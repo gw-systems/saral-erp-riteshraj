@@ -1,0 +1,20 @@
+#!/bin/sh
+
+remote_name="$1"
+remote_url="$2"
+
+allowed_url="https://github.com/gw-systems/saral-erp-riteshraj.git"
+blocked_fragment="saral-erp-main"
+
+if echo "$remote_url" | grep -q "$blocked_fragment"; then
+  echo "Push blocked: this repo must never be pushed to saral-erp-main."
+  exit 1
+fi
+
+if [ "$remote_url" != "$allowed_url" ]; then
+  echo "Push blocked: only $allowed_url is allowed for this repo."
+  echo "Attempted remote: $remote_name -> $remote_url"
+  exit 1
+fi
+
+exit 0
