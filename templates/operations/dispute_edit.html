@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Dispute #{{ dispute.dispute_id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Edit Dispute #{{ dispute.dispute_id }}</h2>
+            <a href="{% url 'operations:dispute_detail' dispute.pk %}" class="text-gray-600 hover:text-gray-900">
+                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Edit Form -->
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                    Dispute Title <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    name="title" 
+                    id="title"
+                    value="{{ dispute.title }}"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter dispute title"
+                >
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description <span class="text-red-500">*</span>
+                </label>
+                <textarea 
+                    name="description" 
+                    id="description"
+                    rows="6"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Describe the dispute in detail..."
+                >{{ dispute.description }}</textarea>
+            </div>
+
+            <!-- Priority -->
+            <div>
+                <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">
+                    Priority <span class="text-red-500">*</span>
+                </label>
+                <select 
+                    name="priority" 
+                    id="priority"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                    <option value="low" {% if dispute.priority.code == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if dispute.priority.code == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if dispute.priority.code == 'high' %}selected{% endif %}>High</option>
+                    <option value="critical" {% if dispute.priority.code == 'critical' %}selected{% endif %}>Critical</option>
+                </select>
+            </div>
+
+            <!-- Disputed Amount -->
+            <div>
+                <label for="disputed_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                    Disputed Amount (₹)
+                </label>
+                <input 
+                    type="number" 
+                    name="disputed_amount" 
+                    id="disputed_amount"
+                    value="{{ dispute.disputed_amount }}"
+                    step="0.01"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                >
+            </div>
+
+            <!-- Dispute Date -->
+            <div>
+                <label for="dispute_date" class="block text-sm font-medium text-gray-700 mb-2">
+                    Dispute Date
+                </label>
+                <input 
+                    type="date" 
+                    name="dispute_date" 
+                    id="dispute_date"
+                    value="{{ dispute.dispute_date|date:'Y-m-d' }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-4 pt-4">
+                <a href="{% url 'operations:dispute_detail' dispute.pk %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

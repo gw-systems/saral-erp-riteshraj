@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Entry - Daily Space{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Edit Daily Entry</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Modify existing entry (editable within 5 days)
+            </p>
+        </div>
+        <a href="{% url 'operations:daily_entry_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+            Back to List
+        </a>
+    </div>
+
+    <!-- Entry Info Card -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start">
+            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-blue-900">Entry Information</p>
+                <div class="mt-2 text-sm text-blue-700 space-y-1">
+                    <p><span class="font-semibold">Project:</span> {{ entry.project.code }} - {{ entry.project.client_name }}</p>
+                    <p><span class="font-semibold">Entry Date:</span> {{ entry.entry_date|date:"d M Y" }}</p>
+                    <p><span class="font-semibold">Originally Entered By:</span> {{ entry.entered_by.get_full_name }} on {{ entry.created_at|date:"d M Y, h:i A" }}</p>
+                    {% if entry.last_modified_by %}
+                    <p><span class="font-semibold">Last Modified By:</span> {{ entry.last_modified_by.get_full_name }} on {{ entry.updated_at|date:"d M Y, h:i A" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Update Entry Details</h2>
+        </div>
+        <form method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- Project Info Display (Read-only) -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-500 mb-1">Billing Unit</p>
+                        <p class="font-semibold text-gray-900">
+                            {% if entry.project.billing_unit == 'sqft' %}
+                                Square Feet
+                            {% elif entry.project.billing_unit == 'pallet' %}
+                                Pallets
+                            {% else %}
+                                Lumpsum
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Minimum Billable</p>
+                        <p class="font-semibold text-gray-900">
+                            {% if entry.project.billing_unit == 'sqft' and entry.project.minimum_billable_sqft %}
+                                {{ entry.project.minimum_billable_sqft }} sq ft
+                            {% elif entry.project.billing_unit == 'pallet' and entry.project.minimum_billable_pallets %}
+                                {{ entry.project.minimum_billable_pallets }} pallets
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Entry Date</p>
+                        <p class="font-semibold text-gray-900">{{ entry.entry_date|date:"d M Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Space & Inventory -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="space_utilized" class="block text-sm font-medium text-gray-700 mb-2">
+                        Space Utilized <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex rounded-md shadow-sm">
+                        <input type="number"
+                            id="space_utilized"
+                            name="space_utilized"
+                            step="0.01"
+                            min="0"
+                            value="{{ entry.space_utilized }}"
+                            required
+                            data-min-sqft="{{ entry.project.minimum_billable_sqft|default:'' }}"
+                            data-min-pallets="{{ entry.project.minimum_billable_pallets|default:'' }}"
+                            data-billing-unit="{{ entry.project.billing_unit }}"
+                            class="flex-1 min-w-0 block w-full px-4 py-2 rounded-none rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                        <select id="unit"
+                                name="unit"
+                                required
+                                class="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            {% for code, label in dropdowns.storage_units %}
+                            <option value="{{ code }}" {% if entry.unit.code == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Enter the space used by this project</p>
+                </div>
+
+                <div>
+                    <label for="inventory_value" class="block text-sm font-medium text-gray-700 mb-2">
+                        Inventory Value (&#8377;) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-500 text-sm">&#8377;</span>
+                        <input type="number"
+                            id="inventory_value"
+                            name="inventory_value"
+                            step="0.01"
+                            min="0"
+                            value="{{ entry.inventory_value }}"
+                            required
+                            class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Total value of inventory in rupees</p>
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            <div>
+                <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2">
+                    Remarks (Optional)
+                </label>
+                <textarea id="remarks"
+                          name="remarks"
+                          rows="3"
+                          placeholder="Add any notes or comments..."
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ entry.remarks }}</textarea>
+            </div>
+
+            <!-- Warning for below minimum -->
+            <div id="below-min-warning" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-yellow-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-yellow-900">Below Minimum Billable</p>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            The space utilized is below the minimum billable amount for this project.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Summary -->
+            <div id="change-summary" class="hidden bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-green-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-green-900">Changes Detected</p>
+                        <p class="text-sm text-green-700 mt-1" id="change-details"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <a href="{% url 'operations:daily_entry_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                    Update Entry
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Audit Trail</h2>
+        </div>
+        <div class="p-6">
+            {% if entry.audit_logs.all %}
+            <div class="space-y-4">
+                {% for log in entry.audit_logs.all %}
+                <div class="flex items-start border-l-4 {% if log.action == 'CREATED' %}border-green-500{% else %}border-blue-500{% endif %} pl-4 py-2">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium {% if log.action == 'CREATED' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ log.action }}
+                            </span>
+                            <span class="text-sm font-medium text-gray-900">{{ log.changed_by.get_full_name }}</span>
+                            <span class="text-sm text-gray-500">{{ log.changed_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-600">
+                            {% if log.old_values %}
+                            <p class="font-medium text-gray-700 mb-1">Changes:</p>
+                            <ul class="list-disc list-inside space-y-1 text-xs">
+                                {% if log.old_values.space_utilized != log.new_values.space_utilized %}
+                                <li>Space: <span class="line-through text-red-600">{{ log.old_values.space_utilized }}</span> &rarr; <span class="text-green-600 font-medium">{{ log.new_values.space_utilized }}</span></li>
+                                {% endif %}
+                                {% if log.old_values.inventory_value != log.new_values.inventory_value %}
+                                <li>Inventory: <span class="line-through text-red-600">&#8377;{{ log.old_values.inventory_value }}</span> &rarr; <span class="text-green-600 font-medium">&#8377;{{ log.new_values.inventory_value }}</span></li>
+                                {% endif %}
+                            </ul>
+                            {% else %}
+                            <p class="text-xs">Initial entry created</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500">No audit history available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const spaceInput = document.getElementById('space_utilized');
+    const inventoryInput = document.getElementById('inventory_value');
+    const unitSelect = document.getElementById('unit');
+    const belowMinWarning = document.getElementById('below-min-warning');
+    const changeSummary = document.getElementById('change-summary');
+    const changeDetails = document.getElementById('change-details');
+
+    const originalSpace = parseFloat(spaceInput.value);
+    const originalInventory = parseFloat(inventoryInput.value);
+    const originalUnit = unitSelect.value;
+
+    // Note: Unit is already pre-selected in HTML based on entry.unit.code
+    // No need to override it with billing_unit
+
+    // Check minimum on load
+    checkMinimum();
+
+    // Check minimum when space value changes
+    spaceInput.addEventListener('input', function() {
+        checkMinimum();
+        detectChanges();
+    });
+
+    inventoryInput.addEventListener('input', detectChanges);
+    unitSelect.addEventListener('change', detectChanges);
+
+    function checkMinimum() {
+        const billingUnit = spaceInput.dataset.billingUnit;
+        const minSqft = parseFloat(spaceInput.dataset.minSqft);
+        const minPallets = parseInt(spaceInput.dataset.minPallets);
+        const spaceValue = parseFloat(spaceInput.value);
+
+        if (!spaceValue) {
+            belowMinWarning.classList.add('hidden');
+            return;
+        }
+
+        let isBelowMin = false;
+
+        if (billingUnit === 'sqft' && minSqft && spaceValue < minSqft) {
+            isBelowMin = true;
+        } else if (billingUnit === 'pallet' && minPallets && spaceValue < minPallets) {
+            isBelowMin = true;
+        }
+
+        if (isBelowMin) {
+            belowMinWarning.classList.remove('hidden');
+        } else {
+            belowMinWarning.classList.add('hidden');
+        }
+    }
+
+    function detectChanges() {
+        const currentSpace = parseFloat(spaceInput.value);
+        const currentInventory = parseFloat(inventoryInput.value);
+        const currentUnit = unitSelect.value;
+
+        const spaceChanged = currentSpace !== originalSpace;
+        const inventoryChanged = currentInventory !== originalInventory;
+        const unitChanged = currentUnit !== originalUnit;
+
+        if (spaceChanged || inventoryChanged || unitChanged) {
+            let changes = [];
+            if (spaceChanged) {
+                changes.push(`Space: ${originalSpace} \u2192 ${currentSpace}`);
+            }
+            if (unitChanged) {
+                changes.push(`Unit: ${originalUnit} \u2192 ${currentUnit}`);
+            }
+            if (inventoryChanged) {
+                changes.push(`Inventory: \u20B9${originalInventory} \u2192 \u20B9${currentInventory}`);
+            }
+            changeDetails.textContent = changes.join(' | ');
+            changeSummary.classList.remove('hidden');
+        } else {
+            changeSummary.classList.add('hidden');
+        }
+    }
+});
+</script>
+{% endblock %}

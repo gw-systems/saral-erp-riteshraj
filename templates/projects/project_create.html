@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Project - MiniERP{% endblock %}
+
+{% block extra_css %}
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+<style>
+    /* Custom Choices.js Theme */
+    .choices__inner {
+        background-color: #ffffff !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        min-height: 56px !important;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: #dbeafe !important;
+        color: #1e40af !important;
+    }
+
+    .choices__input {
+        background-color: transparent !important;
+        font-size: 1rem !important;
+    }
+
+    .choices__list--dropdown {
+        z-index: 100 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.5rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<main class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Create New Project</h1>
+            <p class="text-sm text-gray-600 mt-1">Codes will be auto-generated</p>
+        </div>
+        <a href="{% url 'projects:project_list_all' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+            <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Cancel
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-50 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 border-l-4 border-green-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %} p-4 rounded-r-lg">
+            <p class="{% if message.tags == 'error' %}text-red-700{% elif message.tags == 'success' %}text-green-700{% else %}text-blue-700{% endif %} font-medium">
+                {{ message }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="POST" class="bg-white shadow-lg rounded-2xl border border-gray-200">
+        {% csrf_token %}
+
+        <div class="p-8 space-y-6 mx-auto" style="max-width: 600px;">
+
+            <!-- Series Type -->
+            <div>
+                <label for="id_series_type" class="block text-sm font-semibold text-gray-900 mb-2">
+                    Series Type <span class="text-red-500">*</span>
+                </label>
+                <select name="series_type" id="id_series_type" required class="searchable-select" {% if form.series_type.errors %}aria-invalid="true" aria-describedby="error-series_type"{% endif %}>
+                    <option value="">Select Series</option>
+                    <option value="WAAS" selected>Warehouse as a Service</option>
+                    <option value="SAAS">SaaS Only Client</option>
+                    <option value="GW">Internal Use (GW)</option>
+                </select>
+                {% if form.series_type.errors %}
+                <p id="error-series_type" class="mt-2 text-sm text-red-600" role="alert">{{ form.series_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Client Name -->
+            <div>
+                <label for="id_client_name" class="block text-sm font-semibold text-gray-900 mb-2">
+                    Client Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="client_name" id="id_client_name" required placeholder="Enter client company name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" {% if form.client_name.errors %}aria-invalid="true" aria-describedby="error-client_name"{% endif %}>
+                {% if form.client_name.errors %}
+                <p id="error-client_name" class="mt-2 text-sm text-red-600" role="alert">{{ form.client_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Vendor Name -->
+            <div>
+                <label for="id_vendor_name" class="block text-sm font-semibold text-gray-900 mb-2">
+                    Vendor Name <span class="text-red-500">*</span>
+                </label>
+                <select name="vendor_name" id="id_vendor_name" required class="searchable-select" {% if form.vendor_name.errors %}aria-invalid="true" aria-describedby="error-vendor_name"{% endif %}>
+                    {% for value, label in form.vendor_name.field.choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.vendor_name.errors %}
+                <p id="error-vendor_name" class="mt-2 text-sm text-red-600" role="alert">{{ form.vendor_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Location -->
+            <div>
+                <label for="id_location" class="block text-sm font-semibold text-gray-900 mb-2">
+                    Location <span class="text-red-500">*</span>
+                </label>
+                <select name="location" id="id_location" required class="searchable-select" {% if form.location.errors %}aria-invalid="true" aria-describedby="error-location"{% endif %}>
+                    {% for value, label in form.location.field.choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.location.errors %}
+                <p id="error-location" class="mt-2 text-sm text-red-600" role="alert">{{ form.location.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Sales Manager Field -->
+            <div class="mb-6">
+                <label for="{{ form.sales_manager.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Sales Manager <span class="text-red-500">*</span>
+                </label>
+                {{ form.sales_manager }}
+                {% if form.sales_manager.errors %}
+                    <p id="error-sales_manager" class="mt-1 text-sm text-red-600" role="alert">{{ form.sales_manager.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Includes Sales Managers, CRM Executives, and Directors</p>
+            </div>
+
+            <!-- Non-field errors -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                {% for error in form.non_field_errors %}
+                <p class="text-sm text-red-700 font-medium">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Form Actions -->
+        <div class="bg-gray-50 px-8 py-5 border-t border-gray-200 flex items-center justify-between rounded-b-2xl">
+            <a href="{% url 'projects:project_list_all' %}" class="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Cancel
+            </a>
+            <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-md transition">
+                <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Project
+            </button>
+        </div>
+    </form>
+
+</main>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Choices.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+
+<script>
+// Initialize Choices.js on all searchable selects
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElements = document.querySelectorAll('.searchable-select');
+
+    selectElements.forEach(function(element) {
+        new Choices(element, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Search...',
+            noResultsText: 'No options found',
+            itemSelectText: 'Click to select',
+            shouldSort: false,
+        });
+    });
+});
+</script>
+{% endblock %}

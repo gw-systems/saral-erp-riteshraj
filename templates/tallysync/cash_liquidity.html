@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cash & Liquidity Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">💵 Cash & Liquidity Dashboard</h1>
+                <p class="text-gray-600">Cash flow, receivables & payables tracking</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="refreshDashboard()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    🔄 Refresh
+                </button>
+                <a href="{% url 'accounts:finance_manager_dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    ← Back to Hub
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
+                    <input type="date" id="fromDate" value="{{ default_from_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
+                    <input type="date" id="toDate" value="{{ default_to_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Company</label>
+                    <select id="companyFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">All Companies</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Summary Cards -->
+        <div id="cashSummary" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="col-span-4 text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+                <p class="text-gray-600 mt-4">Loading cash flow data...</p>
+            </div>
+        </div>
+
+        <!-- Cash Flow Trend Table -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📈 Cash Flow Trend (Last 6 Months)</h3>
+            <div id="cashFlowTable" class="overflow-x-auto">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- Receivables & Payables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            
+            <!-- Receivables -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📥 Receivables Aging</h3>
+                <div id="receivablesSummary" class="space-y-4">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Payables -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📤 Payables Aging</h3>
+                <div id="payablesSummary" class="space-y-4">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Balances -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">🏦 Bank Balances & Payment Analysis</h3>
+            <div id="bankSummary">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+<script>
+
+function initDashboard() {
+    if (typeof TallySyncCommon !== 'undefined' && TallySyncCommon.setDefaultPreviousMonth) {
+        TallySyncCommon.setDefaultPreviousMonth();
+    }
+    if (typeof TallySyncCommon !== 'undefined' && TallySyncCommon.loadCompanies) {
+        TallySyncCommon.loadCompanies('companyFilter');
+    }
+    loadDashboard();
+}
+initDashboard();
+window.addEventListener('pageshow', function(e) { if (e.persisted) initDashboard(); });
+
+function refreshDashboard() {
+    loadDashboard();
+}
+
+function applyFilters() {
+    loadDashboard();
+}
+
+async function loadDashboard() {
+    await Promise.all([
+        loadCashSummary(),
+        loadCashFlowTrend(),
+        loadReceivables(),
+        loadPayables(),
+        loadBankSummary()
+    ]);
+}
+
+async function loadCashSummary() {
+    TallySyncCommon.setLoading('cashSummary', true);
+    
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || '',
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('cash-flow-summary', filters);
+        
+        const netFlowClass = data.net_cash_flow >= 0 ? 'from-green-50 to-green-100 border-green-500' : 'from-red-50 to-red-100 border-red-500';
+        const netFlowTextClass = data.net_cash_flow >= 0 ? 'text-green-800' : 'text-red-800';
+        
+        const cardsHTML = `
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <p class="text-sm font-semibold text-blue-700 mb-1">Cash Inflow</p>
+                <p class="text-3xl font-bold text-blue-800">${TallySyncCommon.formatCurrency(data.cash_inflow)}</p>
+                <p class="text-xs text-blue-600 mt-2">From sales & receipts</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <p class="text-sm font-semibold text-orange-700 mb-1">Cash Outflow</p>
+                <p class="text-3xl font-bold text-orange-800">${TallySyncCommon.formatCurrency(data.cash_outflow)}</p>
+                <p class="text-xs text-orange-600 mt-2">From purchases & payments</p>
+            </div>
+
+            <div class="bg-gradient-to-br ${netFlowClass} rounded-xl shadow-lg p-6 border-l-4">
+                <p class="text-sm font-semibold ${netFlowTextClass.replace('800', '700')} mb-1">Net Cash Flow</p>
+                <p class="text-3xl font-bold ${netFlowTextClass}">${TallySyncCommon.formatCurrency(data.net_cash_flow)}</p>
+                <p class="text-xs ${netFlowTextClass.replace('800', '600')} mt-2">Burn rate: ${TallySyncCommon.formatCurrency(data.burn_rate)}/mo</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <p class="text-sm font-semibold text-purple-700 mb-1">Total Liquidity</p>
+                <p class="text-3xl font-bold text-purple-800">${TallySyncCommon.formatCurrency(data.total_liquidity)}</p>
+                <p class="text-xs text-purple-600 mt-2">Bank + Cash in hand</p>
+            </div>
+        `;
+        
+        document.getElementById('cashSummary').innerHTML = cardsHTML;
+    } catch (error) {
+        console.error('Error loading cash summary:', error);
+        TallySyncCommon.showError('Failed to load cash summary', 'cashSummary');
+    }
+}
+
+async function loadCashFlowTrend() {
+    TallySyncCommon.setLoading('cashFlowTable', true);
+    
+    try {
+        const filters = {
+            months: '6',
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('cash-flow-trend', filters);
+        
+        if (!data.trend || data.trend.length === 0) {
+            document.getElementById('cashFlowTable').innerHTML = 
+                '<p class="text-center text-gray-500 py-8">No data available</p>';
+            return;
+        }
+        
+        // Calculate totals
+        let totalInflow = 0;
+        let totalOutflow = 0;
+        let totalNetFlow = 0;
+        
+        data.trend.forEach(item => {
+            totalInflow += parseFloat(item.inflow) || 0;
+            totalOutflow += parseFloat(item.outflow) || 0;
+            totalNetFlow += parseFloat(item.net_flow) || 0;
+        });
+        
+        let html = `
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Month</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700">Cash Inflow</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700">Cash Outflow</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700">Net Flow</th>
+                        <th class="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+        `;
+        
+        data.trend.forEach(item => {
+            const inflow = parseFloat(item.inflow) || 0;
+            const outflow = parseFloat(item.outflow) || 0;
+            const netFlow = parseFloat(item.net_flow) || 0;
+            const netFlowClass = netFlow >= 0 ? 'text-green-700' : 'text-red-700';
+            const statusBadge = netFlow >= 0 
+                ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Positive</span>'
+                : '<span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded">Negative</span>';
+            
+            html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-800">${TallySyncCommon.formatMonth(item.month)}</td>
+                    <td class="px-4 py-3 text-right text-blue-700">${TallySyncCommon.formatCurrency(inflow)}</td>
+                    <td class="px-4 py-3 text-right text-orange-700">${TallySyncCommon.formatCurrency(outflow)}</td>
+                    <td class="px-4 py-3 text-right font-bold ${netFlowClass}">${TallySyncCommon.formatCurrency(netFlow)}</td>
+                    <td class="px-4 py-3 text-center">${statusBadge}</td>
+                </tr>
+            `;
+        });
+        
+        // Total row
+        const netTotal = totalInflow - totalOutflow;
+        const netTotalClass = netTotal >= 0 ? 'text-green-700' : 'text-red-700';
+        
+        html += `
+                    <tr class="bg-gray-100 font-bold">
+                        <td class="px-4 py-3 text-gray-900">TOTAL</td>
+                        <td class="px-4 py-3 text-right text-blue-700">${TallySyncCommon.formatCurrency(totalInflow)}</td>
+                        <td class="px-4 py-3 text-right text-orange-700">${TallySyncCommon.formatCurrency(totalOutflow)}</td>
+                        <td class="px-4 py-3 text-right ${netTotalClass}">${TallySyncCommon.formatCurrency(netTotal)}</td>
+                        <td class="px-4 py-3"></td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        
+        document.getElementById('cashFlowTable').innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading cash flow trend:', error);
+        TallySyncCommon.showError('Failed to load cash flow trend', 'cashFlowTable');
+    }
+}
+
+async function loadReceivables() {
+    try {
+        const filters = {
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('receivables', filters);
+        
+        const html = `
+            <div class="border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 rounded">
+                <p class="text-sm font-semibold text-gray-700">Total Billed</p>
+                <p class="text-2xl font-bold text-blue-800">${TallySyncCommon.formatCurrency(data.total_billed)}</p>
+            </div>
+            <div class="border-l-4 border-green-500 pl-4 py-3 bg-green-50 rounded">
+                <p class="text-sm font-semibold text-gray-700">Total Received</p>
+                <p class="text-2xl font-bold text-green-800">${TallySyncCommon.formatCurrency(data.total_received)}</p>
+            </div>
+            <div class="border-l-4 border-orange-500 pl-4 py-3 bg-orange-50 rounded">
+                <p class="text-sm font-semibold text-gray-700">Outstanding</p>
+                <p class="text-2xl font-bold text-orange-800">${TallySyncCommon.formatCurrency(data.outstanding)}</p>
+            </div>
+            <div class="space-y-2">
+                <p class="text-sm font-semibold text-gray-700 mb-2">Aging Analysis:</p>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">0-30 days:</span>
+                    <span class="font-semibold text-green-700">${TallySyncCommon.formatCurrency(data.aging['0_30_days'] || 0)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">31-60 days:</span>
+                    <span class="font-semibold text-yellow-700">${TallySyncCommon.formatCurrency(data.aging['31_60_days'] || 0)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">61-90 days:</span>
+                    <span class="font-semibold text-orange-700">${TallySyncCommon.formatCurrency(data.aging['61_90_days'] || 0)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">90+ days:</span>
+                    <span class="font-semibold text-red-700">${TallySyncCommon.formatCurrency(data.aging['90_plus_days'] || 0)}</span>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('receivablesSummary').innerHTML = html;
+    } catch (error) {
+        console.error('Error loading receivables:', error);
+        document.getElementById('receivablesSummary').innerHTML = 
+            '<p class="text-center text-red-500 py-4">Failed to load receivables</p>';
+    }
+}
+
+async function loadPayables() {
+    try {
+        const filters = {
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('payables', filters);
+        
+        const html = `
+            <div class="border-l-4 border-red-500 pl-4 py-3 bg-red-50 rounded">
+                <p class="text-sm font-semibold text-gray-700">Total Purchases</p>
+                <p class="text-2xl font-bold text-red-800">${TallySyncCommon.formatCurrency(data.total_purchases)}</p>
+            </div>
+            <div class="border-l-4 border-green-500 pl-4 py-3 bg-green-50 rounded">
+                <p class="text-sm font-semibold text-gray-700">Total Paid</p>
+                <p class="text-2xl font-bold text-green-800">${TallySyncCommon.formatCurrency(data.total_paid)}</p>
+            </div>
+            <div class="border-l-4 border-orange-500 pl-4 py-3 bg-orange-50 rounded">
+                <p class="text-sm font-semibold text-gray-700">Outstanding</p>
+                <p class="text-2xl font-bold text-orange-800">${TallySyncCommon.formatCurrency(data.outstanding)}
+</p>
+            </div>
+            <div class="space-y-2">
+                <p class="text-sm font-semibold text-gray-700 mb-2">Aging Analysis:</p>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">0-30 days:</span>
+                    <span class="font-semibold text-green-700">${TallySyncCommon.formatCurrency(data.aging['0_30_days'] || 0)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">31-60 days:</span>
+                    <span class="font-semibold text-yellow-700">${TallySyncCommon.formatCurrency(data.aging['31_60_days'] || 0)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">61-90 days:</span>
+                    <span class="font-semibold text-orange-700">${TallySyncCommon.formatCurrency(data.aging['61_90_days'] || 0)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">90+ days:</span>
+                    <span class="font-semibold text-red-700">${TallySyncCommon.formatCurrency(data.aging['90_plus_days'] || 0)}</span>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('payablesSummary').innerHTML = html;
+    } catch (error) {
+        console.error('Error loading payables:', error);
+        document.getElementById('payablesSummary').innerHTML = 
+            '<p class="text-center text-red-500 py-4">Failed to load payables</p>';
+    }
+}
+
+async function loadBankSummary() {
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || '',
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('bank-transactions', filters);
+        
+        let html = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                    <p class="text-sm font-semibold text-gray-700">Total Debit</p>
+                    <p class="text-2xl font-bold text-blue-800">${TallySyncCommon.formatCurrency(data.summary.total_debit)}</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                    <p class="text-sm font-semibold text-gray-700">Total Credit</p>
+                    <p class="text-2xl font-bold text-green-800">${TallySyncCommon.formatCurrency(data.summary.total_credit)}</p>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
+                    <p class="text-sm font-semibold text-gray-700">Banks Tracked</p>
+                    <p class="text-2xl font-bold text-purple-800">${data.summary.bank_count}</p>
+                </div>
+            </div>
+        `;
+        
+        if (data.banks && data.banks.length > 0) {
+            html += '<div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-gray-50"><tr>';
+            html += '<th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Bank</th>';
+            html += '<th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Debit</th>';
+            html += '<th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Credit</th>';
+            html += '<th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Net Position</th>';
+            html += '<th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Transactions</th>';
+            html += '</tr></thead><tbody class="divide-y divide-gray-200">';
+            
+            data.banks.forEach(bank => {
+                const netClass = bank.net_position >= 0 ? 'text-green-700' : 'text-red-700';
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-800">${bank.bank_name}</td>
+                        <td class="px-4 py-3 text-sm text-right text-blue-700">${TallySyncCommon.formatCurrency(bank.total_debit)}</td>
+                        <td class="px-4 py-3 text-sm text-right text-green-700">${TallySyncCommon.formatCurrency(bank.total_credit)}</td>
+                        <td class="px-4 py-3 text-sm text-right ${netClass} font-bold">${TallySyncCommon.formatCurrency(bank.net_position)}</td>
+                        <td class="px-4 py-3 text-sm text-right text-gray-600">${bank.transaction_count}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+        } else {
+            html += '<p class="text-gray-500 text-center py-8">No bank transactions found</p>';
+        }
+        
+        document.getElementById('bankSummary').innerHTML = html;
+    } catch (error) {
+        console.error('Error loading bank summary:', error);
+        document.getElementById('bankSummary').innerHTML = 
+            '<p class="text-center text-red-500 py-4">Failed to load bank data</p>';
+    }
+}
+
+</script>
+
+{% endblock %}

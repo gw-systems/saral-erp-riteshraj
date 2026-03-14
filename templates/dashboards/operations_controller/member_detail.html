@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ member_name }} - Performance Details - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl">
+                        {{ member_initials }}
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">{{ member_name }}</h1>
+                        <p class="text-sm text-gray-600 mt-1">{{ member_role }} &bull; {{ member.email }}</p>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <span class="px-3 py-1 bg-{{ grade_color }}-100 text-{{ grade_color }}-800 text-sm font-semibold rounded-full">
+                                Grade {{ grade }}
+                            </span>
+                            <span class="text-sm text-gray-600">
+                                Rank {{ rank }} of {{ total_team_members }}
+                            </span>
+                            <span class="text-sm text-gray-600">
+                                {{ percentile }}th Percentile
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'accounts:operation_controller_team' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Team
+                </a>
+            </div>
+        </div>
+
+        <!-- Performance Overview Cards (4x2 Grid) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+            <!-- Overall Score -->
+            <div class="bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-purple-50 uppercase">Overall Score</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ performance_score }}</p>
+                    <p class="text-xs text-purple-50 flex items-center gap-1">
+                        {% if performance_score > performance_score_last_month %}
+                        <svg aria-hidden="true" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                        +{{ performance_score|floatformat:1|add:performance_score_last_month|floatformat:1 }} from last month
+                        {% elif performance_score < performance_score_last_month %}
+                        <svg aria-hidden="true" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        {{ performance_score_last_month|floatformat:1|add:"-"|add:performance_score|floatformat:1 }} from last month
+                        {% else %}
+                        <svg aria-hidden="true" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
+                        Same as last month
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Projects -->
+            <div class="bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-blue-50 uppercase">Projects</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ total_projects }}</p>
+                    <p class="text-xs text-blue-50">{{ primary_count }} Primary &bull; {{ backup_count }} Backup</p>
+                </div>
+            </div>
+
+            <!-- Entry Completion -->
+            <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-green-50 uppercase">Entry Completion</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ completion_month }}%</p>
+                    <p class="text-xs text-green-50">Today: {{ completion_today }}%</p>
+                </div>
+            </div>
+
+            <!-- Pending Items -->
+            <div class="bg-gradient-to-br from-red-400 to-red-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-red-50 uppercase">Pending Items</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ adhoc_pending|add:mis_pending_today }}</p>
+                    <p class="text-xs text-red-50">{{ adhoc_pending }} Adhoc &bull; {{ mis_pending_today }} MIS</p>
+                </div>
+            </div>
+
+            <!-- Team Comparison -->
+            <div class="bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-indigo-50 uppercase">vs Team Avg</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">
+                        {% if performance_score > team_avg_score %}+{% endif %}{{ performance_score|floatformat:1|add:"-"|add:team_avg_score|floatformat:1 }}
+                    </p>
+                    <p class="text-xs text-indigo-50">Team average: {{ team_avg_score }}%</p>
+                </div>
+            </div>
+
+            <!-- Adhoc Billing -->
+            <div class="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-orange-50 uppercase">Adhoc Billing</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ adhoc_pending }}</p>
+                    <p class="text-xs text-orange-50">&#8377;{{ adhoc_pending_amount|floatformat:2 }} Lakhs</p>
+                </div>
+            </div>
+
+            <!-- Monthly Billing -->
+            <div class="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-teal-50 uppercase">Monthly Billing</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ billing_sent|add:billing_paid }}</p>
+                    <p class="text-xs text-teal-50">{{ billing_pending }} Pending &bull; {{ billing_paid }} Paid</p>
+                </div>
+            </div>
+
+            <!-- Disputes -->
+            <div class="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold text-amber-50 uppercase">Disputes</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ disputes_total }}</p>
+                    <p class="text-xs text-amber-50">{{ disputes_open }} Open &bull; {{ dispute_resolution_rate }}% Resolved</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Entry Completion Trend (30 Days) -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Entry Completion Trend (Last 30 Days)</h2>
+            <div class="h-64">
+                <canvas id="entryTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Performance Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <!-- This Month vs Last Month -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Comparison</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Entry Completion</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ completion_month }}% vs {{ completion_last_month }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ completion_month }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Adhoc Approved</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ adhoc_approved_month }} vs {{ adhoc_approved_last_month }}</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <div class="flex-1 bg-blue-100 rounded p-2 text-center">
+                                <p class="text-2xl font-bold text-blue-600">{{ adhoc_approved_month }}</p>
+                                <p class="text-xs text-gray-600">This Month</p>
+                            </div>
+                            <div class="flex-1 bg-gray-100 rounded p-2 text-center">
+                                <p class="text-2xl font-bold text-gray-600">{{ adhoc_approved_last_month }}</p>
+                                <p class="text-xs text-gray-600">Last Month</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Disputes Resolved</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ disputes_resolved_month }} vs {{ disputes_resolved_last_month }}</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <div class="flex-1 bg-green-100 rounded p-2 text-center">
+                                <p class="text-2xl font-bold text-green-600">{{ disputes_resolved_month }}</p>
+                                <p class="text-xs text-gray-600">This Month</p>
+                            </div>
+                            <div class="flex-1 bg-gray-100 rounded p-2 text-center">
+                                <p class="text-2xl font-bold text-gray-600">{{ disputes_resolved_last_month }}</p>
+                                <p class="text-xs text-gray-600">Last Month</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Score Breakdown -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Performance Score Breakdown</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm text-gray-600">Monthly Completion (40%)</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ completion_month|floatformat:1 }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ completion_month }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm text-gray-600">Today's Completion (30%)</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ completion_today|floatformat:1 }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ completion_today }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm text-gray-600">Adhoc Management (20%)</span>
+                            <span class="text-sm font-semibold text-gray-900">
+                                {% widthratio adhoc_pending 1 100 %}% penalty
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            {% if adhoc_pending == 0 %}
+                            <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                            {% else %}
+                            <div class="bg-orange-600 h-2 rounded-full" style="width: {% widthratio adhoc_pending 10 100 %}%"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm text-gray-600">Dispute Management (10%)</span>
+                            <span class="text-sm font-semibold text-gray-900">
+                                {% widthratio disputes_total 1 100 %}% penalty
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            {% if disputes_total == 0 %}
+                            <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                            {% else %}
+                            <div class="bg-red-600 h-2 rounded-full" style="width: {% widthratio disputes_total 5 100 %}%"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Adhoc Billing & Disputes Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <!-- Adhoc Billing Details -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Adhoc Billing Entries</h3>
+                    <p class="text-xs text-orange-100 mt-1">Latest 50 entries (sorted by date)</p>
+                </div>
+                <div class="p-4">
+                    <div class="overflow-y-auto" style="max-height: 600px;">
+                        <div class="space-y-2">
+                            {% for adhoc in adhoc_details %}
+                            <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow {% if adhoc.status_code == 'pending' %}bg-orange-50{% elif adhoc.status_code == 'approved' %}bg-green-50{% elif adhoc.status_code == 'billed' %}bg-blue-50{% else %}bg-gray-50{% endif %}">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="text-sm font-semibold text-gray-900">{{ adhoc.project_code }}</span>
+                                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full {% if adhoc.status_code == 'pending' %}bg-orange-200 text-orange-800{% elif adhoc.status_code == 'approved' %}bg-green-200 text-green-800{% elif adhoc.status_code == 'billed' %}bg-blue-200 text-blue-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+                                                {{ adhoc.status }}
+                                            </span>
+                                            {% if adhoc.line_items_count %}
+                                            <span class="text-xs px-1.5 py-0.5 bg-gray-200 text-gray-700 rounded">{{ adhoc.line_items_count }} items</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-xs text-gray-600 mb-1">{{ adhoc.client_name }}</p>
+                                        <p class="text-xs text-gray-700 mb-2">{{ adhoc.description|truncatewords:20 }}</p>
+                                        {% if adhoc.billing_remarks %}
+                                        <p class="text-xs text-gray-600 italic mb-2">Remarks: {{ adhoc.billing_remarks|truncatewords:10 }}</p>
+                                        {% endif %}
+                                        <div class="flex items-center space-x-3 text-xs text-gray-500">
+                                            <span>Event: {{ adhoc.event_date|date:"M d, Y" }}</span>
+                                            <span>&bull;</span>
+                                            <span class="font-semibold text-green-600">&#8377;{{ adhoc.client_amount|floatformat:2 }}L</span>
+                                            {% if adhoc.vendor_amount > 0 %}
+                                            <span>&bull;</span>
+                                            <span class="text-red-600">V: &#8377;{{ adhoc.vendor_amount|floatformat:2 }}L</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-sm text-gray-500 text-center py-4">No adhoc billing entries found</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disputes Details -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Disputes Log</h3>
+                    <p class="text-xs text-purple-100 mt-1">Latest 50 disputes (sorted by date)</p>
+                </div>
+                <div class="p-4">
+                    <div class="overflow-y-auto" style="max-height: 600px;">
+                        <div class="space-y-2">
+                            {% for dispute in disputes_details %}
+                            <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow {% if dispute.status_code == 'open' %}bg-red-50{% elif dispute.status_code == 'in_progress' %}bg-amber-50{% elif dispute.status_code == 'resolved' %}bg-green-50{% else %}bg-gray-50{% endif %}">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="text-sm font-semibold text-gray-900">{{ dispute.project_code }}</span>
+                                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full {% if dispute.status_code == 'open' %}bg-red-200 text-red-800{% elif dispute.status_code == 'in_progress' %}bg-amber-200 text-amber-800{% elif dispute.status_code == 'resolved' %}bg-green-200 text-green-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+                                                {{ dispute.status }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mb-1">{{ dispute.client_name }}</p>
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="text-xs font-medium text-gray-700">{{ dispute.category }}</span>
+                                            <span class="text-xs px-1.5 py-0.5 rounded {% if dispute.priority == 'High' or dispute.priority == 'Critical' %}bg-red-100 text-red-700{% elif dispute.priority == 'Medium' %}bg-amber-100 text-amber-700{% else %}bg-blue-100 text-blue-700{% endif %}">{{ dispute.priority }}</span>
+                                        </div>
+                                        {% if dispute.title %}
+                                        <p class="text-xs font-semibold text-gray-800 mb-1">{{ dispute.title }}</p>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-700 mb-2">{{ dispute.description|truncatewords:15 }}</p>
+                                        {% if dispute.resolution and dispute.status_code == 'resolved' %}
+                                        <p class="text-xs text-green-700 mb-2">Resolution: {{ dispute.resolution|truncatewords:10 }}</p>
+                                        {% endif %}
+                                        <div class="flex items-center space-x-3 text-xs text-gray-500">
+                                            <span>Raised: {{ dispute.raised_at|date:"M d, Y" }}</span>
+                                            <span>&bull;</span>
+                                            <span class="{% if dispute.status_code == 'resolved' %}text-green-600{% else %}text-red-600{% endif %}">{{ dispute.days_display }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-sm text-gray-500 text-center py-4">No disputes found</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Project-wise Breakdown Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
+                <h2 class="text-lg font-semibold text-white">Project-wise Performance Breakdown</h2>
+                <p class="text-xs text-indigo-100 mt-1">Detailed metrics for each assigned project</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Entry %</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Adhoc</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Billing</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Disputes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for project in project_breakdown %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ project.project_code }}</div>
+                                    <div class="text-xs text-gray-500">{{ project.client_name }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if project.is_primary %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {% if project.is_primary %}Primary{% else %}Backup{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded {% if project.entry_completion >= 90 %}bg-green-100 text-green-800{% elif project.entry_completion >= 70 %}bg-amber-100 text-amber-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ project.entry_completion }}%
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="text-sm {% if project.adhoc_pending > 0 %}text-orange-600 font-semibold{% else %}text-gray-900{% endif %}">
+                                    {{ project.adhoc_pending }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="text-xs text-gray-900">{{ project.billing_status }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="text-sm {% if project.disputes > 0 %}text-red-600 font-semibold{% else %}text-gray-900{% endif %}">
+                                    {{ project.disputes }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Entry Completion Trend Chart
+    const ctx = document.getElementById('entryTrendChart').getContext('2d');
+    const entryTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                label: 'Completion %',
+                data: {{ trend_data|safe }},
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

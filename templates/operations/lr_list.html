@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}LR / Consignment Notes - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">LR / Consignment Notes</h1>
+                    <p class="text-gray-600 mt-1">Manage Lorry Receipts for goods movement</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'accounts:dashboard' %}"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <a href="{% url 'operations:lr_create' %}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create LR
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-400">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total LRs</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ total_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-400">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">This Month</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ this_month_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div>
+                    <input type="text" name="search" value="{{ search }}" placeholder="Search LR #, location, vehicle..."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                    <select name="project" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="">All Projects</option>
+                        {% for p in projects %}
+                        <option value="{{ p.project_id }}" {% if project_filter == p.project_id %}selected{% endif %}>
+                            {{ p.project_code }} - {{ p.client_name|truncatechars:25 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <input type="date" name="date_from" value="{{ date_from }}" placeholder="From date"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                    <input type="date" name="date_to" value="{{ date_to }}" placeholder="To date"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div class="flex items-center gap-2 md:col-span-2">
+                    <button type="submit"
+                        class="flex-1 px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition text-sm font-medium">
+                        Apply Filters
+                    </button>
+                    {% if search or project_filter or date_from or date_to %}
+                    <a href="{% url 'operations:lr_list' %}"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        Clear
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LR Number</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">From / To</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Vehicle No</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Created By</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for lr in lrs %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{% url 'operations:lr_detail' lr.id %}" class="text-sm font-bold text-blue-600 hover:text-blue-800 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                    {{ lr.lr_number }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ lr.lr_date|date:"d M Y" }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <span class="font-medium">{{ lr.from_location|truncatechars:20 }}</span>
+                                <span class="text-gray-400 mx-1">&rarr;</span>
+                                <span class="font-medium">{{ lr.to_location|truncatechars:20 }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ lr.vehicle_no|default:"-" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ lr.project.project_code }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                {{ lr.created_by.get_full_name|default:lr.created_by.username }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{% url 'operations:lr_detail' lr.id %}" class="text-blue-600 hover:text-blue-800 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" title="View">View</a>
+                                    <a href="{% url 'operations:lr_edit' lr.id %}" class="text-gray-600 hover:text-gray-800 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" title="Edit">Edit</a>
+                                    <a href="{% url 'operations:lr_download_docx' lr.id %}" class="text-green-600 hover:text-green-800 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" title="Download DOCX">DOCX</a>
+                                    {% if can_delete %}
+                                    <a href="{% url 'operations:lr_delete' lr.id %}" class="text-red-600 hover:text-red-800 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" title="Delete">Del</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                <svg aria-hidden="true" width="48" height="48" class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">No LRs found</p>
+                                <p class="text-sm mt-1">Create your first Lorry Receipt to get started.</p>
+                                <a href="{% url 'operations:lr_create' %}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                    Create LR
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if lrs.has_other_pages %}
+        <div class="mt-6 flex justify-center">
+            <nav class="inline-flex rounded-md shadow-sm -space-x-px">
+                {% if lrs.has_previous %}
+                <a href="?page={{ lrs.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                    class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    &laquo; Prev
+                </a>
+                {% endif %}
+
+                {% for num in lrs.paginator.page_range %}
+                    {% if lrs.number == num %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                        {{ num }}
+                    </span>
+                    {% elif num > lrs.number|add:"-3" and num < lrs.number|add:"3" %}
+                    <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if lrs.has_next %}
+                <a href="?page={{ lrs.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                    class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Next &raquo;
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

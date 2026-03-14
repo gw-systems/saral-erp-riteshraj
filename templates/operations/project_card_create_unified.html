@@ -1,0 +1,1125 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Project Card{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Create Project Card</h1>
+        <p class="text-gray-600 mt-1">Define rates and terms for this project</p>
+    </div>
+
+    <form method="POST" id="projectCardForm">
+        {% csrf_token %}
+        
+        <!-- Agreement Details -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border-b-4 border-blue-500">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <span class="mr-2">📋</span> Agreement Details
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Project Selection -->
+                <div class="lg:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Project <span class="text-red-500">*</span>
+                    </label>
+                    <select name="project" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                            <option value="{{ project.project_id }}" {% if preselect_project == project.project_id %}selected{% endif %}>
+                                {{ project.project_code }} - {{ project.client_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Agreement Dates -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Agreement Start <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="agreement_start_date" required
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Agreement End <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="agreement_end_date" required
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escalation Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="yearly_escalation_date" required
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Escalation & Security -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escalation % <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="has_fixed_escalation" id="hasFixedEscalation" class="w-4 h-4">
+                        <input type="number" step="0.01" name="annual_escalation_percent" id="escalationPercent"
+                               disabled placeholder="e.g., 5.00"
+                               class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-500">%</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Security Deposit (₹) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" step="0.01" name="security_deposit" required
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Billing Start <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="date" name="billing_start_date"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Activation Fee (₹) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="number" step="0.01" name="activation_fee"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g., 10000">
+                </div>
+
+                <!-- Payment Terms -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Storage Payment (days) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="number" name="storage_payment_days" min="0" max="365" placeholder="e.g., 30"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Handling Payment (days) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="number" name="handling_payment_days" min="0" max="365" placeholder="e.g., 15"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENT/VENDOR TABS -->
+        <div class="bg-white rounded-lg shadow-sm mb-6">
+            <!-- Tab Headers -->
+            <div class="border-b border-gray-200">
+                <nav class="flex">
+                    <button type="button" onclick="switchTab('client')" id="clientTab"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-blue-600 text-blue-600">
+                        💰 Client Rates
+                    </button>
+                    <button type="button" onclick="switchTab('vendor')" id="vendorTab"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        🏭 Vendor Rates
+                    </button>
+                    <div class="flex-1 flex items-center justify-end px-6">
+                        <span id="progressIndicator" class="text-sm text-gray-500">
+                            Client: <span id="clientStatus">⏳ In Progress</span> | 
+                            Vendor: <span id="vendorStatus">⏳ Pending</span>
+                        </span>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- CLIENT TAB CONTENT -->
+            <div id="clientContent" class="p-6">
+                
+                <!-- Storage Rates -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">📦</span> Storage Rates (Client)
+                        </h3>
+                        <button type="button" onclick="addStorageRate('client')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Storage Rate
+                        </button>
+                    </div>
+                    <div id="clientStorageRates" class="space-y-4">
+                        <!-- Storage rate cards will be added here -->
+                    </div>
+                </div>
+                
+                <!-- Handling Rates -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">🚛</span> Handling Rates (Client)
+                        </h3>
+                        <button type="button" onclick="addHandlingRate('client')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Handling Rate
+                        </button>
+                    </div>
+                    <div id="clientHandlingRates" class="space-y-4">
+                        <!-- Handling rate cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Transport -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">🚚</span> Transport Rates (Client)
+                        </h3>
+                        <button type="button" onclick="addTransport('client')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Transport Rate
+                        </button>
+                    </div>
+                    <div id="clientTransport" class="space-y-4">
+                        <!-- Transport cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- VAS -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">⚙️</span> Value Added Services (Client)
+                        </h3>
+                        <button type="button" onclick="addVAS('client')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add VAS
+                        </button>
+                    </div>
+                    <div id="clientVAS" class="space-y-4">
+                        <!-- VAS cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Infrastructure -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">🏗️</span> Infrastructure Costs (Client)
+                        </h3>
+                        <button type="button" onclick="addInfra('client')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Infrastructure
+                        </button>
+                    </div>
+                    <div id="clientInfra" class="space-y-4">
+                        <!-- Infrastructure cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Client Tab Actions -->
+                <div class="flex justify-end gap-3 pt-6 border-t">
+                    <button type="button" onclick="switchTab('vendor')" 
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                        Next: Fill Vendor Rates →
+                    </button>
+                </div>
+            </div>
+
+            <!-- VENDOR TAB CONTENT -->
+            <div id="vendorContent" class="p-6 hidden">
+                
+                <!-- Storage Rates -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">📦</span> Storage Rates (Vendor)
+                        </h3>
+                        <button type="button" onclick="addStorageRate('vendor')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Storage Rate
+                        </button>
+                    </div>
+                    <div id="vendorStorageRates" class="space-y-4">
+                        <!-- Storage rate cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Handling Rates -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">🚛</span> Handling Rates (Vendor)
+                        </h3>
+                        <button type="button" onclick="addHandlingRate('vendor')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Handling Rate
+                        </button>
+                    </div>
+                    <div id="vendorHandlingRates" class="space-y-4">
+                        <!-- Handling rate cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Transport -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">🚚</span> Transport Rates (Vendor)
+                        </h3>
+                        <button type="button" onclick="addTransport('vendor')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Transport Rate
+                        </button>
+                    </div>
+                    <div id="vendorTransport" class="space-y-4">
+                        <!-- Transport cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- VAS -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">⚙️</span> Value Added Services (Vendor)
+                        </h3>
+                        <button type="button" onclick="addVAS('vendor')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add VAS
+                        </button>
+                    </div>
+                    <div id="vendorVAS" class="space-y-4">
+                        <!-- VAS cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Infrastructure -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <span class="mr-2">🏗️</span> Infrastructure Costs (Vendor)
+                        </h3>
+                        <button type="button" onclick="addInfra('vendor')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                            + Add Infrastructure
+                        </button>
+                    </div>
+                    <div id="vendorInfra" class="space-y-4">
+                        <!-- Infrastructure cards will be added here -->
+                    </div>
+                </div>
+
+                <!-- Vendor Tab Actions -->
+                <div class="flex justify-start pt-6 border-t">
+                    <button type="button" onclick="switchTab('client')" 
+                            class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                        ← Back to Client Rates
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="flex justify-between items-center bg-white border-t border-gray-200 p-4 shadow-lg rounded-lg">
+            <a href="{% url 'projects:project_card_list' %}" 
+               class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                Cancel
+            </a>
+            <div class="flex gap-3">
+                <button type="button" onclick="saveDraft()" 
+                        class="px-6 py-3 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50">
+                    💾 Save Draft
+                </button>
+                <button type="submit" 
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                    ✓ Create Project Card
+                </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<script>
+// ========== MODEL CHOICES FROM BACKEND ==========
+const CHOICES = {
+    storage: {
+        space_type: {{ storage_space_type_choices|safe }},
+    },
+    handling: {
+        direction: {{ handling_direction_choices|safe }},
+        channel: {{ handling_channel_choices|safe }},
+        base_type: {{ handling_base_type_choices|safe }},
+    },
+    transport: {
+        vehicle_type: {{ vehicle_types_json|safe }}
+    },
+    vas: {
+        service_type: {{ vas_service_type_choices|safe }},
+        unit: {{ vas_unit_choices|safe }},
+    },
+    infra: {
+        cost_type: {{ infra_cost_type_choices|safe }},
+    }
+};
+
+// ========== TAB SWITCHING ==========
+function switchTab(tab) {
+    const clientTab = document.getElementById('clientTab');
+    const vendorTab = document.getElementById('vendorTab');
+    const clientContent = document.getElementById('clientContent');
+    const vendorContent = document.getElementById('vendorContent');
+    
+    if (tab === 'client') {
+        clientTab.classList.add('border-blue-600', 'text-blue-600');
+        clientTab.classList.remove('border-transparent', 'text-gray-500');
+        vendorTab.classList.remove('border-blue-600', 'text-blue-600');
+        vendorTab.classList.add('border-transparent', 'text-gray-500');
+        clientContent.classList.remove('hidden');
+        vendorContent.classList.add('hidden');
+    } else {
+        vendorTab.classList.add('border-blue-600', 'text-blue-600');
+        vendorTab.classList.remove('border-transparent', 'text-gray-500');
+        clientTab.classList.remove('border-blue-600', 'text-blue-600');
+        clientTab.classList.add('border-transparent', 'text-gray-500');
+        vendorContent.classList.remove('hidden');
+        clientContent.classList.add('hidden');
+    }
+}
+
+// ========== AUTO-ENABLE ESCALATION ==========
+document.getElementById('hasFixedEscalation').addEventListener('change', function() {
+    document.getElementById('escalationPercent').disabled = !this.checked;
+});
+
+// ========== COUNTERS ==========
+let storageCount = 0;
+let handlingCount = 0;
+let transportCount = 0;
+let vasCount = 0;
+let infraCount = 0;
+
+// ========== HELPER: BUILD OPTIONS FROM CHOICES ==========
+function buildOptions(choices, selectedValue = '') {
+    return choices.map(([value, label]) => 
+        `<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${label}</option>`
+    ).join('');
+}
+
+// ========== SMART 3-FIELD CALCULATOR FOR STORAGE ==========
+function smartCalculate(rowId) {
+    const minBillable = parseFloat(document.querySelector(`#${rowId} input[name*="min_billable"]`).value) || 0;
+    const rate = parseFloat(document.querySelector(`#${rowId} input[name*="rate_per_unit"]`).value) || 0;
+    const monthly = parseFloat(document.querySelector(`#${rowId} input[name*="monthly_amount"]`).value) || 0;
+    
+    const filled = [minBillable > 0, rate > 0, monthly > 0].filter(Boolean).length;
+    
+    if (filled === 2) {
+        const minInput = document.querySelector(`#${rowId} input[name*="min_billable"]`);
+        const rateInput = document.querySelector(`#${rowId} input[name*="rate_per_unit"]`);
+        const monthlyInput = document.querySelector(`#${rowId} input[name*="monthly_amount"]`);
+        
+        if (!minBillable && rate && monthly) {
+            minInput.value = (monthly / rate).toFixed(2);
+            flashGreen(minInput);
+        } else if (!rate && minBillable && monthly) {
+            rateInput.value = (monthly / minBillable).toFixed(2);
+            flashGreen(rateInput);
+        } else if (!monthly && minBillable && rate) {
+            monthlyInput.value = (minBillable * rate).toFixed(2);
+            flashGreen(monthlyInput);
+        }
+    }
+}
+
+function flashGreen(element) {
+    element.classList.add('bg-green-100', 'border-green-500');
+    setTimeout(() => {
+        element.classList.remove('bg-green-100', 'border-green-500');
+    }, 1000);
+}
+
+// After the storage rate card is created, add a "Manage Slabs" button and slab management UI
+
+function addStorageRate(rateFor) {
+    storageCount++;
+    const rowId = `storage_${rateFor}_${storageCount}`;
+    const container = document.getElementById(`${rateFor}StorageRates`);
+    
+    const card = document.createElement('div');
+    card.id = rowId;
+    card.className = 'bg-blue-50 border-2 border-blue-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Storage Rate #${storageCount}</h4>
+            <button type="button" onclick="this.closest('.bg-blue-50').remove()" 
+                    class="text-red-600 hover:text-red-800 font-bold">✕</button>
+        </div>
+        
+        <input type="hidden" name="storage_rate_for_${storageCount}" value="${rateFor}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Space Type *</label>
+                <select name="storage_space_type_${storageCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.storage.space_type)}
+                </select>
+            </div>
+            
+            <!-- ADD PRICING TYPE SELECTOR -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pricing Type *</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="storage_pricing_type_${storageCount}" value="flat" 
+                               onchange="togglePricingMode('${rowId}', 'flat')" checked
+                               class="w-4 h-4 mr-2">
+                        <span>Flat Rate</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="storage_pricing_type_${storageCount}" value="slab" 
+                               onchange="togglePricingMode('${rowId}', 'slab')"
+                               class="w-4 h-4 mr-2">
+                        <span>Tiered/Slab Based</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="storage_pricing_type_${storageCount}" value="lumpsum" 
+                               onchange="togglePricingMode('${rowId}', 'lumpsum')"
+                               class="w-4 h-4 mr-2">
+                        <span>Lumpsum</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FLAT RATE SECTION -->
+        <div id="${rowId}_flat" class="pricing-section">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Min Billable
+                        <span class="text-xs text-yellow-600">(Fill any 2)</span>
+                    </label>
+                    <input type="number" step="0.01" name="storage_min_billable_${storageCount}" 
+                           onchange="smartCalculate('${rowId}')"
+                           class="w-full border-2 border-yellow-300 rounded-lg px-3 py-2">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Rate/Unit (₹)
+                        <span class="text-xs text-yellow-600">(Fill any 2)</span>
+                    </label>
+                    <input type="number" step="0.01" name="storage_rate_per_unit_${storageCount}" 
+                           onchange="smartCalculate('${rowId}')"
+                           class="w-full border-2 border-yellow-300 rounded-lg px-3 py-2">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Monthly Amount (₹)
+                        <span class="text-xs text-yellow-600">(Fill any 2)</span>
+                    </label>
+                    <input type="number" step="0.01" name="storage_monthly_amount_${storageCount}" 
+                           onchange="smartCalculate('${rowId}')"
+                           class="w-full border-2 border-yellow-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+        </div>
+        
+        <!-- LUMPSUM SECTION -->
+        <div id="${rowId}_lumpsum" class="pricing-section hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Monthly Lumpsum Amount (₹) *
+                    </label>
+                    <input type="number" step="0.01" name="storage_lumpsum_amount_${storageCount}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+        </div>
+        
+        <!-- SLAB SECTION -->
+        <div id="${rowId}_slab" class="pricing-section hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h5 class="font-semibold text-gray-800">📊 Tiered Slabs</h5>
+                <button type="button" onclick="addSlab('${rowId}', ${storageCount})" 
+                        class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                    + Add Slab
+                </button>
+            </div>
+            
+            <div id="${rowId}_slabs" class="space-y-2">
+                <!-- Slabs will be added here -->
+            </div>
+            
+            <div class="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
+                <p class="text-xs text-blue-800">
+                    💡 <strong>Example:</strong> 
+                    Slab 1: 0-1000 @ ₹10/sqft | 
+                    Slab 2: 1001-5000 @ ₹8/sqft | 
+                    Slab 3: 5001+ @ ₹6/sqft
+                </p>
+            </div>
+        </div>
+        
+        <!-- SAAS & REMARKS (COMMON) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">SAAS Charge (₹) <span class="text-gray-500">(Optional)</span></label>
+                <input type="number" step="0.01" name="storage_saas_${storageCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea name="storage_remarks_${storageCount}" rows="2"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Optional notes about this storage rate..."></textarea>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// Toggle between flat, slab, and lumpsum pricing modes
+function togglePricingMode(rowId, mode) {
+    const flatSection = document.getElementById(`${rowId}_flat`);
+    const slabSection = document.getElementById(`${rowId}_slab`);
+    const lumpsumSection = document.getElementById(`${rowId}_lumpsum`);
+    
+    flatSection.classList.add('hidden');
+    slabSection.classList.add('hidden');
+    lumpsumSection.classList.add('hidden');
+    
+    if (mode === 'flat') {
+        flatSection.classList.remove('hidden');
+    } else if (mode === 'slab') {
+        slabSection.classList.remove('hidden');
+        // Add first slab if none exist
+        const slabsContainer = document.getElementById(`${rowId}_slabs`);
+        if (slabsContainer.children.length === 0) {
+            addSlab(rowId, rowId.split('_').pop());
+        }
+    } else if (mode === 'lumpsum') {
+        lumpsumSection.classList.remove('hidden');
+    }
+}
+
+// Add individual slab
+let slabCounter = 0;
+function addSlab(rowId, storageId) {
+    slabCounter++;
+    const slabsContainer = document.getElementById(`${rowId}_slabs`);
+    
+    const slabDiv = document.createElement('div');
+    slabDiv.className = 'bg-white border-2 border-blue-300 rounded-lg p-3';
+    slabDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold text-sm">Slab #${slabCounter}</span>
+            <button type="button" onclick="this.closest('.bg-white').remove()" 
+                    class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Min Qty *</label>
+                <input type="number" step="0.01"
+                       name="slab_min_${storageId}_${slabCounter}"
+                       placeholder="e.g., 0"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Max Qty</label>
+                <input type="number" step="0.01" 
+                       name="slab_max_${storageId}_${slabCounter}"
+                       placeholder="Leave blank for ∞"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Rate (₹) *</label>
+                <input type="number" step="0.01"
+                       name="slab_rate_${storageId}_${slabCounter}"
+                       placeholder="e.g., 10"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+            </div>
+        </div>
+        
+        <div class="mt-2">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Remarks</label>
+            <input type="text" name="slab_remarks_${storageId}_${slabCounter}"
+                   placeholder="Optional notes..."
+                   class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+        </div>
+    `;
+    
+    slabsContainer.appendChild(slabDiv);
+}
+
+// ========== ADD HANDLING RATE ==========
+function addHandlingRate(rateFor) {
+    handlingCount++;
+    const container = document.getElementById(`${rateFor}HandlingRates`);
+    
+    const card = document.createElement('div');
+    card.className = 'bg-green-50 border-2 border-green-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Handling Rate #${handlingCount}</h4>
+            <button type="button" onclick="this.closest('.bg-green-50').remove()" 
+                    class="text-red-600 hover:text-red-800 font-bold">✕</button>
+        </div>
+        
+        <input type="hidden" name="handling_rate_for_${handlingCount}" value="${rateFor}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Direction *</label>
+                <select name="handling_direction_${handlingCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.handling.direction)}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Channel</label>
+                <select name="handling_channel_${handlingCount}" 
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.handling.channel)}
+                </select>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Base Type *</label>
+                <select name="handling_base_type_${handlingCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.handling.base_type)}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rate (₹) *</label>
+                <input type="number" step="0.01" name="handling_rate_${handlingCount}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Min Weight (kg)</label>
+                <input type="number" step="0.01" name="handling_min_weight_${handlingCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Max Weight (kg)</label>
+                <input type="number" step="0.01" name="handling_max_weight_${handlingCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <input type="text" name="handling_remarks_${handlingCount}" 
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2">
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+
+// ========== ADD TRANSPORT ==========
+function addTransport(rateFor) {
+    transportCount++;
+    const container = document.getElementById(`${rateFor}Transport`);
+    
+    const card = document.createElement('div');
+    card.className = 'bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Transport Rate #${transportCount}</h4>
+            <button type="button" onclick="this.closest('.bg-yellow-50').remove()" 
+                    class="text-red-600 hover:text-red-800 font-bold">✕</button>
+        </div>
+        
+        <input type="hidden" name="transport_rate_for_${transportCount}" value="${rateFor}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
+                <select name="transport_vehicle_type_${transportCount}" 
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    <option value="">-- Select Vehicle --</option>
+                    ${buildOptions(CHOICES.transport.vehicle_type)}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rate per Trip (₹)</label>
+                <input type="number" step="0.01" name="transport_rate_${transportCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                       placeholder="e.g., 5000">
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Route/Description</label>
+                <input type="text" name="transport_description_${transportCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                       placeholder="e.g., Warehouse to Port">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                <input type="text" name="transport_remarks_${transportCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+        
+        <div class="mt-3 bg-blue-50 border border-blue-200 rounded p-2">
+            <p class="text-xs text-blue-800">💡 <strong>Note:</strong> Transport rates are typically per trip or lumpsum. Configure as needed for this project.</p>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+
+// ========== ADD VAS ==========
+function addVAS(rateFor) {
+    vasCount++;
+    const container = document.getElementById(`${rateFor}VAS`);
+    
+    const card = document.createElement('div');
+    card.className = 'bg-purple-50 border-2 border-purple-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">VAS #${vasCount}</h4>
+            <button type="button" onclick="this.closest('.bg-purple-50').remove()" 
+                    class="text-red-600 hover:text-red-800 font-bold">✕</button>
+        </div>
+        
+        <input type="hidden" name="vas_rate_for_${vasCount}" value="${rateFor}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Service Type *</label>
+                <select name="vas_service_type_${vasCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.vas.service_type)}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                <select name="vas_unit_${vasCount}" 
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.vas.unit)}
+                </select>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input type="text" name="vas_description_${vasCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                       placeholder="Brief description of service">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rate (₹)</label>
+                <input type="number" step="0.01" name="vas_rate_${vasCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea name="vas_remarks_${vasCount}" rows="2"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Optional notes about this VAS..."></textarea>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== ADD INFRASTRUCTURE ==========
+function addInfra(rateFor) {
+    infraCount++;
+    const container = document.getElementById(`${rateFor}Infra`);
+    
+    const card = document.createElement('div');
+    card.className = 'bg-orange-50 border-2 border-orange-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Infrastructure #${infraCount}</h4>
+            <button type="button" onclick="this.closest('.bg-orange-50').remove()" 
+                    class="text-red-600 hover:text-red-800 font-bold">✕</button>
+        </div>
+        
+        <input type="hidden" name="infra_rate_for_${infraCount}" value="${rateFor}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cost Type *</label>
+                <select name="infra_cost_type_${infraCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.infra.cost_type)}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                <input type="number" step="0.01" name="infra_amount_${infraCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input type="text" name="infra_description_${infraCount}" 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                       placeholder="Brief description">
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="infra_at_actual_${infraCount}" class="w-4 h-4 mr-2">
+                <label class="text-sm text-gray-700">At Actual</label>
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea name="infra_remarks_${infraCount}" rows="2"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Optional notes about this infrastructure cost..."></textarea>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== SAVE DRAFT ==========
+function saveDraft() {
+    const form = document.getElementById('projectCardForm');
+    const formData = new FormData(form);
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+        if (key in data) {
+            // handle multiple values (e.g. checkboxes)
+            if (!Array.isArray(data[key])) data[key] = [data[key]];
+            data[key].push(value);
+        } else {
+            data[key] = value;
+        }
+    }
+    // Also capture counters so we know how many rows were added
+    data['__meta__'] = {
+        storageCount, handlingCount, transportCount, vasCount, infraCount, slabCounter
+    };
+    localStorage.setItem('project_card_draft', JSON.stringify(data));
+
+    // Visual feedback
+    const btn = document.querySelector('[onclick="saveDraft()"]');
+    const original = btn.innerHTML;
+    btn.innerHTML = '✅ Draft Saved!';
+    btn.classList.add('bg-green-50', 'border-green-400', 'text-green-700');
+    setTimeout(() => {
+        btn.innerHTML = original;
+        btn.classList.remove('bg-green-50', 'border-green-400', 'text-green-700');
+    }, 2000);
+}
+
+function loadDraft() {
+    const raw = localStorage.getItem('project_card_draft');
+    if (!raw) return;
+    try {
+        const data = JSON.parse(raw);
+        const form = document.getElementById('projectCardForm');
+
+        // Restore simple named inputs/selects that already exist in the form (agreement details)
+        const staticFields = [
+            'project', 'agreement_start_date', 'agreement_end_date',
+            'yearly_escalation_date', 'annual_escalation_percent',
+            'security_deposit', 'billing_start_date', 'activation_fee',
+            'storage_payment_days', 'handling_payment_days', 'notes'
+        ];
+        staticFields.forEach(name => {
+            if (data[name] !== undefined) {
+                const el = form.querySelector(`[name="${name}"]`);
+                if (el) el.value = data[name];
+            }
+        });
+
+        // Restore has_fixed_escalation checkbox
+        if (data['has_fixed_escalation']) {
+            const cb = form.querySelector('[name="has_fixed_escalation"]');
+            if (cb) {
+                cb.checked = true;
+                document.getElementById('escalationPercent').disabled = false;
+            }
+        }
+
+        // Restore dynamic rate rows by replaying field names found in saved data
+        // Storage rates
+        const storageKeys = Object.keys(data).filter(k => k.startsWith('storage_rate_for_'));
+        storageKeys.forEach(key => {
+            const num = key.split('_').pop();
+            const rateFor = data[key];
+            addStorageRate(rateFor);
+            const currentNum = storageCount;
+            // Restore fields for this row
+            const fields = ['storage_space_type_', 'storage_pricing_type_', 'storage_min_billable_',
+                           'storage_rate_per_unit_', 'storage_monthly_amount_', 'storage_lumpsum_amount_',
+                           'storage_saas_', 'storage_remarks_'];
+            fields.forEach(prefix => {
+                if (data[prefix + num] !== undefined) {
+                    const el = form.querySelector(`[name="${prefix + currentNum}"]`);
+                    if (el) el.value = data[prefix + num];
+                }
+            });
+        });
+
+        // Handling rates
+        const handlingKeys = Object.keys(data).filter(k => k.startsWith('handling_rate_for_'));
+        handlingKeys.forEach(key => {
+            const num = key.split('_').pop();
+            const rateFor = data[key];
+            addHandlingRate(rateFor);
+            const currentNum = handlingCount;
+            const fields = ['handling_direction_', 'handling_channel_', 'handling_base_type_',
+                           'handling_rate_', 'handling_min_weight_', 'handling_max_weight_', 'handling_remarks_'];
+            fields.forEach(prefix => {
+                if (data[prefix + num] !== undefined) {
+                    const el = form.querySelector(`[name="${prefix + currentNum}"]`);
+                    if (el) el.value = data[prefix + num];
+                }
+            });
+        });
+
+        // Transport rates
+        const transportKeys = Object.keys(data).filter(k => k.startsWith('transport_rate_for_'));
+        transportKeys.forEach(key => {
+            const num = key.split('_').pop();
+            const rateFor = data[key];
+            addTransport(rateFor);
+            const currentNum = transportCount;
+            const fields = ['transport_vehicle_type_', 'transport_rate_', 'transport_description_', 'transport_remarks_'];
+            fields.forEach(prefix => {
+                if (data[prefix + num] !== undefined) {
+                    const el = form.querySelector(`[name="${prefix + currentNum}"]`);
+                    if (el) el.value = data[prefix + num];
+                }
+            });
+        });
+
+        // VAS
+        const vasKeys = Object.keys(data).filter(k => k.startsWith('vas_rate_for_'));
+        vasKeys.forEach(key => {
+            const num = key.split('_').pop();
+            const rateFor = data[key];
+            addVAS(rateFor);
+            const currentNum = vasCount;
+            const fields = ['vas_service_type_', 'vas_unit_', 'vas_description_', 'vas_rate_', 'vas_remarks_'];
+            fields.forEach(prefix => {
+                if (data[prefix + num] !== undefined) {
+                    const el = form.querySelector(`[name="${prefix + currentNum}"]`);
+                    if (el) el.value = data[prefix + num];
+                }
+            });
+        });
+
+        // Infra
+        const infraKeys = Object.keys(data).filter(k => k.startsWith('infra_rate_for_'));
+        infraKeys.forEach(key => {
+            const num = key.split('_').pop();
+            const rateFor = data[key];
+            addInfra(rateFor);
+            const currentNum = infraCount;
+            const fields = ['infra_cost_type_', 'infra_description_', 'infra_amount_', 'infra_remarks_'];
+            fields.forEach(prefix => {
+                if (data[prefix + num] !== undefined) {
+                    const el = form.querySelector(`[name="${prefix + currentNum}"]`);
+                    if (el) el.value = data[prefix + num];
+                }
+            });
+        });
+
+        showDraftBanner();
+    } catch(e) {
+        console.warn('Could not load draft:', e);
+    }
+}
+
+function showDraftBanner() {
+    const banner = document.createElement('div');
+    banner.id = 'draftBanner';
+    banner.className = 'fixed top-4 right-4 z-50 bg-blue-600 text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3';
+    banner.innerHTML = `
+        <span>📋 Draft restored from previous session</span>
+        <button onclick="clearDraft()" class="text-blue-200 hover:text-white underline text-sm">Clear</button>
+        <button onclick="this.parentElement.remove()" class="text-blue-200 hover:text-white font-bold ml-1">✕</button>
+    `;
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 6000);
+}
+
+function clearDraft() {
+    localStorage.removeItem('project_card_draft');
+    const banner = document.getElementById('draftBanner');
+    if (banner) banner.remove();
+}
+
+// Clear draft on successful form submission
+document.getElementById('projectCardForm').addEventListener('submit', function() {
+    localStorage.removeItem('project_card_draft');
+});
+
+// ========== INITIALIZE ==========
+window.addEventListener('load', function() {
+    // Check if there's a saved draft to restore
+    const hasDraft = localStorage.getItem('project_card_draft');
+    if (hasDraft) {
+        loadDraft();
+    } else {
+        // Add one empty card for each section in client tab
+        addStorageRate('client');
+        addHandlingRate('client');
+        addTransport('client');
+        addVAS('client');
+        addInfra('client');
+    }
+});
+
+// ========== AUTO-SELECT PROJECT IF PRESELECTED ==========
+{% if preselect_project %}
+document.addEventListener('DOMContentLoaded', function() {
+    const projectSelect = document.querySelector('select[name="project"]');
+    if (projectSelect) {
+        projectSelect.value = '{{ preselect_project }}';
+        projectSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+{% endif %}
+</script>
+
+{% endblock %}

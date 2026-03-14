@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if location %}Edit Location{% else %}Add Location{% endif %} - Supply Chain{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header with Back Button -->
+        <div class="mb-8">
+            <a href="{% url 'supply:location_list' %}"
+               class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Locations
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if location %}Edit Location{% else %}Add New Location{% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                {% if location %}
+                    Update location information for {{ location.location }}
+                {% else %}
+                    Register a new location in the system
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="rounded-lg bg-red-50 p-4 border border-red-200">
+                    <div class="flex">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Please correct the errors below</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Location Details Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700">
+                    <div class="flex items-center">
+                        <svg aria-hidden="true" width="24" height="24" class="w-6 h-6 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-white">Location Details</h2>
+                    </div>
+                </div>
+                <div class="p-6 space-y-6">
+
+                    <!-- Region -->
+                    <div>
+                        <label for="id_region" class="block text-sm font-medium text-gray-700 mb-2">
+                            Region <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.region }}
+                        {% if form.region.errors %}
+                            <p id="error-region" class="mt-1 text-sm text-red-600" role="alert">{{ form.region.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Select the geographic region of India</p>
+                    </div>
+
+                    <!-- State -->
+                    <div>
+                        <label for="id_state" class="block text-sm font-medium text-gray-700 mb-2">
+                            State <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                            <p id="error-state" class="mt-1 text-sm text-red-600" role="alert">{{ form.state.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Select state to load cities</p>
+                    </div>
+
+                    <!-- City -->
+                    <div>
+                        <label for="id_city" class="block text-sm font-medium text-gray-700 mb-2">
+                            City <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <p id="error-city" class="mt-1 text-sm text-red-600" role="alert">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Cities will load after selecting state</p>
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <label for="id_location" class="block text-sm font-medium text-gray-700 mb-2">
+                            Location <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                            <p id="error-location" class="mt-1 text-sm text-red-600" role="alert">{{ form.location.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Specific area/locality within the city (e.g., Andheri East, MIDC)</p>
+                    </div>
+
+                    <!-- Pincode -->
+                    <div>
+                        <label for="id_pincode" class="block text-sm font-medium text-gray-700 mb-2">
+                            Pincode
+                        </label>
+                        {{ form.pincode }}
+                        {% if form.pincode.errors %}
+                            <p id="error-pincode" class="mt-1 text-sm text-red-600" role="alert">{{ form.pincode.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">6-digit postal code</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600">
+                    <div class="flex items-center">
+                        <svg aria-hidden="true" width="24" height="24" class="w-6 h-6 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-white">Status</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.is_active }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.is_active.id_for_label }}" class="font-medium text-gray-700">
+                                Active Location
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Inactive locations will not appear in warehouse selection dropdowns</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-Generated Codes Info (Only on Edit) -->
+            {% if location %}
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Auto-Generated Codes
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500">State Code</p>
+                        <p class="text-sm font-mono font-semibold text-gray-900">{{ location.state_code|default:"Not set" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">City Code</p>
+                        <p class="text-sm font-mono font-semibold text-gray-900">{{ location.city_code|default:"Not set" }}</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-3 flex items-center gap-1">
+                    <svg aria-hidden="true" width="12" height="12" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    These codes are automatically generated based on your state and city selection
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'supply:location_list' %}"
+                   class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition">
+                    {% if location %}Update Location{% else %}Create Location{% endif %}
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+// Wire up ARIA error attributes for Django-rendered form widgets
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[id^="error-"]').forEach(function(errorEl) {
+        const fieldName = errorEl.id.replace('error-', '');
+        const input = document.getElementById('id_' + fieldName);
+        if (input) {
+            input.setAttribute('aria-invalid', 'true');
+            input.setAttribute('aria-describedby', errorEl.id);
+        }
+    });
+});
+
+// Cascading dropdown for City based on State selection
+document.addEventListener('DOMContentLoaded', function() {
+    const stateSelect = document.getElementById('id_state');
+    const citySelect = document.getElementById('id_city');
+
+    if (stateSelect && citySelect) {
+        stateSelect.addEventListener('change', function() {
+            const selectedState = this.value;
+
+            // Clear city dropdown
+            citySelect.innerHTML = '<option value="">Loading cities...</option>';
+            citySelect.disabled = true;
+
+            if (!selectedState) {
+                citySelect.innerHTML = '<option value="">Select State First</option>';
+                return;
+            }
+
+            // Fetch cities for selected state
+            fetch(`{% url 'supply:get_cities_by_state' %}?state=${encodeURIComponent(selectedState)}`)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.innerHTML = '<option value="">Select City</option>';
+
+                    if (data.cities && data.cities.length > 0) {
+                        data.cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city.value;
+                            option.textContent = city.label;
+                            citySelect.appendChild(option);
+                        });
+                        citySelect.disabled = false;
+                    } else {
+                        citySelect.innerHTML = '<option value="">No cities available</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching cities:', error);
+                    citySelect.innerHTML = '<option value="">Error loading cities</option>';
+                });
+        });
+    }
+});
+</script>
+{% endblock %}

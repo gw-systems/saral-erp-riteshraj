@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit GST State{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit GST State</h1>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                <!-- State Code (Read-only) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        State Code
+                    </label>
+                    <input type="text" value="{{ state.state_code }}" disabled
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                    <p class="text-xs text-gray-500 mt-1">State code cannot be changed</p>
+                </div>
+
+                <!-- State Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        State Name <span class="text-red-600">*</span>
+                    </label>
+                    <input type="text" name="state_name" value="{{ state.state_name }}" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- GST Number -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        GST Number <span class="text-red-600">*</span>
+                    </label>
+                    <input type="text" name="gst_number" value="{{ state.gst_number }}" maxlength="15" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                    <p class="text-xs text-gray-500 mt-1">15-character GST registration number</p>
+                </div>
+
+                <!-- Registration Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Registration Date (Optional)
+                    </label>
+                    <input type="date" name="registration_date" value="{{ state.registration_date|date:'Y-m-d' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Active Status -->
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_active" id="is_active" {% if state.is_active %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                        Active (uncheck to deactivate this state)
+                    </label>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex space-x-3 mt-6 pt-6 border-t">
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    Update GST State
+                </button>
+                <a href="{% url 'projects:gst_state_list' %}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

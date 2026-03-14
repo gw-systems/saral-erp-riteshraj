@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% block title %}Error {{ error.error_id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-6 space-y-5">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3">
+        <a href="{% url 'accounts:error_list' %}" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+        </a>
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">Error <span class="font-mono text-red-600">{{ error.error_id }}</span></h1>
+            <p class="text-gray-400 text-sm">{{ error.timestamp|date:"d M Y, H:i:s" }} UTC</p>
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+            <!-- Severity badge -->
+            {% if error.severity == 'error' %}
+            <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>ERROR
+            </span>
+            {% elif error.severity == 'warning' %}
+            <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>WARNING
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>INFO
+            </span>
+            {% endif %}
+            <!-- Source badge -->
+            {% if error.source == 'unhandled' %}
+            <span class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Unhandled 500
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>Caught (view-handled)
+            </span>
+            {% endif %}
+            <!-- Resolved badge -->
+            {% if error.resolved %}
+            <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-800 font-semibold px-3 py-1.5 rounded-full text-sm">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Resolved
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-800 font-semibold px-3 py-1.5 rounded-full text-sm">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                Pending
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm font-medium">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Exception Details -->
+    <div class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden">
+        <div class="bg-red-50 border-b border-red-200 px-5 py-3">
+            <h2 class="font-semibold text-red-800 text-sm uppercase tracking-wide">Exception</h2>
+        </div>
+        <div class="p-5 space-y-3">
+            <div>
+                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">Type</p>
+                <span class="font-mono bg-red-100 text-red-800 text-sm font-bold px-3 py-1 rounded-full border border-red-200">{{ error.exception_type }}</span>
+            </div>
+            <div>
+                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">Message</p>
+                <p class="font-mono text-sm text-gray-800 bg-red-50 border border-red-100 rounded-lg px-4 py-3 leading-relaxed whitespace-pre-wrap">{{ error.exception_message }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Context -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-gray-50 border-b border-gray-200 px-5 py-3">
+            <h2 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Request Context</h2>
+        </div>
+        <div class="grid grid-cols-2 divide-y divide-gray-100 text-sm">
+            <div class="px-5 py-3 border-r border-gray-100 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">Error ID</span>
+                <span class="font-mono text-gray-700 font-semibold">{{ error.error_id }}</span>
+            </div>
+            <div class="px-5 py-3 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">Environment</span>
+                <span class="font-mono {% if error.environment == 'production' %}text-orange-700{% else %}text-yellow-700{% endif %} font-medium">
+                    {{ error.environment }}
+                </span>
+            </div>
+            <div class="px-5 py-3 col-span-2 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">URL</span>
+                <span class="font-mono text-blue-700 break-all">
+                    <span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded text-xs mr-1">{{ error.request_method }}</span>
+                    {{ error.request_path }}
+                </span>
+            </div>
+            <div class="px-5 py-3 border-r border-gray-100 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">User</span>
+                <span>
+                    {% if error.request_user %}
+                        {{ error.request_user.get_full_name|default:error.request_user.username }}
+                        <span class="text-xs bg-gray-100 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full ml-1">{{ error.request_user.role }}</span>
+                    {% else %}
+                        <span class="text-gray-400">Anonymous</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="px-5 py-3 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">Revision</span>
+                <span class="font-mono text-gray-700">{{ error.revision|default:"—" }}</span>
+            </div>
+            <div class="px-5 py-3 border-r border-gray-100 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">Source</span>
+                <span>
+                    {% if error.source == 'unhandled' %}
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">Unhandled 500</span>
+                    {% else %}
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">Caught (view-handled)</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="px-5 py-3 flex gap-3">
+                <span class="text-gray-400 text-xs font-semibold uppercase w-24 pt-0.5 shrink-0">Severity</span>
+                <span class="text-gray-700 font-medium capitalize">{{ error.severity }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Traceback -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-gray-800 px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="flex gap-1.5">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <span class="text-gray-300 text-xs font-semibold uppercase tracking-wider ml-2">Full Traceback</span>
+            </div>
+            <button onclick="copyText('traceback-text', this)"
+                    class="text-gray-500 hover:text-white text-xs flex items-center gap-1.5 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                Copy
+            </button>
+        </div>
+        <div class="bg-gray-900 max-h-96 overflow-y-auto">
+            <pre id="traceback-text" class="font-mono text-green-300 text-xs p-5 whitespace-pre-wrap break-all leading-relaxed">{{ error.traceback }}</pre>
+        </div>
+    </div>
+
+    <!-- Request Data -->
+    {% if error.request_data %}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <button onclick="toggleSection('req-data')"
+                class="w-full bg-gray-50 border-b border-gray-200 px-5 py-3 flex items-center justify-between text-left hover:bg-gray-100 transition-colors">
+            <h2 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Request Data</h2>
+            <svg id="req-data-icon" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div id="req-data" class="hidden">
+            {% if error.request_data.GET %}
+            <div class="border-b border-gray-100">
+                <p class="px-5 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">GET Parameters</p>
+                <pre class="font-mono text-xs text-gray-700 px-5 py-3 bg-white overflow-x-auto">{{ error.request_data.GET|pprint }}</pre>
+            </div>
+            {% endif %}
+            {% if error.request_data.POST %}
+            <div class="border-b border-gray-100">
+                <p class="px-5 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">POST Data</p>
+                <pre class="font-mono text-xs text-gray-700 px-5 py-3 bg-white overflow-x-auto">{{ error.request_data.POST|pprint }}</pre>
+            </div>
+            {% endif %}
+            {% if error.request_data.FILES %}
+            <div class="border-b border-gray-100">
+                <p class="px-5 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Uploaded Files</p>
+                <pre class="font-mono text-xs text-gray-700 px-5 py-3 bg-white overflow-x-auto">{{ error.request_data.FILES|pprint }}</pre>
+            </div>
+            {% endif %}
+            {% if error.request_data.headers %}
+            <div>
+                <p class="px-5 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Headers</p>
+                <pre class="font-mono text-xs text-gray-700 px-5 py-3 bg-white overflow-x-auto">{{ error.request_data.headers|pprint }}</pre>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resolve / Resolved Section -->
+    {% if error.resolved %}
+    <div class="bg-green-50 rounded-xl border border-green-200 p-5">
+        <div class="flex items-start gap-3">
+            <div class="bg-green-500 rounded-full p-1.5 mt-0.5">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="font-semibold text-green-900">Resolved</p>
+                <p class="text-green-700 text-sm mt-0.5">
+                    By <strong>{% if error.resolved_by %}{{ error.resolved_by.get_full_name|default:error.resolved_by.username }}{% else %}—{% endif %}</strong>
+                    on {{ error.resolved_at|date:"d M Y, H:i" }}
+                </p>
+                {% if error.notes %}
+                <p class="text-green-800 text-sm mt-2 bg-green-100 rounded-lg px-3 py-2 border border-green-200">{{ error.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <form method="post" class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="unresolve">
+            <button type="submit" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 bg-white px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                Reopen this error
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <h2 class="font-semibold text-gray-800 mb-3">Mark as Resolved</h2>
+        <form method="post" class="space-y-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="resolve">
+            <textarea name="notes" rows="3" placeholder="Optional: describe what caused this and what was fixed..."
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"></textarea>
+            <button type="submit"
+                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Mark as Resolved
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+function toggleSection(id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById(id + '-icon');
+    el.classList.toggle('hidden');
+    icon.style.transform = el.classList.contains('hidden') ? '' : 'rotate(180deg)';
+}
+
+function copyText(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('text-green-400');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('text-green-400'); }, 2000);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+
+{% block title %}Change Status - {{ project.code }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900">Change Project Status</h1>
+        <p class="mt-2 text-sm text-gray-600">
+            Project: <span class="font-semibold">{{ project.code }} - {{ project.client_name }}</span>
+        </p>
+        <p class="text-sm text-gray-600">
+            Current Status: <span class="px-2 py-1 rounded text-xs font-medium
+                {% if project.project_status == 'Active' %}bg-green-100 text-green-800
+                {% elif project.project_status == 'Notice Period' %}bg-yellow-100 text-yellow-800
+                {% elif project.project_status == 'Operation Not Started' %}bg-blue-100 text-blue-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ project.project_status }}
+            </span>
+            {% if is_temp_project %}
+                <span class="ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                    <svg aria-hidden="true" width="12" height="12" class="mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    Temporary ID
+                </span>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Status Change Form -->
+    <form method="POST" id="statusForm" class="bg-white shadow rounded-lg p-6">
+        {% csrf_token %}
+        <input type="hidden" name="return_url" value="{{ return_url }}">
+
+        <!-- New Status Selection -->
+        <div class="mb-6">
+            <label for="new_status" class="block text-sm font-medium text-gray-700 mb-2">
+                New Status <span class="text-red-500">*</span>
+            </label>
+            <select id="new_status" name="new_status" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Select New Status --</option>
+                {% for status in available_statuses %}
+                    {% if status != current_status %}
+                    <option value="{{ status }}">{{ status }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Dynamic Fields Container -->
+        <div id="dynamicFields"></div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+            <a href="{{ return_url|default:'/projects/' }}"
+               class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Cancel
+            </a>
+            <button type="submit" id="submitBtn"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                Change Status
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const newStatusSelect = document.getElementById('new_status');
+    const dynamicFields = document.getElementById('dynamicFields');
+    const statusForm = document.getElementById('statusForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const currentStatus = "{{ current_status }}";
+    const isTemp = {{ is_temp_project|yesno:"true,false" }};
+    const projectId = "{{ project.project_id }}";
+    const projectSeries = "{{ project.series_type }}";
+    const today = "{{ today|date:'Y-m-d' }}";
+
+    newStatusSelect.addEventListener('change', function() {
+        const newStatus = this.value;
+        dynamicFields.innerHTML = '';
+
+        if (!newStatus) return;
+
+        // Operation Not Started → Active: Show activation options (TEMP and non-TEMP)
+        if (currentStatus === 'Operation Not Started' && newStatus === 'Active') {
+            showActivationOptions();
+        }
+        // Active → Notice Period
+        else if (currentStatus === 'Active' && newStatus === 'Notice Period') {
+            showNoticePeriodFields();
+        }
+        // Notice Period → Active (cancel notice)
+        else if (currentStatus === 'Notice Period' && newStatus === 'Active') {
+            showCancelNoticeConfirmation();
+        }
+        // Active → Inactive (skip notice)
+        else if (currentStatus === 'Active' && newStatus === 'Inactive') {
+            showSkipNoticeConfirmation();
+        }
+        // Operation Not Started → Inactive
+        else if (currentStatus === 'Operation Not Started' && newStatus === 'Inactive') {
+            showCloseWithoutStartConfirmation();
+        }
+        // Any → Operation Not Started (reopen)
+        else if (newStatus === 'Operation Not Started') {
+            showReopenConfirmation();
+        }
+        // Notice Period → Notice Period (extend)
+        else if (currentStatus === 'Notice Period' && newStatus === 'Notice Period') {
+            showExtendNoticePeriod();
+        }
+    });
+
+    function showActivationOptions() {
+        // Adapt labels based on TEMP vs non-TEMP
+        const option1Label = isTemp ? 'New Independent Project' : 'Reactivate Project';
+        const option1Desc = isTemp
+            ? `Generate new ${projectSeries}-25-XXX code for this project`
+            : 'Reactivate with a new operation start date';
+        const option1Icon = isTemp
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+        const iconColor = isTemp ? 'text-green-600' : 'text-blue-600';
+
+        dynamicFields.innerHTML = `
+            <div class="space-y-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
+                <div class="flex items-center space-x-2">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <h3 class="text-lg font-bold text-blue-900">Activation Options</h3>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Option 1: New / Reactivate -->
+                    <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-white transition bg-white/50">
+                        <input type="radio" name="activation_type" value="new" checked
+                               class="mt-1 mr-3 h-4 w-4 text-blue-600" onchange="toggleActivationMode('new')">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900 flex items-center">
+                                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    ${option1Icon}
+                                </svg>
+                                ${option1Label}
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                ${option1Desc}
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Option 2: Merge / Continue Existing -->
+                    <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-white transition bg-white/50">
+                        <input type="radio" name="activation_type" value="merge"
+                               class="mt-1 mr-3 h-4 w-4 text-blue-600" onchange="toggleActivationMode('merge')">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900 flex items-center">
+                                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                                Continue Existing Project (Client Rebrand)
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                Merge with an existing project code (location must match)
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- New / Reactivate Fields -->
+                <div id="newProjectFields" class="space-y-4 pt-4 border-t border-blue-200">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Operation Start Date <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="operation_start_date" required
+                               max="${today}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-gray-500">Date when operations will begin</p>
+                    </div>
+                </div>
+
+                <!-- Merge Fields -->
+                <div id="mergeFields" class="space-y-4 pt-4 border-t border-purple-200 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Previous Project <span class="text-red-500">*</span>
+                        </label>
+                        <select name="merge_with_project" id="mergeProjectSelect"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                            <option value="">Loading projects...</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Only projects with matching location and state will appear
+                        </p>
+                    </div>
+
+                    <div id="validationResults" class="hidden"></div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Reason for Continuation (Optional)
+                        </label>
+                        <textarea name="merge_reason" rows="2"
+                                  placeholder="E.g., Client legal entity rebrand, company restructuring, correction"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Load available projects for merge
+        loadMergeableProjects();
+    }
+
+    function toggleActivationMode(mode) {
+        const newFields = document.getElementById('newProjectFields');
+        const mergeFields = document.getElementById('mergeFields');
+
+        if (mode === 'merge') {
+            newFields.classList.add('hidden');
+            mergeFields.classList.remove('hidden');
+            // Disable operation_start_date when merging
+            const dateInput = document.querySelector('input[name="operation_start_date"]');
+            if (dateInput) dateInput.removeAttribute('required');
+        } else {
+            newFields.classList.remove('hidden');
+            mergeFields.classList.add('hidden');
+            // Re-enable operation_start_date
+            const dateInput = document.querySelector('input[name="operation_start_date"]');
+            if (dateInput) dateInput.setAttribute('required', 'required');
+        }
+    }
+
+    function loadMergeableProjects() {
+        fetch(`/projects/api/mergeable-projects/${projectId}/`)
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('mergeProjectSelect');
+                select.innerHTML = '<option value="">-- Select a project --</option>';
+
+                if (data.success && data.projects && data.projects.length > 0) {
+                    // Group by match type
+                    const exactMatches = data.projects.filter(p => p.match_type === 'exact_match');
+                    const vendorTransitions = data.projects.filter(p => p.match_type === 'vendor_transition');
+                    const clientTransitions = data.projects.filter(p => p.match_type === 'client_transition');
+
+                    // Add exact matches (same client + vendor + location)
+                    if (exactMatches.length > 0) {
+                        const exactGroup = document.createElement('optgroup');
+                        exactGroup.label = 'Exact Match (Same Client + Vendor + Location)';
+                        exactMatches.forEach(proj => {
+                            const option = document.createElement('option');
+                            option.value = proj.project_id;
+                            option.textContent = `${proj.code} - ${proj.client_name} | ${proj.vendor_name} | ${proj.location} [${proj.project_status}]`;
+                            option.dataset.matchType = proj.match_type;
+                            exactGroup.appendChild(option);
+                        });
+                        select.appendChild(exactGroup);
+                    }
+
+                    // Add vendor transition matches (client + location same, vendor different)
+                    if (vendorTransitions.length > 0) {
+                        const vendorGroup = document.createElement('optgroup');
+                        vendorGroup.label = 'Vendor Transition (Same Client + Location)';
+                        vendorTransitions.forEach(proj => {
+                            const option = document.createElement('option');
+                            option.value = proj.project_id;
+                            option.textContent = `${proj.code} - ${proj.client_name} | OLD VENDOR: ${proj.vendor_name} | ${proj.location}`;
+                            option.dataset.matchType = proj.match_type;
+                            vendorGroup.appendChild(option);
+                        });
+                        select.appendChild(vendorGroup);
+                    }
+
+                    // Add client transition matches (vendor + location same, client different)
+                    if (clientTransitions.length > 0) {
+                        const clientGroup = document.createElement('optgroup');
+                        clientGroup.label = 'Client Transition (Same Vendor + Location)';
+                        clientTransitions.forEach(proj => {
+                            const option = document.createElement('option');
+                            option.value = proj.project_id;
+                            option.textContent = `${proj.code} - OLD CLIENT: ${proj.client_name} | ${proj.vendor_name} | ${proj.location}`;
+                            option.dataset.matchType = proj.match_type;
+                            clientGroup.appendChild(option);
+                        });
+                        select.appendChild(clientGroup);
+                    }
+
+                    // Show summary
+                    const validationDiv = document.getElementById('validationResults');
+                    if (validationDiv) {
+                        let summaryLines = [];
+                        if (exactMatches.length > 0) summaryLines.push(`<div class="text-green-700">${exactMatches.length} exact match(es) - Same Client + Vendor + Location</div>`);
+                        if (vendorTransitions.length > 0) summaryLines.push(`<div class="text-orange-700">${vendorTransitions.length} vendor transition(s) - Client & Location match</div>`);
+                        if (clientTransitions.length > 0) summaryLines.push(`<div class="text-orange-700">${clientTransitions.length} client transition(s) - Vendor & Location match</div>`);
+
+                        validationDiv.innerHTML = `
+                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                                <div class="font-semibold text-blue-900 mb-1">Found ${data.total_count} matching project(s):</div>
+                                ${summaryLines.join('')}
+                            </div>
+                        `;
+                        validationDiv.classList.remove('hidden');
+                    }
+                } else {
+                    select.innerHTML = '<option value="">No matching projects found</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading projects:', error);
+                const select = document.getElementById('mergeProjectSelect');
+                select.innerHTML = '<option value="">Error loading projects</option>';
+            });
+    }
+
+    function showNoticePeriodFields() {
+        dynamicFields.innerHTML = `
+            <div class="space-y-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Notice Period Start Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="notice_period_start_date" required
+                           value="${today}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Notice Period Duration <span class="text-red-500">*</span>
+                    </label>
+                    <select name="notice_period_duration" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                        <option value="">-- Select Duration --</option>
+                        <option value="15">15 Days</option>
+                        <option value="30">1 Month (30 Days)</option>
+                        <option value="60">2 Months (60 Days)</option>
+                        <option value="90">3 Months (90 Days)</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    }
+
+    function showCancelNoticeConfirmation() {
+        dynamicFields.innerHTML = `
+            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-start">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-green-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-green-900">Confirm Reactivation</p>
+                        <p class="text-sm text-green-700 mt-1">
+                            Cancel Notice Period and reactivate this project?
+                        </p>
+                        <label class="flex items-center mt-3">
+                            <input type="checkbox" name="confirm_cancel_notice" value="yes" required
+                                   class="h-4 w-4 text-green-600 rounded">
+                            <span class="ml-2 text-sm text-green-900">Yes, cancel notice period and reactivate</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function showSkipNoticeConfirmation() {
+        dynamicFields.innerHTML = `
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-start">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-red-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-red-900">Confirm Direct Inactivation</p>
+                        <p class="text-sm text-red-700 mt-1">
+                            Skip Notice Period and move directly to Inactive? Coordinators will be cleared.
+                        </p>
+                        <label class="flex items-center mt-3">
+                            <input type="checkbox" name="confirm_skip_notice" value="yes" required
+                                   class="h-4 w-4 text-red-600 rounded">
+                            <span class="ml-2 text-sm text-red-900">Yes, skip notice period and inactivate</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function showCloseWithoutStartConfirmation() {
+        dynamicFields.innerHTML = `
+            <div class="p-4 bg-gray-50 border border-gray-300 rounded-lg">
+                <div class="flex items-start">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-gray-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Confirm Closure</p>
+                        <p class="text-sm text-gray-700 mt-1">
+                            Close this project without starting operations?
+                        </p>
+                        <label class="flex items-center mt-3">
+                            <input type="checkbox" name="confirm_close_not_started" value="yes" required
+                                   class="h-4 w-4 text-gray-600 rounded">
+                            <span class="ml-2 text-sm text-gray-900">Yes, close this project</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function showReopenConfirmation() {
+        dynamicFields.innerHTML = `
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-start">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-blue-900">Confirm Reopen</p>
+                        <p class="text-sm text-blue-700 mt-1">
+                            Reopen this project to Operation Not Started? All dates will be cleared.
+                        </p>
+                        <label class="flex items-center mt-3">
+                            <input type="checkbox" name="confirm_reopen" value="yes" required
+                                   class="h-4 w-4 text-blue-600 rounded">
+                            <span class="ml-2 text-sm text-blue-900">Yes, reopen this project</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function showExtendNoticePeriod() {
+        dynamicFields.innerHTML = `
+            <div class="space-y-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-sm font-medium text-yellow-900">Extend Notice Period</p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Extension Duration <span class="text-red-500">*</span>
+                    </label>
+                    <select name="extend_days" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                        <option value="">-- Select Extension --</option>
+                        <option value="15">15 Days</option>
+                        <option value="30">1 Month (30 Days)</option>
+                        <option value="60">2 Months (60 Days)</option>
+                        <option value="90">3 Months (90 Days)</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    }
+
+    // Prevent accidental double submission
+    statusForm.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+    });
+});
+</script>
+{% endblock %}

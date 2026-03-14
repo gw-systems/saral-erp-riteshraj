@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MIS Tracking Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                <svg class="h-8 w-8 text-indigo-600" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                MIS Tracking Dashboard
+            </h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Track MIS submission status for {{ selected_date|date:"l, F d, Y" }}
+                {% if is_sunday %}
+                <span class="text-red-600 font-semibold ml-2 inline-flex items-center gap-1">
+                    <svg class="h-4 w-4" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    Sunday - No Daily MIS Due
+                </span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'operations:mis_all_history' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                View All History
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Total Projects -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <svg class="h-6 w-6 text-white" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">MIS Projects</p>
+                    <p class="text-3xl font-semibold text-gray-900">{{ grouped_mis_data|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sent Today -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <svg class="h-6 w-6 text-white" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Sent Today</p>
+                    <p class="text-3xl font-semibold text-green-600">{{ sent_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Today -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                    <svg class="h-6 w-6 text-white" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Pending</p>
+                    <p class="text-3xl font-semibold text-red-600">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Selector Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                    <svg class="h-6 w-6 text-white" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-5 flex-1">
+                    <label for="date-selector" class="block text-sm font-medium text-gray-500 mb-1">Select Date</label>
+                    <input type="date"
+                           id="date-selector"
+                           name="date"
+                           value="{{ selected_date|date:'Y-m-d' }}"
+                           max="{{ today|date:'Y-m-d' }}"
+                           class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="GET" class="space-y-4">
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+
+            <div class="flex items-end gap-4">
+                <!-- Search Box -->
+                <div class="flex-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Projects</label>
+                    <input type="text"
+                           id="search"
+                           name="search"
+                           value="{{ search_query }}"
+                           placeholder="Search by client name, vendor name, location, or project code..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Frequency Filter -->
+                <div class="w-48">
+                    <label for="frequency" class="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
+                    <select name="frequency"
+                            id="frequency"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Frequencies</option>
+                        <option value="MIS Daily" {% if frequency_filter == 'MIS Daily' %}selected{% endif %}>MIS Daily</option>
+                        <option value="MIS Weekly" {% if frequency_filter == 'MIS Weekly' %}selected{% endif %}>MIS Weekly</option>
+                        <option value="MIS Monthly" {% if frequency_filter == 'MIS Monthly' %}selected{% endif %}>MIS Monthly</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition shadow-sm">
+                    <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Apply
+                </button>
+
+                {% if search_query or frequency_filter %}
+                <a href="?date={{ selected_date|date:'Y-m-d' }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Grouped MIS Tracking -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-900">
+                MIS Status for {{ selected_date|date:"d M Y" }}
+                {% if selected_date != today %}
+                    <span class="ml-2 text-sm font-normal text-gray-500">(Historical View)</span>
+                {% endif %}
+            </h2>
+            <div class="text-sm text-gray-500">
+                {{ grouped_mis_data|length }} project(s)
+            </div>
+        </div>
+
+        <!-- Column Headers -->
+        <div class="px-6 py-3 bg-gray-100 border-b border-gray-200">
+            <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div class="col-span-4">Project</div>
+                <div class="col-span-2 text-center">Frequency</div>
+                <div class="col-span-2 text-center">Status</div>
+                <div class="col-span-1 text-center">Sent By</div>
+                <div class="col-span-2 text-center">Action</div>
+                <div class="col-span-1 text-center">History</div>
+            </div>
+        </div>
+
+        <div class="divide-y divide-gray-200">
+            {% for item in grouped_mis_data %}
+            <div class="project-group">
+                <!-- Project Row (Clickable) -->
+                <div class="px-6 py-4 {% if item.should_send_today and not item.sent_today %}bg-yellow-50{% else %}hover:bg-gray-50{% endif %} cursor-pointer transition"
+                     onclick="toggleHistory('mis-project-{{ item.project.project_id }}')">
+                    <div class="grid grid-cols-12 gap-4 items-center">
+                        <!-- Project Info (4 columns) -->
+                        <div class="col-span-4 flex items-center space-x-3">
+                            <svg class="h-5 w-5 text-gray-500 transform transition-transform history-arrow flex-shrink-0"
+                                 id="arrow-mis-project-{{ item.project.project_id }}"
+                                 width="20" height="20"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                 aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            <div class="min-w-0 flex-1">
+                                <a href="{% url 'projects:project_detail' item.project.project_id %}"
+                                   class="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                   onclick="event.stopPropagation();">
+                                    {{ item.project.project_code }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Frequency (2 columns) -->
+                        <div class="col-span-2 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs rounded-full font-semibold
+                                {% if item.frequency == 'MIS Daily' %}bg-blue-100 text-blue-800
+                                {% elif item.frequency == 'MIS Weekly' %}bg-purple-100 text-purple-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ item.frequency }}
+                            </span>
+                        </div>
+
+                        <!-- Status (2 columns) -->
+                        <div class="col-span-2 text-center">
+                            {% if item.sent_today %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full font-semibold">
+                                    <svg class="w-3.5 h-3.5 mr-1" width="14" height="14" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Sent
+                                </span>
+                            {% elif item.should_send_today %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-red-100 text-red-800 text-xs rounded-full font-semibold pulse-animation">
+                                    <svg class="w-3.5 h-3.5 mr-1" width="14" height="14" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Pending
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500 text-xs">Not Due</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sent By (1 column) -->
+                        <div class="col-span-1 text-center text-xs">
+                            {% if item.sent_by %}
+                                <span class="font-medium text-gray-900">{{ item.sent_by.first_name }}</span>
+                            {% else %}
+                                <span class="text-gray-500">&mdash;</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action (2 columns) -->
+                        <div class="col-span-2 text-center">
+                            {% if item.should_send_today and not item.sent_today %}
+                                <a href="{% url 'operations:mis_mark_sent' item.project.project_id %}?date={{ selected_date|date:'Y-m-d' }}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 font-medium transition shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                   onclick="event.stopPropagation();">
+                                    <svg class="w-3.5 h-3.5 mr-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Mark Sent
+                                </a>
+                            {% else %}
+                                <span class="text-gray-500 text-xs">&mdash;</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- History Button (1 column) -->
+                        <div class="col-span-1 text-center">
+                            <a href="{% url 'operations:mis_history' item.project.project_id %}"
+                               class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                               onclick="event.stopPropagation();"
+                               title="View complete history">
+                                <svg class="h-3 w-3 mr-1" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                View All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table (Hidden by default) -->
+                <div id="history-mis-project-{{ item.project.project_id }}" class="hidden bg-gray-50">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-100 border-t border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent By</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent At</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                {% for log in item.history %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                                        {{ log.log_date|date:"d M Y" }}
+                                        {% if log.log_date == selected_date %}
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Selected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-center">
+                                        {% if log.mis_sent %}
+                                            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full font-semibold">
+                                                <svg class="w-4 h-4 mr-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Sent
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full font-semibold">
+                                                Not Sent
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                                        {{ log.sent_by.get_full_name|default:"&mdash;" }}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
+                                        {% if log.sent_at %}
+                                            {{ log.sent_at|date:"d M Y, h:i A" }}
+                                        {% else %}
+                                            <span class="text-gray-500">&mdash;</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-3 text-sm text-gray-600">
+                                        {{ log.remarks|truncatewords:10|default:"&mdash;" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="px-6 py-12 text-center text-gray-500">
+                <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                <p class="mt-2 text-sm font-medium">No MIS projects found</p>
+                <p class="mt-1 text-sm">
+                    {% if search_query %}
+                        Try adjusting your search
+                    {% else %}
+                        Projects with MIS Daily/Weekly/Monthly will appear here
+                    {% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Information Card -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-600 mt-0.5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-1">
+                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                    </svg>
+                    MIS Tracking Rules
+                </h3>
+                <div class="text-sm text-blue-800 space-y-1">
+                    <p>&bull; <strong>MIS Daily:</strong> Due every day except Sunday</p>
+                    <p>&bull; <strong>MIS Weekly:</strong> Due only on Saturdays</p>
+                    <p>&bull; <strong>MIS Monthly:</strong> Due during last 2 days of the month</p>
+                    <p>&bull; <strong>Excluded:</strong> Inciflo, MIS Automode, MIS Not Required, Backup projects</p>
+                    <p>&bull; <strong>History:</strong> Click any project row to expand/collapse its submission history</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Date selector change handler
+document.getElementById('date-selector').addEventListener('change', function() {
+    const selectedDate = this.value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('date', selectedDate);
+    window.location.href = currentUrl.toString();
+});
+
+// Toggle history visibility
+function toggleHistory(projectId) {
+    const historyDiv = document.getElementById('history-' + projectId);
+    const arrow = document.getElementById('arrow-' + projectId);
+
+    if (historyDiv.classList.contains('hidden')) {
+        historyDiv.classList.remove('hidden');
+        arrow.style.transform = 'rotate(90deg)';
+    } else {
+        historyDiv.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+</script>
+
+<style>
+.pulse-animation {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+</style>
+{% endblock %}

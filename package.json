@@ -1,0 +1,14 @@
+{
+  "name": "saral-erp",
+  "private": true,
+  "scripts": {
+    "build:css": "npx tailwindcss -i static/css/input.css -o static/css/tailwind.min.css --minify",
+    "watch:css": "npx tailwindcss -i static/css/input.css -o static/css/tailwind.min.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
+  }
+}

@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ salesperson_name }} — Salesperson Detail{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-1" id="pageTitle">{{ salesperson_name }}</h1>
+                <p class="text-gray-500 text-sm" id="pageSubtitle">Loading...</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="exportData()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold">
+                    Export Excel
+                </button>
+                <a href="{% url 'tallysync:operations_dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+                    ← Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+            <div class="flex items-center gap-4 flex-wrap">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">From Date</label>
+                    <input type="date" id="fromDate" value="{{ default_from_date }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">To Date</label>
+                    <input type="date" id="toDate" value="{{ default_to_date }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="loadData()" class="px-5 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 text-sm font-semibold">
+                        Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="col-span-4 text-center py-8">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-600 mx-auto"></div>
+            </div>
+        </div>
+
+        <!-- Projects Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden" id="projectsSection">
+            <div class="px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-600">
+                <h3 class="text-lg font-bold text-white">Client-wise Breakdown</h3>
+            </div>
+            <!-- Column headers -->
+            <div class="flex items-center px-6 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase">
+                <span class="flex-1">Client</span>
+                <span class="w-28 text-right">Revenue</span>
+                <span class="w-28 text-right ml-4">Purchase</span>
+                <span class="w-24 text-right ml-4">Profit</span>
+                <span class="w-8"></span>
+            </div>
+            <div id="projectsBody" class="divide-y divide-gray-100">
+                <div class="text-center py-10 text-gray-400">Loading...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Voucher Detail Modal -->
+<div id="voucherModalBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998"></div>
+<div id="voucherModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:42rem;display:flex;flex-direction:column;height:90vh">
+        <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;background:linear-gradient(to right,#6366f1,#9333ea);border-radius:1rem 1rem 0 0">
+            <div>
+                <p style="color:#fff;font-weight:700;font-size:1.125rem" id="voucherModalTitle">Voucher Details</p>
+                <p style="color:#c7d2fe;font-size:0.875rem" id="voucherModalSubtitle"></p>
+            </div>
+            <button onclick="closeVoucherModal()" style="color:#fff;font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer">&times;</button>
+        </div>
+        <div id="voucherModalContent" style="flex:1;min-height:0;overflow-y:auto;padding:1.5rem;font-size:0.875rem">
+            <div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div></div>
+        </div>
+    </div>
+</div>
+
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="{% static 'js/tallysync-common.js' %}"></script>
+<script>
+const SALESPERSON_NAME = '{{ salesperson_name|escapejs }}';
+let allProjectsData = [];
+
+function initDashboard() {
+    if (typeof TallySyncCommon !== 'undefined' && TallySyncCommon.setDefaultPreviousMonth) {
+        TallySyncCommon.setDefaultPreviousMonth('fromDate', 'toDate');
+    }
+    loadData();
+}
+initDashboard();
+window.addEventListener('pageshow', e => { if (e.persisted) initDashboard(); });
+
+async function loadData() {
+    document.getElementById('summaryCards').innerHTML = '<div class="col-span-4 text-center py-8"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-600 mx-auto"></div></div>';
+    document.getElementById('projectsBody').innerHTML = '<div class="text-center py-10 text-gray-400">Loading...</div>';
+
+    const filters = {
+        start_date: document.getElementById('fromDate').value,
+        end_date: document.getElementById('toDate').value,
+    };
+
+    try {
+        const data = await TallySyncCommon.apiCall('salesperson/' + encodeURIComponent(SALESPERSON_NAME) + '/', filters);
+        allProjectsData = data.projects || [];
+        renderSummary(data.summary);
+        renderClients(data.clients || []);
+        document.getElementById('pageSubtitle').textContent =
+            `${data.summary.project_count} projects · ${filters.start_date} to ${filters.end_date}`;
+    } catch (err) {
+        document.getElementById('summaryCards').innerHTML = `<div class="col-span-4 text-center py-8 text-red-500">Failed to load data</div>`;
+    }
+}
+
+function renderSummary(s) {
+    const profitColor = parseFloat(s.total_profit) >= 0 ? 'text-green-700' : 'text-red-700';
+    document.getElementById('summaryCards').innerHTML = `
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border-l-4 border-blue-500">
+            <p class="text-xs font-semibold text-blue-600 uppercase">Projects</p>
+            <p class="text-3xl font-bold text-blue-800 mt-1">${s.project_count}</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border-l-4 border-green-500">
+            <p class="text-xs font-semibold text-green-600 uppercase">Revenue</p>
+            <p class="text-2xl font-bold text-green-800 mt-1">${TallySyncCommon.formatCurrency(s.total_revenue)}</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-5 border-l-4 border-red-500">
+            <p class="text-xs font-semibold text-red-600 uppercase">Purchase</p>
+            <p class="text-2xl font-bold text-red-800 mt-1">${TallySyncCommon.formatCurrency(s.total_purchase)}</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border-l-4 border-purple-500">
+            <p class="text-xs font-semibold text-purple-600 uppercase">Profit · ${TallySyncCommon.formatPercentage(s.profit_margin)} margin</p>
+            <p class="text-2xl font-bold mt-1 ${profitColor}">${TallySyncCommon.formatCurrency(s.total_profit)}</p>
+        </div>
+    `;
+}
+
+function renderClients(clients) {
+    if (!clients.length) {
+        document.getElementById('projectsBody').innerHTML = '<div class="text-center py-10 text-gray-400">No clients found</div>';
+        return;
+    }
+
+    let html = '';
+    clients.forEach((c, ci) => {
+        const clientId = `client-${ci}`;
+        const profitColor = parseFloat(c.total_profit) >= 0 ? 'text-green-700' : 'text-red-700';
+        const margin = parseFloat(c.total_revenue) > 0 ? (parseFloat(c.total_profit) / parseFloat(c.total_revenue) * 100).toFixed(1) : '0.0';
+
+        // Build nested project rows
+        let projHtml = '';
+        (c.projects || []).forEach((p, pi) => {
+            const projRowId = `proj-${ci}-${pi}`;
+            const pc = parseFloat(p.profit) >= 0 ? 'text-green-700' : 'text-red-700';
+            const pm = parseFloat(p.revenue) > 0 ? (parseFloat(p.profit) / parseFloat(p.revenue) * 100).toFixed(1) : '0.0';
+            projHtml += `
+                <div class="border-b border-gray-100 last:border-0">
+                    <div class="flex items-center pl-10 pr-4 py-3 hover:bg-blue-50/40 cursor-pointer transition" onclick="toggleProjectVouchers('${projRowId}', '${p.project_id}')">
+                        <span class="flex-1 text-sm font-medium text-gray-700 truncate pr-4">${p.code} — ${p.project_code}</span>
+                        <span class="w-28 text-right text-sm font-semibold text-green-700">${TallySyncCommon.formatCurrency(p.revenue)}</span>
+                        <span class="w-28 text-right text-sm font-semibold text-red-700 ml-4">${TallySyncCommon.formatCurrency(p.purchase)}</span>
+                        <span class="w-24 text-right text-sm font-bold ml-4 ${pc}">${TallySyncCommon.formatCurrency(p.profit)} <span class="text-xs text-gray-400">${pm}%</span></span>
+                        <span class="w-8 text-center text-gray-400 ml-2 text-xs" id="arrow-${projRowId}">▶</span>
+                    </div>
+                    <div id="${projRowId}" class="hidden bg-gray-50 border-t border-gray-100 px-6 py-4">
+                        <div class="text-center py-4"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mx-auto"></div></div>
+                    </div>
+                </div>`;
+        });
+
+        html += `
+            <div class="border-b border-gray-100 last:border-0">
+                <!-- Client header row -->
+                <div class="flex items-center px-6 py-4 hover:bg-pink-50/40 cursor-pointer transition bg-white" onclick="toggleClient('${clientId}')">
+                    <div class="flex-1 min-w-0 pr-4">
+                        <span class="font-bold text-gray-900">${c.client_name}</span>
+                        <span class="ml-2 text-xs text-gray-400">${c.project_count} project${c.project_count !== 1 ? 's' : ''}</span>
+                    </div>
+                    <span class="w-28 text-right font-semibold text-green-700">${TallySyncCommon.formatCurrency(c.total_revenue)}</span>
+                    <span class="w-28 text-right font-semibold text-red-700 ml-4">${TallySyncCommon.formatCurrency(c.total_purchase)}</span>
+                    <span class="w-24 text-right font-bold ml-4 ${profitColor}">${TallySyncCommon.formatCurrency(c.total_profit)} <span class="text-xs text-gray-400">${margin}%</span></span>
+                    <span class="w-8 text-center text-gray-400 ml-2" id="arrow-${clientId}">▶</span>
+                </div>
+                <!-- Nested projects -->
+                <div id="${clientId}" class="hidden bg-blue-50/20 border-t border-gray-100">
+                    <!-- Project sub-header -->
+                    <div class="flex items-center pl-10 pr-4 py-1.5 bg-gray-100 text-xs font-semibold text-gray-500 uppercase">
+                        <span class="flex-1">Project</span>
+                        <span class="w-28 text-right">Revenue</span>
+                        <span class="w-28 text-right ml-4">Purchase</span>
+                        <span class="w-24 text-right ml-4">Profit</span>
+                        <span class="w-8"></span>
+                    </div>
+                    ${projHtml}
+                </div>
+            </div>`;
+    });
+    document.getElementById('projectsBody').innerHTML = html;
+}
+
+function toggleClient(clientId) {
+    const panel = document.getElementById(clientId);
+    const arrow = document.getElementById(`arrow-${clientId}`);
+    const isHidden = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    arrow.textContent = isHidden ? '▼' : '▶';
+}
+
+async function toggleProjectVouchers(rowId, projectCode) {
+    const panel = document.getElementById(rowId);
+    const arrow = document.getElementById(`arrow-${rowId}`);
+
+    if (!panel.classList.contains('hidden')) {
+        panel.classList.add('hidden');
+        arrow.textContent = '▶';
+        return;
+    }
+
+    panel.classList.remove('hidden');
+    arrow.textContent = '▼';
+
+    if (panel.dataset.loaded === 'true') return;
+
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate').value,
+            end_date: document.getElementById('toDate').value,
+        };
+        const data = await TallySyncCommon.apiCall('project/' + projectCode + '/', filters);
+        const txns = data.transactions || [];
+        panel.dataset.loaded = 'true';
+
+        if (!txns.length) {
+            panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No transactions in this period</p>';
+            return;
+        }
+
+        let html = `
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Billing Month</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Type</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Voucher #</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Party</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Narration</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th>
+                            <th class="px-3 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">`;
+
+        txns.forEach(t => {
+            const typeColor = t.voucher_type === 'Sales' ? 'bg-green-100 text-green-800' :
+                              t.voucher_type === 'Credit Note' ? 'bg-yellow-100 text-yellow-800' :
+                              t.voucher_type.startsWith('Purchase') ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-700';
+            const narrationShort = (t.narration || '').length > 40 ? t.narration.substring(0, 40) + '…' : (t.narration || '-');
+            html += `
+                <tr class="hover:bg-white transition">
+                    <td class="px-3 py-2 text-gray-600">${TallySyncCommon.formatDate(t.date)}</td>
+                    <td class="px-3 py-2 text-gray-600 font-medium">${t.billing_month || '-'}</td>
+                    <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor}">${t.voucher_type}</span></td>
+                    <td class="px-3 py-2 text-blue-600 font-medium">${t.voucher_number || '-'}</td>
+                    <td class="px-3 py-2 text-gray-700">${t.party_name || '-'}</td>
+                    <td class="px-3 py-2 text-gray-500 max-w-xs truncate" title="${(t.narration || '').replace(/"/g, '&quot;')}">${narrationShort}</td>
+                    <td class="px-3 py-2 text-right font-semibold ${t.voucher_type === 'Sales' ? 'text-green-700' : 'text-red-700'}">${TallySyncCommon.formatCurrency(t.amount)}</td>
+                    <td class="px-3 py-2 text-center">
+                        ${t.id ? `<button onclick="openVoucherModal(${t.id})" class="text-indigo-400 hover:text-indigo-600" title="View voucher details">
+                            <svg class="inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        </button>` : ''}
+                    </td>
+                </tr>`;
+        });
+        html += `</tbody></table></div>`;
+        panel.innerHTML = html;
+    } catch (err) {
+        panel.innerHTML = '<p class="text-red-500 text-sm text-center py-4">Failed to load transactions</p>';
+    }
+}
+
+// ---- Voucher Modal (same as project_detail.html) ----
+async function openVoucherModal(voucherId) {
+    document.getElementById('voucherModalBackdrop').style.display = 'block';
+    document.getElementById('voucherModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.getElementById('voucherModalTitle').textContent = 'Loading...';
+    document.getElementById('voucherModalSubtitle').textContent = '';
+    document.getElementById('voucherModalContent').innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div></div>';
+
+    try {
+        const data = await TallySyncCommon.apiCall('voucher/' + voucherId + '/');
+        document.getElementById('voucherModalTitle').textContent = `${data.voucher_type} — ${data.voucher_number || 'No Number'}`;
+        document.getElementById('voucherModalSubtitle').textContent = `${data.company} · ${TallySyncCommon.formatDate(data.date)}${data.is_cancelled ? ' · CANCELLED' : ''}`;
+
+        const cancelBadge = data.is_cancelled ? '<span class="ml-2 px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full">CANCELLED</span>' : '';
+
+        let html = `<div class="space-y-4">
+            <div class="flex items-start justify-between gap-2">
+                <div>
+                    <p class="text-xs text-gray-500">${data.voucher_type}${cancelBadge}</p>
+                    <p class="font-bold text-gray-900">${data.voucher_number || 'N/A'}</p>
+                </div>
+                <span class="text-sm text-gray-500 whitespace-nowrap">${TallySyncCommon.formatDate(data.date)}</span>
+            </div>
+            <div class="text-sm space-y-1">
+                <div class="flex justify-between"><span class="text-gray-500">Party</span><span class="font-semibold text-gray-800 text-right max-w-xs">${data.party_name || 'N/A'}</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Amount</span><span class="font-bold text-gray-900">${TallySyncCommon.formatCurrency(data.amount)}</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Company</span><span class="text-gray-700 text-right max-w-xs">${data.company || ''}</span></div>
+                ${data.party_gstin ? `<div class="flex justify-between"><span class="text-gray-500">Party GSTIN</span><span class="font-mono text-gray-700 text-xs">${data.party_gstin}</span></div>` : ''}
+                ${data.party_state ? `<div class="flex justify-between"><span class="text-gray-500">Party State</span><span class="text-gray-700">${data.party_state}</span></div>` : ''}
+                ${data.reference ? `<div class="flex justify-between"><span class="text-gray-500">Reference</span><span class="text-gray-700">${data.reference}</span></div>` : ''}
+                ${data.billing_month ? `<div class="flex justify-between"><span class="text-gray-500">Billing Month</span><span class="text-gray-700">${data.billing_month}</span></div>` : ''}
+                ${data.credit_period ? `<div class="flex justify-between"><span class="text-gray-500">Credit Period</span><span class="text-gray-700">${data.credit_period}</span></div>` : ''}
+                ${data.payment_mode ? `<div class="flex justify-between"><span class="text-gray-500">Payment Mode</span><span class="text-gray-700">${data.payment_mode}</span></div>` : ''}
+                ${data.transaction_type ? `<div class="flex justify-between"><span class="text-gray-500">Transaction Type</span><span class="text-gray-700">${data.transaction_type}</span></div>` : ''}
+                ${data.cheque_number ? `<div class="flex justify-between"><span class="text-gray-500">Cheque No.</span><span class="font-mono text-gray-700">${data.cheque_number}</span></div>` : ''}
+                ${data.cheque_date ? `<div class="flex justify-between"><span class="text-gray-500">Cheque Date</span><span class="text-gray-700">${data.cheque_date}</span></div>` : ''}
+                ${data.utr_number ? `<div class="flex justify-between"><span class="text-gray-500">UTR No.</span><span class="font-mono text-gray-700 text-xs">${data.utr_number}</span></div>` : ''}
+                ${data.need_to_pay ? `<div class="flex justify-between"><span class="text-gray-500">Pay To</span><span class="text-gray-700">${data.need_to_pay}</span></div>` : ''}
+                ${data.eway_bill_number ? `<div class="flex justify-between"><span class="text-gray-500">E-Way Bill</span><span class="font-mono text-gray-700 text-xs">${data.eway_bill_number}</span></div>` : ''}
+                ${data.buyer_name ? `<div class="flex justify-between"><span class="text-gray-500">Buyer</span><span class="text-gray-700">${data.buyer_name}</span></div>` : ''}
+                ${data.buyer_gstin ? `<div class="flex justify-between"><span class="text-gray-500">Buyer GSTIN</span><span class="font-mono text-gray-700 text-xs">${data.buyer_gstin}</span></div>` : ''}
+                ${data.consignee_name ? `<div class="flex justify-between"><span class="text-gray-500">Consignee</span><span class="text-gray-700">${data.consignee_name}</span></div>` : ''}
+            </div>
+        </div>`;
+
+        if (data.remark) html += `<div class="mt-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Remark</h4><p class="text-sm text-gray-700 bg-gray-50 rounded p-2">${data.remark}</p></div>`;
+        if (data.narration) html += `<div class="mt-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Narration</h4><p class="text-sm text-gray-700 bg-gray-50 rounded p-2">${data.narration}</p></div>`;
+
+        if (data.inventory_items && data.inventory_items.length) {
+            const serviceHtml = data.inventory_items.map(item => `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex justify-between items-start">
+                        <span class="font-semibold text-blue-800 text-sm">${item.service || item.name || '-'}</span>
+                        ${item.amount ? `<span class="font-bold text-blue-900 text-sm">${TallySyncCommon.formatCurrency(parseFloat(item.amount) || 0)}</span>` : ''}
+                    </div>
+                    ${(item.descriptions && item.descriptions.length) ? `<ul class="mt-1.5 space-y-0.5">${item.descriptions.map(d => `<li class="text-xs text-blue-700">• ${d}</li>`).join('')}</ul>` : ''}
+                </div>`).join('');
+            html += `<div class="mt-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Services / Items</h4><div class="space-y-2">${serviceHtml}</div></div>`;
+        }
+
+        if (data.ledger_entries && data.ledger_entries.length) {
+            html += `<div class="mt-4"><h4 class="text-sm font-bold text-gray-700 mb-2">Ledger Entries</h4>
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="w-full text-sm"><thead><tr class="bg-gray-50 border-b">
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ledger</th>
+                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th>
+                    <th class="px-3 py-2 text-center text-xs font-semibold text-gray-600 uppercase">Dr/Cr</th>
+                </tr></thead><tbody class="divide-y divide-gray-100">`;
+            data.ledger_entries.forEach(e => {
+                html += `<tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 text-gray-800">${e.ledger_name || '-'}</td>
+                    <td class="px-3 py-2 text-right font-semibold ${e.is_debit ? 'text-rose-700' : 'text-emerald-700'}">${TallySyncCommon.formatCurrency(e.amount)}</td>
+                    <td class="px-3 py-2 text-center"><span class="px-2 py-0.5 text-xs font-bold rounded ${e.is_debit ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${e.is_debit ? 'Dr' : 'Cr'}</span></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        }
+
+        if (data.bill_references && data.bill_references.length) {
+            html += `<div class="mt-4"><h4 class="text-sm font-bold text-gray-700 mb-2">Bill References</h4>
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="w-full text-sm"><thead><tr class="bg-gray-50 border-b">
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Bill Name</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Type</th>
+                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th>
+                </tr></thead><tbody class="divide-y divide-gray-100">`;
+            data.bill_references.forEach(b => {
+                html += `<tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 font-medium text-gray-800">${b.bill_number || '-'}</td>
+                    <td class="px-3 py-2 text-gray-500 text-xs">${b.bill_type || '-'}</td>
+                    <td class="px-3 py-2 text-right font-semibold text-gray-800">${TallySyncCommon.formatCurrency(b.amount)}</td>
+                </tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        }
+
+        document.getElementById('voucherModalContent').innerHTML = html;
+    } catch (err) {
+        document.getElementById('voucherModalContent').innerHTML = `<p class="text-red-500 text-center py-8">Failed to load voucher</p>`;
+    }
+}
+
+function closeVoucherModal() {
+    document.getElementById('voucherModalBackdrop').style.display = 'none';
+    document.getElementById('voucherModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeVoucherModal();
+});
+
+function exportData() {
+    if (!allProjectsData.length || typeof XLSX === 'undefined') return;
+    const headers = ['Project Code', 'Client', 'Vendor', 'Location', 'Revenue', 'Purchase', 'Expenses (Journals)', 'Payments', 'Collections', 'Profit', 'Margin %'];
+    const rows = allProjectsData.map(p => [
+        p.project_code, p.client_name || '', p.vendor_name || '', p.location || '',
+        parseFloat(p.revenue) || 0, parseFloat(p.purchase) || 0,
+        parseFloat(p.expenses) || 0, parseFloat(p.payments) || 0, parseFloat(p.collections) || 0,
+        parseFloat(p.profit) || 0,
+        parseFloat(p.revenue) > 0 ? (parseFloat(p.profit) / parseFloat(p.revenue) * 100).toFixed(1) : 0,
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{wch:15},{wch:25},{wch:20},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:10}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, SALESPERSON_NAME);
+    XLSX.writeFile(wb, `${SALESPERSON_NAME}_detail.xlsx`);
+}
+</script>
+{% endblock %}

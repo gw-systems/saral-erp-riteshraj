@@ -1,0 +1,746 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load bigin_filters %}
+
+{% block title %}Bigin Analytics Dashboard - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 py-6 px-4">
+    
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="mb-6 bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">📊 Bigin Analytics Dashboard</h1>
+                    <p class="text-sm text-gray-600 mt-1">Comprehensive lead analysis and insights</p>
+                </div>
+                <a href="{% url 'bigin:bigin_leads' %}" 
+                   class="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition shadow-md">
+                    View Detailed Leads →
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">📅 Filters</h2>
+            <form method="get" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Start Date</label>
+                    <input type="date" name="start_date" value="{{ filters.start_date }}"
+                           class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">End Date</label>
+                    <input type="date" name="end_date" value="{{ filters.end_date }}"
+                           class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Contact Type</label>
+                    <select name="contact_type" class="w-full border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                        <option value="">All Types</option>
+                        <option value="3pl" {% if filters.contact_type == '3pl' %}selected{% endif %}>3PL</option>
+                        <option value="Lead (Standalone )" {% if filters.contact_type == 'Lead (Standalone )' %}selected{% endif %}>Lead (Standalone)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Lead Source</label>
+                    <select name="lead_source" multiple class="searchable-select w-full" id="lead_source_select">
+                        <option value="blank" {% if 'blank' in filters.lead_source_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for source in all_lead_sources %}
+                        <option value="{{ source }}" {% if source in filters.lead_source_list %}selected{% endif %}>{{ source }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition">
+                        Apply
+                    </button>
+                    <a href="{% url 'bigin:bigin_dashboard' %}" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Summary Cards - Status -->
+        <div class="grid grid-cols-1 md:grid-cols-7 gap-3 mb-6">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads()">
+                <p class="text-xs opacity-90 mb-1">Total Leads</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.total_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.total_leads }} leads</p>
+            </div>
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads('hot')">
+                <p class="text-xs opacity-90 mb-1">🔥 Hot</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.hot_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.hot_count }} leads</p>
+            </div>
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads('warm')">
+                <p class="text-xs opacity-90 mb-1">🌡️ Warm</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.warm_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.warm_count }} leads</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads('converted')">
+                <p class="text-xs opacity-90 mb-1">✅ Converted</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.converted_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.converted_count }} leads</p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads('cold')">
+                <p class="text-xs opacity-90 mb-1">❄️ Cold</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.cold_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.cold_count }} leads</p>
+            </div>
+            <div class="bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads('closed')">
+                <p class="text-xs opacity-90 mb-1">🔒 Closed</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.closed_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.closed_count }} leads</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 text-white cursor-pointer hover:shadow-xl transition" onclick="redirectToLeads('junk')">
+                <p class="text-xs opacity-90 mb-1">🗑️ Junk</p>
+                <p class="text-xl font-bold font-mono break-all">{{ metrics.junk_sqft|indian_number_format }}</p>
+                <p class="text-xs opacity-75 mt-1">{{ metrics.junk_count }} leads</p>
+            </div>
+        </div>
+
+        <!-- Lead Source Analysis Cards -->
+        <div class="mb-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-3">🔗 Lead Source Analysis</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {% for source in source_breakdown %}
+                <div class="bg-gradient-to-br {{ source.color }} rounded-xl shadow-lg p-4 text-gray-800 cursor-pointer hover:shadow-xl transition" onclick="redirectToLeadsBySource('{{ source.name }}')">
+                    <p class="text-xs font-semibold mb-1 truncate" title="{{ source.name }}">{{ source.name }}</p>
+                    <p class="text-xl font-bold font-mono break-all">{{ source.sqft|indian_number_format }}</p>
+                    <p class="text-xs mt-1">{{ source.count }} leads</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Area Requirement Breakdown with Status Distribution -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-900">📐 Area Requirement Breakdown</h2>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <button onclick="toggleAreaView('sqft')" id="areaViewSqft" class="px-3 py-1 bg-purple-600 text-white rounded text-sm font-semibold">Sq.Ft.</button>
+                    <button onclick="toggleAreaView('count')" id="areaViewCount" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Leads</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700">Area Range</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Total Leads</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Total Sq.Ft.</th>
+                            <th class="px-3 py-3 text-center font-semibold text-orange-700">🔥 Hot</th>
+                            <th class="px-3 py-3 text-center font-semibold text-yellow-700">🌡️ Warm</th>
+                            <th class="px-3 py-3 text-center font-semibold text-blue-700">❄️ Cold</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">🔒 Closed</th>
+                            <th class="px-3 py-3 text-center font-semibold text-purple-700">🗑️ Junk</th>
+                            <th class="px-3 py-3 text-center font-semibold text-green-700">✅ Converted</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Lead Gen %</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Sq.Ft. Var %</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Avg Sq.Ft/Lead</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for bucket in area_buckets %}
+                        <tr class="hover:bg-gray-50 cursor-pointer" onclick="redirectToLeadsByArea('{{ bucket.range }}')">
+                            <td class="px-3 py-3 font-medium">{{ bucket.range }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-total-leads">{{ bucket.total_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-total-sqft">{{ bucket.total_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-status-cell" data-sqft="{{ bucket.hot_sqft|indian_number_format }}" data-count="{{ bucket.hot_count }}">{{ bucket.hot_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-status-cell" data-sqft="{{ bucket.warm_sqft|indian_number_format }}" data-count="{{ bucket.warm_count }}">{{ bucket.warm_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-status-cell" data-sqft="{{ bucket.cold_sqft|indian_number_format }}" data-count="{{ bucket.cold_count }}">{{ bucket.cold_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-status-cell" data-sqft="{{ bucket.closed_sqft|indian_number_format }}" data-count="{{ bucket.closed_count }}">{{ bucket.closed_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-status-cell" data-sqft="{{ bucket.junk_sqft|indian_number_format }}" data-count="{{ bucket.junk_count }}">{{ bucket.junk_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono area-status-cell" data-sqft="{{ bucket.converted_sqft|indian_number_format }}" data-count="{{ bucket.converted_count }}">{{ bucket.converted_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">{{ bucket.lead_gen_pct|floatformat:1 }}%</span>
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">{{ bucket.sqft_variation_pct|floatformat:1 }}%</span>
+                            </td>
+                            <td class="px-3 py-3 text-center font-mono text-purple-700">{{ bucket.avg_sqft_per_lead|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        <!-- Totals Row -->
+                        <tr class="bg-gray-100">
+                            <td class="px-3 py-3">TOTAL</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ metrics.total_leads }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ metrics.total_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono text-orange-700 area-totals-cell" data-sqft="{{ status_totals.hot_sqft|indian_number_format }}" data-count="{{ status_totals.hot_count }}">{{ status_totals.hot_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono text-yellow-700 area-totals-cell" data-sqft="{{ status_totals.warm_sqft|indian_number_format }}" data-count="{{ status_totals.warm_count }}">{{ status_totals.warm_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono text-blue-700 area-totals-cell" data-sqft="{{ status_totals.cold_sqft|indian_number_format }}" data-count="{{ status_totals.cold_count }}">{{ status_totals.cold_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono text-gray-700 area-totals-cell" data-sqft="{{ status_totals.closed_sqft|indian_number_format }}" data-count="{{ status_totals.closed_count }}">{{ status_totals.closed_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono text-purple-700 area-totals-cell" data-sqft="{{ status_totals.junk_sqft|indian_number_format }}" data-count="{{ status_totals.junk_count }}">{{ status_totals.junk_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono text-green-700 area-totals-cell" data-sqft="{{ status_totals.converted_sqft|indian_number_format }}" data-count="{{ status_totals.converted_count }}">{{ status_totals.converted_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center">
+                                <span class="px-2 py-1 bg-green-200 text-green-800 rounded text-xs font-bold">100%</span>
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                                <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs font-bold">100%</span>
+                            </td>
+                            <td class="px-3 py-3 text-center font-mono text-purple-700">{{ metrics.avg_area|indian_number_format }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sales Team Area Breakdown -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-bold text-gray-900">💼 Sales Team Area Breakdown</h2>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-600">View:</span>
+                        <button onclick="toggleSalesTeamView('sqft')" id="salesTeamViewSqft" class="px-3 py-1 bg-purple-600 text-white rounded text-sm font-semibold">Sq.Ft.</button>
+                        <button onclick="toggleSalesTeamView('count')" id="salesTeamViewCount" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Leads</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm text-gray-600">Status:</span>
+                    <button onclick="toggleSalesTeamStatus('all')" id="salesTeamStatusAll" class="px-3 py-1 bg-blue-600 text-white rounded text-sm font-semibold">All</button>
+                    <button onclick="toggleSalesTeamStatus('hot')" id="salesTeamStatusHot" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">🔥 Hot</button>
+                    <button onclick="toggleSalesTeamStatus('warm')" id="salesTeamStatusWarm" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">🌡️ Warm</button>
+                    <button onclick="toggleSalesTeamStatus('cold')" id="salesTeamStatusCold" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">❄️ Cold</button>
+                    <button onclick="toggleSalesTeamStatus('converted')" id="salesTeamStatusConverted" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">✅ Conv</button>
+                    <button onclick="toggleSalesTeamStatus('closed')" id="salesTeamStatusClosed" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">🔒 Closed</button>
+                    <button onclick="toggleSalesTeamStatus('junk')" id="salesTeamStatusJunk" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">🗑️ Junk</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-r">Sales Team</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Blanks</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">0-1000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">1001-3000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">3001-5000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">5001-10000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">10001-20000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">20001-30000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">30001+</th>
+                            <th class="px-3 py-3 text-center font-semibold text-purple-700 border-l bg-purple-50">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200" id="salesTeamTableBody">
+                        {% for row in sales_team_breakdown.all %}
+                        <tr class="hover:bg-gray-50 sales-team-row" data-status="all">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for row in sales_team_breakdown.hot %}
+                        <tr class="hover:bg-gray-50 sales-team-row hidden" data-status="hot">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for row in sales_team_breakdown.warm %}
+                        <tr class="hover:bg-gray-50 sales-team-row hidden" data-status="warm">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for row in sales_team_breakdown.cold %}
+                        <tr class="hover:bg-gray-50 sales-team-row hidden" data-status="cold">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for row in sales_team_breakdown.converted %}
+                        <tr class="hover:bg-gray-50 sales-team-row hidden" data-status="converted">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for row in sales_team_breakdown.closed %}
+                        <tr class="hover:bg-gray-50 sales-team-row hidden" data-status="closed">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for row in sales_team_breakdown.junk %}
+                        <tr class="hover:bg-gray-50 sales-team-row hidden" data-status="junk">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r">{{ row.name }}</td>
+                            <td class="px-3 py-3 text-center font-mono">{{ row.blanks_count }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_0_1000_sqft|indian_number_format }}" data-count="{{ row.range_0_1000_count }}">{{ row.range_0_1000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_1001_3000_sqft|indian_number_format }}" data-count="{{ row.range_1001_3000_count }}">{{ row.range_1001_3000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_3001_5000_sqft|indian_number_format }}" data-count="{{ row.range_3001_5000_count }}">{{ row.range_3001_5000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_5001_10000_sqft|indian_number_format }}" data-count="{{ row.range_5001_10000_count }}">{{ row.range_5001_10000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_10001_20000_sqft|indian_number_format }}" data-count="{{ row.range_10001_20000_count }}">{{ row.range_10001_20000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_20001_30000_sqft|indian_number_format }}" data-count="{{ row.range_20001_30000_count }}">{{ row.range_20001_30000_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono sales-team-cell" data-sqft="{{ row.range_30001_plus_sqft|indian_number_format }}" data-count="{{ row.range_30001_plus_count }}">{{ row.range_30001_plus_sqft|indian_number_format }}</td>
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sales-team-cell" data-sqft="{{ row.total_sqft|indian_number_format }}" data-count="{{ row.total_count }}">{{ row.total_sqft|indian_number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Team Analysis -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-900">👥 Team Analysis</h2>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <button onclick="toggleTeamView('sqft')" id="teamViewSqft" class="px-3 py-1 bg-purple-600 text-white rounded text-sm font-semibold">Sq.Ft.</button>
+                    <button onclick="toggleTeamView('count')" id="teamViewCount" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Leads</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th rowspan="2" class="px-3 py-3 text-left font-semibold text-gray-700 border-r">Contact Owner</th>
+                            <th rowspan="2" class="px-2 py-3 text-center font-semibold text-gray-700 border-r">Leads Assigned</th>
+                            <th rowspan="2" class="px-2 py-3 text-center font-semibold text-gray-700 border-r">Total Sq.Ft.</th>
+                            <th colspan="6" class="px-2 py-2 text-center font-semibold text-gray-700 border-b border-r">Status Distribution</th>
+                            <th colspan="5" class="px-2 py-2 text-center font-semibold text-red-700 border-b">⚠️ Data Quality - Blank Fields</th>
+                        </tr>
+                        <tr>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-orange-700">🔥 Hot</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-yellow-700">🌡️ Warm</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-blue-700">❄️ Cold</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-green-700">✅ Conv</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700">🔒 Close</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-purple-700 border-r">🗑️ Junk</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-red-700">Area</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-yellow-700">Status</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-orange-700">Stage</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-pink-700">Industry</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-indigo-700">Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for person in team_performance %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r cursor-pointer" onclick="redirectToLeadsByOwner('{{ person.name }}')">{{ person.name }}</td>
+                            <td class="px-2 py-3 text-center font-mono border-r">{{ person.total_leads }}</td>
+                            <td class="px-2 py-3 text-center font-mono border-r">{{ person.total_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono team-status-cell cursor-pointer" data-sqft="{{ person.hot_sqft|indian_number_format }}" data-count="{{ person.hot_count }}" onclick="redirectToOwnerStatus('{{ person.name }}', 'hot')">{{ person.hot_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono team-status-cell cursor-pointer" data-sqft="{{ person.warm_sqft|indian_number_format }}" data-count="{{ person.warm_count }}" onclick="redirectToOwnerStatus('{{ person.name }}', 'warm')">{{ person.warm_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono team-status-cell cursor-pointer" data-sqft="{{ person.cold_sqft|indian_number_format }}" data-count="{{ person.cold_count }}" onclick="redirectToOwnerStatus('{{ person.name }}', 'cold')">{{ person.cold_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono team-status-cell cursor-pointer" data-sqft="{{ person.converted_sqft|indian_number_format }}" data-count="{{ person.converted_count }}" onclick="redirectToOwnerStatus('{{ person.name }}', 'converted')">{{ person.converted_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono team-status-cell cursor-pointer" data-sqft="{{ person.closed_sqft|indian_number_format }}" data-count="{{ person.closed_count }}" onclick="redirectToOwnerStatus('{{ person.name }}', 'closed')">{{ person.closed_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono border-r team-status-cell cursor-pointer" data-sqft="{{ person.junk_sqft|indian_number_format }}" data-count="{{ person.junk_count }}" onclick="redirectToOwnerStatus('{{ person.name }}', 'junk')">{{ person.junk_sqft|indian_number_format }}</td>
+                            <td class="px-2 py-3 text-center font-mono bg-red-50 text-red-700 cursor-pointer" onclick="redirectToOwnerBlank('{{ person.name }}', 'area')">{{ person.area_blank }}</td>
+                            <td class="px-2 py-3 text-center font-mono bg-yellow-50 text-yellow-700 cursor-pointer" onclick="redirectToOwnerBlank('{{ person.name }}', 'status')">{{ person.status_blank }}</td>
+                            <td class="px-2 py-3 text-center font-mono bg-orange-50 text-orange-700 cursor-pointer" onclick="redirectToOwnerBlank('{{ person.name }}', 'lead_stage')">{{ person.lead_stage_blank }}</td>
+                            <td class="px-2 py-3 text-center font-mono bg-pink-50 text-pink-700 cursor-pointer" onclick="redirectToOwnerBlank('{{ person.name }}', 'industry')">{{ person.industry_blank }}</td>
+                            <td class="px-2 py-3 text-center font-mono bg-indigo-50 text-indigo-700 cursor-pointer" onclick="redirectToOwnerBlank('{{ person.name }}', 'reason')">{{ person.reason_blank }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Lead Stage Distribution by Owner -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-900">📊 Lead Stage Distribution by Owner</h2>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <button onclick="toggleStageView('sqft')" id="stageViewSqft" class="px-3 py-1 bg-purple-600 text-white rounded text-sm font-semibold">Sq.Ft.</button>
+                    <button onclick="toggleStageView('count')" id="stageViewCount" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Leads</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-r">Lead Stage</th>
+                            {% for owner in owner_names %}
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">{{ owner }}</th>
+                            {% endfor %}
+                            <th class="px-3 py-3 text-center font-semibold text-purple-700 border-l">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for stage_name, owner_data in stage_by_owner.items %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-3 font-medium text-gray-900 border-r cursor-pointer" onclick="redirectToLeadsByStage('{{ stage_name }}')">{{ stage_name }}</td>
+                            {% for owner in owner_names %}
+                            <td class="px-3 py-3 text-center stage-owner-cell" data-sqft="{{ owner_data|get_item:owner|get_item:'sqft'|default:0|indian_number_format }}" data-count="{{ owner_data|get_item:owner|get_item:'count'|default:0 }}">
+                                {{ owner_data|get_item:owner|get_item:'sqft'|default:0|indian_number_format }}
+                            </td>
+                            {% endfor %}
+                            <td class="px-3 py-3 text-center font-mono border-l bg-purple-50 stage-owner-cell" data-sqft="{{ owner_data.TOTAL.sqft|indian_number_format }}" data-count="{{ owner_data.TOTAL.count }}">
+                                {{ owner_data.TOTAL.sqft|indian_number_format }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Choices.js for Multi-Select Filters -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<style>
+/* Custom Choices.js Theme */
+.choices__inner {
+    background-color: #f9fafb !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.375rem 0.75rem !important;
+    min-height: 44px !important;
+}
+
+/* When dropdown is CLOSED (not focused) - fixed height */
+.choices__inner:not(:focus-within) {
+    max-height: 44px !important;
+    overflow: hidden !important;
+}
+
+/* When dropdown is OPEN (focused/active) - dynamic height */
+.choices__inner:focus-within,
+.choices.is-open .choices__inner {
+    max-height: none !important;
+    overflow-y: auto !important;
+}
+
+.choices__list--multiple .choices__item {
+    background-color: #9333ea !important;
+    border: 1px solid #7e22ce !important;
+    color: white !important;
+    border-radius: 0.375rem !important;
+    padding: 2px 8px !important;
+    margin: 2px !important;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #9333ea !important;
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Choices.js for lead source multi-select
+        const leadSourceSelect = document.getElementById('lead_source_select');
+        if (leadSourceSelect) {
+            new Choices(leadSourceSelect, {
+                removeItemButton: true,
+                searchEnabled: true,
+                searchPlaceholderValue: 'Search lead sources...',
+                placeholder: true,
+                placeholderValue: 'Select lead sources',
+            });
+        }
+    });
+
+    // Toggle functions for Area Requirement Breakdown
+    function toggleAreaView(view) {
+        const sqftBtn = document.getElementById('areaViewSqft');
+        const countBtn = document.getElementById('areaViewCount');
+        const cells = document.querySelectorAll('.area-status-cell');
+        const totalsCells = document.querySelectorAll('.area-totals-cell');
+
+        if (view === 'sqft') {
+            sqftBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            sqftBtn.classList.add('bg-purple-600', 'text-white');
+            countBtn.classList.remove('bg-purple-600', 'text-white');
+            countBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            // Show sqft values
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.sqft;
+            });
+            totalsCells.forEach(cell => {
+                cell.textContent = cell.dataset.sqft;
+            });
+        } else {
+            countBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            countBtn.classList.add('bg-purple-600', 'text-white');
+            sqftBtn.classList.remove('bg-purple-600', 'text-white');
+            sqftBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            // Show count values
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.count;
+            });
+            totalsCells.forEach(cell => {
+                cell.textContent = cell.dataset.count;
+            });
+        }
+    }
+
+    // Toggle functions for Team Analysis
+    function toggleTeamView(view) {
+        const sqftBtn = document.getElementById('teamViewSqft');
+        const countBtn = document.getElementById('teamViewCount');
+        const cells = document.querySelectorAll('.team-status-cell');
+
+        if (view === 'sqft') {
+            sqftBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            sqftBtn.classList.add('bg-purple-600', 'text-white');
+            countBtn.classList.remove('bg-purple-600', 'text-white');
+            countBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            // Show sqft values
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.sqft;
+            });
+        } else {
+            countBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            countBtn.classList.add('bg-purple-600', 'text-white');
+            sqftBtn.classList.remove('bg-purple-600', 'text-white');
+            sqftBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            // Show count values
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.count;
+            });
+        }
+    }
+
+    // Toggle function for Sales Team Area Breakdown
+    function toggleSalesTeamView(view) {
+        const sqftBtn = document.getElementById('salesTeamViewSqft');
+        const countBtn = document.getElementById('salesTeamViewCount');
+        const cells = document.querySelectorAll('.sales-team-cell');
+
+        if (view === 'sqft') {
+            sqftBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            sqftBtn.classList.add('bg-purple-600', 'text-white');
+            countBtn.classList.remove('bg-purple-600', 'text-white');
+            countBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            // Show sqft values
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.sqft;
+            });
+        } else {
+            countBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            countBtn.classList.add('bg-purple-600', 'text-white');
+            sqftBtn.classList.remove('bg-purple-600', 'text-white');
+            sqftBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            // Show count values
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.count;
+            });
+        }
+    }
+
+    // Toggle status filter for Sales Team Area Breakdown
+    function toggleSalesTeamStatus(status) {
+        // Update button states
+        const statusButtons = ['all', 'hot', 'warm', 'cold', 'converted', 'closed', 'junk'];
+        statusButtons.forEach(s => {
+            const btn = document.getElementById('salesTeamStatus' + s.charAt(0).toUpperCase() + s.slice(1));
+            if (s === status) {
+                btn.classList.remove('bg-gray-200', 'text-gray-700');
+                btn.classList.add('bg-blue-600', 'text-white', 'font-semibold');
+            } else {
+                btn.classList.remove('bg-blue-600', 'text-white', 'font-semibold');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            }
+        });
+
+        // Show/hide rows based on status
+        const allRows = document.querySelectorAll('.sales-team-row');
+        allRows.forEach(row => {
+            if (row.dataset.status === status) {
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        // Reapply current view (sqft or count)
+        const sqftBtn = document.getElementById('salesTeamViewSqft');
+        const currentView = sqftBtn.classList.contains('bg-purple-600') ? 'sqft' : 'count';
+
+        // Update visible cells
+        const visibleCells = document.querySelectorAll('.sales-team-row:not(.hidden) .sales-team-cell');
+        visibleCells.forEach(cell => {
+            cell.textContent = currentView === 'sqft' ? cell.dataset.sqft : cell.dataset.count;
+        });
+    }
+
+    // Toggle functions for Lead Stage Distribution
+    function toggleStageView(view) {
+        const sqftBtn = document.getElementById('stageViewSqft');
+        const countBtn = document.getElementById('stageViewCount');
+        const cells = document.querySelectorAll('.stage-owner-cell');
+
+        if (view === 'sqft') {
+            sqftBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            sqftBtn.classList.add('bg-purple-600', 'text-white');
+            countBtn.classList.remove('bg-purple-600', 'text-white');
+            countBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.sqft;
+            });
+        } else {
+            countBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            countBtn.classList.add('bg-purple-600', 'text-white');
+            sqftBtn.classList.remove('bg-purple-600', 'text-white');
+            sqftBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+            cells.forEach(cell => {
+                cell.textContent = cell.dataset.count;
+            });
+        }
+    }
+
+    // Redirect functions
+    function redirectToLeads(status = '') {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+        if (status) {
+            url += '&status=' + status;
+        }
+        window.location.href = url;
+    }
+
+    function redirectToLeadsBySource(source) {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+        url += '&lead_source=' + encodeURIComponent(source);
+        window.location.href = url;
+    }
+
+    function redirectToLeadsByArea(range) {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+        url += '&area_range=' + encodeURIComponent(range);
+        window.location.href = url;
+    }
+
+    function redirectToLeadsByOwner(owner) {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+        url += '&owner=' + encodeURIComponent(owner);
+        window.location.href = url;
+    }
+
+    function redirectToLeadsByStage(stage) {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+        url += '&lead_stage=' + encodeURIComponent(stage);
+        window.location.href = url;
+    }
+
+    // Granular redirect functions for Team Analysis
+    function redirectToOwnerStatus(owner, status) {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?owner=' + encodeURIComponent(owner) + '&status=' + status + '&start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+        window.location.href = url;
+    }
+
+    function redirectToOwnerBlank(owner, field) {
+        const startDate = '{{ filters.start_date }}';
+        const endDate = '{{ filters.end_date }}';
+        const contactType = '{{ filters.contact_type }}';
+        let url = '/integrations/bigin/leads/?owner=' + encodeURIComponent(owner) + '&start_date=' + startDate + '&end_date=' + endDate;
+        if (contactType) {
+            url += '&contact_type=' + encodeURIComponent(contactType);
+        }
+
+        if (field === 'reason') {
+            url += '&status=cold,closed,junk';
+        }
+
+        // Add blank filter parameter (backend will handle this)
+        url += '&' + field + '_blank=true';
+
+        window.location.href = url;
+    }
+</script>
+
+{% endblock %}

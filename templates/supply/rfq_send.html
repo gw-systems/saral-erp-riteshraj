@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Send RFQ - {{ rfq.rfq_id }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Send RFQ to Vendors</h1>
+                    <p class="mt-2 text-sm text-gray-600">{{ rfq.rfq_id }} • {{ rfq.city }} • {{ rfq.area_required_sqft|floatformat:0 }} Sq Ft</p>
+                </div>
+                <a href="{% url 'supply:rfq_detail' rfq.rfq_id %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="20" height="20" class="mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to RFQ
+                </a>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Left Column: Email Settings -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Sender Gmail Account -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                            <h2 class="text-lg font-bold text-white flex items-center">
+                                <svg aria-hidden="true" width="20" height="20" class="mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Select Sender Gmail Account
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            {% if sender_accounts %}
+                                <div class="space-y-3">
+                                    {% for account in sender_accounts %}
+                                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
+                                        <input type="radio" name="sender_email" value="{{ account.email_account }}" required
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                        <div class="ml-4 flex-1">
+                                            <p class="text-sm font-medium text-gray-900">{{ account.email_account }}</p>
+                                            <p class="text-xs text-gray-500">{{ account.user.get_full_name }} • Last synced: {{ account.last_sync_at|date:"M d, Y"|default:"Never" }}</p>
+                                        </div>
+                                        {% if account.user == user %}
+                                        <span class="px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full">Your Account</span>
+                                        {% endif %}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-8">
+                                    <svg aria-hidden="true" width="48" height="48" class="mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    <p class="text-gray-700 font-medium mb-2">No Gmail Accounts Connected</p>
+                                    <p class="text-sm text-gray-500 mb-4">Connect your Gmail account first to send emails</p>
+                                    <a href="/gmail/" target="_blank"
+                                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                        Connect Gmail
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Select Vendors -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 flex items-center justify-between">
+                            <h2 class="text-lg font-bold text-white flex items-center">
+                                <svg aria-hidden="true" width="20" height="20" class="mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Select Vendors
+                            </h2>
+                            <span id="selectedCount" class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold text-white">
+                                0 selected
+                            </span>
+                        </div>
+                        <div class="p-6">
+                            <!-- Search Box -->
+                            <div class="mb-4">
+                                <input type="text" id="vendorSearch"
+                                       placeholder="Search vendors by name, city, or email..."
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Vendor List -->
+                            <div class="space-y-2 max-h-96 overflow-y-auto">
+                                {% if vendor_contacts %}
+                                    {% for contact in vendor_contacts %}
+                                    <label class="vendor-item flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition
+                                        {% if contact.id in already_sent %}opacity-50 cursor-not-allowed{% endif %}"
+                                        data-vendor-name="{{ contact.vendor_code.vendor_short_name|lower }}"
+                                        data-vendor-cities="{{ contact.rfq_cities|lower }}"
+                                        data-vendor-email="{{ contact.vendor_contact_email|lower }}">
+                                        <input type="checkbox" name="vendor_contacts" value="{{ contact.id }}"
+                                               class="vendor-checkbox h-4 w-4 text-purple-600 focus:ring-purple-500 rounded mt-1"
+                                               {% if contact.id in already_sent %}disabled{% endif %}
+                                               onchange="updateSelectedCount()">
+                                        <div class="ml-4 flex-1">
+                                            <p class="text-sm font-medium text-gray-900">{{ contact.vendor_code.vendor_short_name }}</p>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                <span class="inline-flex items-center">
+                                                    <svg aria-hidden="true" width="12" height="12" class="mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    {{ contact.vendor_contact_email }}
+                                                </span>
+                                            </p>
+                                            {% if contact.rfq_cities %}
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                <span class="inline-flex items-center">
+                                                    <svg aria-hidden="true" width="12" height="12" class="mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    </svg>
+                                                    Cities: {{ contact.rfq_cities }}
+                                                </span>
+                                            </p>
+                                            {% endif %}
+                                            {% if contact.rfq_cc_emails %}
+                                            <p class="text-xs text-blue-600 mt-1">
+                                                CC: {{ contact.rfq_cc_emails|length }} email(s)
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                        {% if contact.id in already_sent %}
+                                        <span class="px-2 py-1 text-xs font-semibold text-green-600 bg-green-100 rounded-full">Already Sent</span>
+                                        {% endif %}
+                                    </label>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-8">
+                                        <svg aria-hidden="true" width="48" height="48" class="mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        <p class="text-gray-700 font-medium mb-2">No RFQ Vendor Contacts</p>
+                                        <p class="text-sm text-gray-500">Mark vendor contacts as "RFQ Contact" in vendor management</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Additional Details -->
+                <div class="space-y-6">
+
+                    <!-- Deadline & POC -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4">
+                            <h2 class="text-lg font-bold text-white">Email Details</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <!-- Deadline Date -->
+                            <div>
+                                <label for="deadline_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Response Deadline <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" id="deadline_date" name="deadline_date" required
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Point of Contact -->
+                            <div>
+                                <label for="point_of_contact" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Point of Contact <span class="text-xs text-gray-500">(Optional)</span>
+                                </label>
+                                <select id="point_of_contact" name="point_of_contact"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    <option value="">Default Contact</option>
+                                    {% for poc in pocs %}
+                                    <option value="{{ poc.id }}">{{ poc.get_full_name }} - {{ poc.get_role_display }}</option>
+                                    {% endfor %}
+                                </select>
+                                <p class="text-xs text-gray-500 mt-2">Vendors will reply to this contact's email</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RFQ Summary -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
+                            <h2 class="text-lg font-bold text-white">RFQ Summary</h2>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">RFQ ID:</span>
+                                <span class="font-semibold text-gray-900">{{ rfq.rfq_id }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">City:</span>
+                                <span class="font-semibold text-gray-900">{{ rfq.city }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Area:</span>
+                                <span class="font-semibold text-gray-900">{{ rfq.area_required_sqft|floatformat:0 }} Sq Ft</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Product:</span>
+                                <span class="font-semibold text-gray-900">{{ rfq.product }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                            class="w-full inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-lg font-bold rounded-xl shadow-lg hover:from-emerald-700 hover:to-emerald-800 transform hover:scale-105 transition">
+                        <svg aria-hidden="true" width="24" height="24" class="mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Send RFQ Emails
+                    </button>
+
+                    <!-- Info Box -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <svg aria-hidden="true" width="20" height="20" class="text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-blue-800">Email Preview</p>
+                                <p class="text-sm text-blue-700 mt-1">
+                                    Emails will include RFQ details, expected rates (if any), deadline, and POC contact information.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<script>
+// Update selected vendors count
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.vendor-checkbox:not(:disabled):checked');
+    document.getElementById('selectedCount').textContent = checkboxes.length + ' selected';
+}
+
+// Vendor search functionality
+document.getElementById('vendorSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const vendorItems = document.querySelectorAll('.vendor-item');
+
+    vendorItems.forEach(item => {
+        const vendorName = item.getAttribute('data-vendor-name');
+        const vendorCities = item.getAttribute('data-vendor-cities');
+        const vendorEmail = item.getAttribute('data-vendor-email');
+
+        const matches = vendorName.includes(searchTerm) ||
+                       vendorCities.includes(searchTerm) ||
+                       vendorEmail.includes(searchTerm);
+
+        item.style.display = matches ? 'flex' : 'none';
+    });
+});
+
+// Set minimum date to today
+document.getElementById('deadline_date').min = new Date().toISOString().split('T')[0];
+</script>
+
+{% endblock %}

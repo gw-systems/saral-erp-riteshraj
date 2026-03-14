@@ -1,0 +1,151 @@
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type ROLLBACK to confirm emergency rollback to stable revision'
+        required: true
+        default: 'NO'
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+
+jobs:
+  rollback:
+    name: Rollback to Stable Revision
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "ROLLBACK" ]; then
+            echo "❌ Rollback cancelled - must type ROLLBACK to confirm"
+            exit 1
+          fi
+          echo "⚠️ Emergency rollback initiated"
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Get Current and Stable Revisions
+        id: get-revisions
+        run: |
+          # Get current serving revision
+          CURRENT_REV=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+                         --region=${{ env.GCP_REGION }} \
+                         --format='value(status.traffic[0].revisionName)')
+          
+          # Get stable revision from secret
+          STABLE_REV="${{ secrets.STABLE_REVISION }}"
+          
+          if [ -z "$STABLE_REV" ]; then
+            echo "❌ ERROR: STABLE_REVISION secret is not set"
+            exit 1
+          fi
+          
+          if [ "$CURRENT_REV" == "$STABLE_REV" ]; then
+            echo "⚠️ WARNING: Already serving stable revision"
+            echo "Current: $CURRENT_REV"
+            echo "Stable:  $STABLE_REV"
+            exit 1
+          fi
+          
+          echo "current_revision=${CURRENT_REV}" >> $GITHUB_OUTPUT
+          echo "stable_revision=${STABLE_REV}" >> $GITHUB_OUTPUT
+          
+          echo "🔄 Rollback Plan:"
+          echo "  FROM: ${CURRENT_REV} (current)"
+          echo "  TO:   ${STABLE_REV} (stable)"
+      
+      - name: Verify Stable Revision Exists
+        run: |
+          STABLE_REV="${{ steps.get-revisions.outputs.stable_revision }}"
+          
+          # Check if revision exists
+          if ! gcloud run revisions describe "$STABLE_REV" \
+               --service=${{ env.SERVICE_NAME }} \
+               --region=${{ env.GCP_REGION }} \
+               --format='value(metadata.name)' &>/dev/null; then
+            echo "❌ ERROR: Stable revision $STABLE_REV does not exist"
+            echo "Available revisions:"
+            gcloud run revisions list \
+              --service=${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --format='table(metadata.name,status.conditions[0].status,metadata.creationTimestamp)' \
+              --limit=10
+            exit 1
+          fi
+          
+          echo "✅ Stable revision exists and is valid"
+      
+      - name: Execute Rollback
+        run: |
+          STABLE_REV="${{ steps.get-revisions.outputs.stable_revision }}"
+          
+          echo "🔄 Routing 100% traffic to stable revision..."
+          
+          gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --to-revisions="${STABLE_REV}=100"
+          
+          echo "✅ Rollback complete"
+      
+      - name: Verify Rollback
+        run: |
+          STABLE_REV="${{ steps.get-revisions.outputs.stable_revision }}"
+          
+          sleep 10
+          
+          TRAFFIC=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+                     --region=${{ env.GCP_REGION }} \
+                     --format='value(status.traffic[0].revisionName,status.traffic[0].percent)')
+          
+          echo "Current traffic distribution: $TRAFFIC"
+          
+          if echo "$TRAFFIC" | grep -q "${STABLE_REV}.*100"; then
+            echo "✅ Rollback verified - 100% traffic on stable revision"
+          else
+            echo "⚠️ WARNING: Traffic distribution unexpected"
+          fi
+      
+      - name: 🎯 Rollback Summary
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ EMERGENCY ROLLBACK COMPLETE"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "🌐 Production URL: https://${{ env.SERVICE_NAME }}-ensstwr7tq-el.a.run.app"
+          echo "📦 Active Revision: ${{ steps.get-revisions.outputs.stable_revision }}"
+          echo "🔙 Rolled back from: ${{ steps.get-revisions.outputs.current_revision }}"
+          echo ""
+          echo "⚠️ IMPORTANT NEXT STEPS:"
+          echo "  1. Investigate what caused the rollback need"
+          echo "  2. Fix the issue in the failing revision"
+          echo "  3. Test thoroughly in staging before next rollout"
+          echo "  4. Document the incident"
+          echo ""
+          echo "📋 To roll forward again:"
+          echo "  Use the Production Rollout workflow with the fixed revision"
+          echo ""
+      
+      - name: Rollback Failed
+        if: failure()
+        run: |
+          echo "❌ ROLLBACK FAILED"
+          echo ""
+          echo "Manual rollback required:"
+          echo ""
+          echo "gcloud run services update-traffic ${{ env.SERVICE_NAME }} \\"
+          echo "  --region=${{ env.GCP_REGION }} \\"
+          echo "  --to-revisions=\"${{ secrets.STABLE_REVISION }}=100\""
+          echo ""
+          echo "Contact DevOps immediately"

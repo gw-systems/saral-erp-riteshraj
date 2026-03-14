@@ -1,0 +1,829 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ filter_title }} - Saral ERP{% endblock %}
+
+{% block content %}
+
+<main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ filter_title }}</h1>
+            <p class="text-sm text-gray-500 mt-1">{{ total_count }} project{{ total_count|pluralize }}</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Dashboard
+            </a>
+            {% if user.role == 'admin' or user.role == 'backoffice' or user.role == 'super_user' %}
+            <a href="{% url 'projects:project_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                New Project
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SEARCH & FILTER SECTION -->
+    <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-6">
+        <form method="GET" class="space-y-4">
+
+            <!-- 1. Search Bar -->
+            <div class="flex gap-4">
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-500" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search by project code, client, vendor, or location..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button type="submit" class="px-6 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 transition shadow-sm">
+                    Search
+                </button>
+                {% if search_query or current_filters.f_status or current_filters.f_coordinator or current_filters.f_sales or current_filters.f_mode or current_filters.f_mis %}
+                <a href="{% url 'projects:project_list_all' %}" class="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 2. Filters Grid (5 columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+
+                <!-- Status Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                    <select name="f_status" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Statuses</option>
+                        {% for status in filter_options.statuses %}
+                        <option value="{{ status }}" {% if current_filters.f_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Coordinator Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Coordinator</label>
+                    <select name="f_coordinator" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Coordinators</option>
+                        {% for coord in filter_options.coordinators %}
+                        <option value="{{ coord }}" {% if current_filters.f_coordinator == coord %}selected{% endif %}>{{ coord }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Operation Mode Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Op. Mode</label>
+                    <select name="f_mode" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Modes</option>
+                        <option value="auto_mode" {% if current_filters.f_mode == 'auto_mode' %}selected{% endif %}>Auto Mode</option>
+                        <option value="data_sharing" {% if current_filters.f_mode == 'data_sharing' %}selected{% endif %}>Data Sharing</option>
+                        <option value="active_engagement" {% if current_filters.f_mode == 'active_engagement' %}selected{% endif %}>Active Engagement</option>
+                    </select>
+                </div>
+
+                <!-- Sales Manager Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Sales Mgr</label>
+                    <select name="f_sales" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Sales Mgrs</option>
+                        {% for sales in filter_options.sales_managers %}
+                        <option value="{{ sales }}" {% if current_filters.f_sales == sales %}selected{% endif %}>{{ sales }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- MIS Status Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">MIS Status</label>
+                    <select name="f_mis" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All</option>
+                        <option value="MIS Daily" {% if current_filters.f_mis == 'MIS Daily' %}selected{% endif %}>MIS Daily</option>
+                        <option value="MIS Weekly" {% if current_filters.f_mis == 'MIS Weekly' %}selected{% endif %}>MIS Weekly</option>
+                        <option value="MIS Monthly" {% if current_filters.f_mis == 'MIS Monthly' %}selected{% endif %}>MIS Monthly</option>
+                        <option value="Inciflo" {% if current_filters.f_mis == 'Inciflo' %}selected{% endif %}>Inciflo</option>
+                        <option value="MIS Automode" {% if current_filters.f_mis == 'MIS Automode' %}selected{% endif %}>MIS Automode</option>
+                        <option value="MIS Not Required" {% if current_filters.f_mis == 'MIS Not Required' %}selected{% endif %}>MIS Not Required</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Filter Tabs (Project Status Categories) -->
+    <div class="mb-6 border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+            <a href="{% url 'projects:project_list_all' %}"
+            class="{% if filter_type == 'all' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                All Projects
+            </a>
+            <a href="{% url 'projects:project_list_active' %}"
+            class="{% if filter_type == 'active' %}border-emerald-500 text-emerald-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Active
+            </a>
+            <a href="{% url 'projects:project_list_pending' %}"
+            class="{% if filter_type == 'pending' %}border-amber-500 text-amber-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Not Started
+            </a>
+            {% if role == 'admin' or role == 'super_user' or role == 'operation_controller' or role == 'operation_manager' %}
+            <a href="{% url 'projects:project_list_unassigned' %}"
+            class="{% if filter_type == 'unassigned' %}border-rose-500 text-rose-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Unassigned
+            </a>
+            {% endif %}
+            {% if role != 'operation_coordinator' %}
+            <a href="{% url 'projects:project_list_inactive' %}"
+            class="{% if filter_type == 'inactive' %}border-gray-500 text-gray-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Inactive
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+
+    <!-- Projects Table -->
+    {% if projects %}
+    <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 300px;">
+                            <a href="?sort=project_code{% if request.GET.sort == 'project_code' %}_desc{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="hover:text-gray-700 flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                Project Code
+                                {% if request.GET.sort == 'project_code' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/></svg>
+                                {% elif request.GET.sort == 'project_code_desc' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operation Mode</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MIS Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sales Manager</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coordinator</th>
+                        {% if user.role == 'admin' or user.role == 'backoffice' %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                            <a href="?sort=created{% if request.GET.sort == 'created' %}_desc{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="hover:text-gray-700 flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                Created
+                                {% if request.GET.sort == 'created' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/></svg>
+                                {% elif request.GET.sort == 'created_desc' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                            <a href="?sort=updated{% if request.GET.sort == 'updated' %}_desc{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="hover:text-gray-700 flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                Modified
+                                {% if request.GET.sort == 'updated' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/></svg>
+                                {% elif request.GET.sort == 'updated_desc' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        {% endif %}
+                        {% if user.role != 'backoffice' %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">Op. Start Date</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in projects %}
+                    <tr class="hover:bg-gray-50 transition">
+
+                        <!-- 1. Project Code -->
+                        <td class="px-6 py-4">
+                            <a href="{% url 'projects:project_detail' project.project_id %}?return_url={{ request.get_full_path|urlencode }}"
+                                class="text-blue-600 hover:text-blue-800 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                {{ project.project_code }}
+                            </a>
+                        </td>
+
+                        <!-- 2. Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if project.project_status == 'Active' %}bg-emerald-100 text-emerald-800
+                                    {% elif project.project_status == 'Operation Not Started' %}bg-amber-100 text-amber-800
+                                    {% elif project.project_status == 'Notice Period' %}bg-orange-100 text-orange-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ project.project_status }}
+                                </span>
+
+                                {% if role == 'admin' or role == 'super_user' or role == 'operation_controller' or role == 'operation_manager' or role == 'backoffice' %}
+                                <a href="{% url 'projects:change_status' project.project_id %}?return_url={{ request.get_full_path|urlencode }}"
+                                   class="text-gray-500 hover:text-blue-600 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                   title="Change Status">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- 3. Operation Mode -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                {% if project.operation_mode %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if project.operation_mode == 'Auto Mode' %}bg-gray-100 text-gray-700
+                                        {% elif project.operation_mode == 'Data Sharing' %}bg-sky-100 text-sky-800
+                                        {% elif project.operation_mode == 'Active Engagement' %}bg-amber-100 text-amber-800
+                                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                        {{ project.get_operation_mode_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-500 text-xs">Not Set</span>
+                                {% endif %}
+
+                                {% if role in 'operation_controller,operation_manager,admin,super_user' %}
+                                <button onclick="openOperationModeModal('{{ project.project_id }}', '{{ project.project_code }}', '{{ project.operation_mode }}')"
+                                        class="text-gray-500 hover:text-blue-600 transition"
+                                        title="Update Operation Mode">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- 4. MIS Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                {% if project.mis_status %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if 'daily' in project.mis_status %}bg-blue-100 text-blue-800
+                                        {% elif 'weekly' in project.mis_status %}bg-purple-100 text-purple-800
+                                        {% elif 'monthly' in project.mis_status %}bg-green-100 text-green-800
+                                        {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                        {{ project.get_mis_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-500 text-xs">Not Set</span>
+                                {% endif %}
+
+                                {% if role in 'operation_controller,operation_manager,admin,super_user,operation_coordinator' %}
+                                <button onclick="openMisStatusModal('{{ project.project_id }}', '{{ project.project_code }}', '{{ project.mis_status }}')"
+                                        class="text-gray-500 hover:text-blue-600 transition"
+                                        title="Update MIS Status">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- 5. Sales Manager -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-gray-900" id="sales_display_{{ project.project_id }}">{{ project.sales_manager|default:"-" }}</div>
+
+                                {% if role == 'admin' or role == 'super_user' or role == 'director' %}
+                                <button onclick="openSalesManagerModal('{{ project.project_id }}', '{{ project.project_code }}', '{{ project.sales_manager }}')"
+                                        class="ml-2 text-gray-500 hover:text-blue-600 transition flex-shrink-0"
+                                        title="Update Sales Manager">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- 6. Coordinator -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-gray-900">{{ project.operation_coordinator|default:"-" }}</div>
+                                    {% if project.backup_coordinator %}
+                                    <div class="text-xs text-gray-500">Backup: {{ project.backup_coordinator }}</div>
+                                    {% endif %}
+                                </div>
+
+                                {% if role in 'operation_controller,operation_manager,admin,super_user' %}
+                                <button onclick="openCoordinatorModal('{{ project.project_id }}', '{{ project.project_code }}', '{{ project.operation_coordinator }}', '{{ project.backup_coordinator }}')"
+                                        class="ml-2 text-gray-500 hover:text-blue-600 transition flex-shrink-0"
+                                        title="Update Coordinators">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        {% if user.role == 'admin' or user.role == 'backoffice' %}
+                        <!-- 7. Created Date (admin & backoffice only) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ project.created_at|date:"d M Y" }}
+                        </td>
+
+                        <!-- 8. Modified Date (admin & backoffice only) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ project.updated_at|date:"d M Y" }}
+                        </td>
+                        {% endif %}
+
+                        {% if user.role != 'backoffice' %}
+                        <!-- Op. Start Date (admin + all roles except backoffice) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ project.operation_start_date|date:"d M Y"|default:"—" }}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+        <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+        <p class="mt-1 text-sm text-gray-500">
+            {% if search_query %}
+            No projects match your search "{{ search_query }}"
+            {% else %}
+            No projects available in this category
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+</main>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Operation Mode Update Modal -->
+<div id="operationModeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Update Operation Mode
+            </h3>
+
+            <form id="operationModeForm" method="POST" action="">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                    <p id="modalProjectCode" class="text-sm text-gray-900 font-semibold"></p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Operation Mode <span class="text-red-500">*</span>
+                    </label>
+                    <select name="operation_mode" id="modalOperationMode" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Select Mode --</option>
+                        <option value="auto_mode">Auto Mode</option>
+                        <option value="data_sharing">Data Sharing</option>
+                        <option value="active_engagement">Active Engagement</option>
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <strong>Auto Mode:</strong> Fully automated operations<br>
+                        <strong>Data Sharing:</strong> Client shares data regularly<br>
+                        <strong>Active Engagement:</strong> Regular coordination needed
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks (Optional)</label>
+                    <textarea name="remarks" rows="2"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Reason for change..."></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeOperationModeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Update Mode</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Coordinator Update Modal -->
+<div id="coordinatorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Update Coordinators
+            </h3>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <p id="coordModalProjectCode" class="text-sm text-gray-900 font-semibold"></p>
+            </div>
+
+            <!-- Operation Coordinator -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Operation Coordinator</label>
+                <select id="coordModalOperationCoordinator" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">-- Unassigned --</option>
+                </select>
+                <p id="coordOperationStatus" class="text-xs mt-1"></p>
+            </div>
+
+            <!-- Backup Coordinator -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Backup Coordinator</label>
+                <select id="coordModalBackupCoordinator" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">-- Unassigned --</option>
+                </select>
+                <p id="coordBackupStatus" class="text-xs mt-1"></p>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeCoordinatorModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                <button type="button" onclick="saveCoordinators()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Sales Manager Update Modal -->
+<div id="salesManagerModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Update Sales Manager
+            </h3>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <p id="salesModalProjectCode" class="text-sm text-gray-900 font-semibold"></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sales Manager</label>
+                <select id="salesManagerSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">-- Unassigned --</option>
+                </select>
+                <p id="salesUpdateStatus" class="text-xs mt-1"></p>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeSalesManagerModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                <button type="button" onclick="saveSalesManager()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. MIS Status Update Modal -->
+<div id="misStatusModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Update MIS Status
+            </h3>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <p id="misModalProjectCode" class="text-sm text-gray-900 font-semibold"></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    MIS Status <span class="text-red-500">*</span>
+                </label>
+                <select id="misStatusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">-- Not Set --</option>
+                    <option value="mis_daily">MIS Daily</option>
+                    <option value="mis_weekly">MIS Weekly</option>
+                    <option value="mis_monthly">MIS Monthly</option>
+                    <option value="inciflo">Inciflo</option>
+                    <option value="mis_automode">MIS Automode</option>
+                    <option value="mis_not_required">MIS Not Required</option>
+                </select>
+                <p id="misUpdateStatus" class="text-xs mt-1"></p>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeMisStatusModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                <button type="button" onclick="saveMisStatus()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+// --- 1. Operation Mode Modal Logic ---
+function openOperationModeModal(projectId, projectCode, currentMode) {
+    const modal = document.getElementById('operationModeModal');
+    const form = document.getElementById('operationModeForm');
+    const projectCodeEl = document.getElementById('modalProjectCode');
+    const modeSelect = document.getElementById('modalOperationMode');
+
+    form.action = `/projects/${projectId}/update-operation-mode/`;
+    projectCodeEl.textContent = projectCode;
+    modeSelect.value = currentMode || '';
+    modal.classList.remove('hidden');
+}
+
+function closeOperationModeModal() {
+    document.getElementById('operationModeModal').classList.add('hidden');
+}
+
+// --- 2. Coordinator Modal Logic ---
+let currentProjectId = null;
+
+function openCoordinatorModal(projectId, projectCode, currentOperation, currentBackup) {
+    currentProjectId = projectId;
+    const modal = document.getElementById('coordinatorModal');
+    const projectCodeEl = document.getElementById('coordModalProjectCode');
+
+    projectCodeEl.textContent = projectCode;
+
+    document.getElementById('coordOperationStatus').textContent = '';
+    document.getElementById('coordBackupStatus').textContent = '';
+
+    fetch('/projects/api/coordinators/')
+        .then(response => response.json())
+        .then(data => {
+            const operationSelect = document.getElementById('coordModalOperationCoordinator');
+            const backupSelect = document.getElementById('coordModalBackupCoordinator');
+
+            operationSelect.innerHTML = '<option value="">-- Unassigned --</option>';
+            data.coordinators.forEach(coord => {
+                const option = document.createElement('option');
+                option.value = coord.id;
+                option.textContent = coord.name;
+                if (coord.name.includes(currentOperation) && currentOperation) {
+                    option.selected = true;
+                    operationSelect.setAttribute('data-original', coord.id);
+                }
+                operationSelect.appendChild(option);
+            });
+
+            backupSelect.innerHTML = '<option value="">-- Unassigned --</option>';
+            data.coordinators.forEach(coord => {
+                const option = document.createElement('option');
+                option.value = coord.id;
+                option.textContent = coord.name;
+                if (coord.name.includes(currentBackup) && currentBackup) {
+                    option.selected = true;
+                    backupSelect.setAttribute('data-original', coord.id);
+                }
+                backupSelect.appendChild(option);
+            });
+
+            if (!operationSelect.value && currentOperation) operationSelect.setAttribute('data-original', '');
+            if (!backupSelect.value && currentBackup) backupSelect.setAttribute('data-original', '');
+
+            modal.classList.remove('hidden');
+        })
+        .catch(error => {
+            alert('Failed to load coordinators.');
+            console.error(error);
+        });
+}
+
+function closeCoordinatorModal() {
+    document.getElementById('coordinatorModal').classList.add('hidden');
+    currentProjectId = null;
+}
+
+function saveCoordinators() {
+    const operationSelect = document.getElementById('coordModalOperationCoordinator');
+    const backupSelect = document.getElementById('coordModalBackupCoordinator');
+
+    const operationId = operationSelect.value;
+    const backupId = backupSelect.value;
+    const originalOperation = operationSelect.getAttribute('data-original') || '';
+    const originalBackup = backupSelect.getAttribute('data-original') || '';
+
+    let updateCount = 0;
+
+    if (operationId !== originalOperation) {
+        updateCoordinatorField('operation_coordinator', operationId, 'coordOperationStatus', false);
+        updateCount++;
+    }
+
+    if (backupId !== originalBackup) {
+        updateCoordinatorField('backup_coordinator', backupId, 'coordBackupStatus', false);
+        updateCount++;
+    }
+
+    if (updateCount > 0) {
+        setTimeout(() => {
+            closeCoordinatorModal();
+            window.location.reload();
+        }, 1500);
+    } else {
+        closeCoordinatorModal();
+    }
+}
+
+function updateCoordinatorField(field, coordinatorId, statusElementId) {
+    const statusEl = document.getElementById(statusElementId);
+    statusEl.textContent = 'Updating...';
+    statusEl.className = 'text-xs mt-1 text-blue-600';
+
+    const formData = new FormData();
+    formData.append('field', field);
+    formData.append('coordinator_id', coordinatorId);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch(`/projects/${currentProjectId}/update-coordinator/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusEl.textContent = 'Saved';
+            statusEl.className = 'text-xs mt-1 text-green-600';
+        } else {
+            statusEl.textContent = 'Error: ' + data.error;
+            statusEl.className = 'text-xs mt-1 text-red-600';
+        }
+    })
+    .catch(error => {
+        statusEl.textContent = 'Update failed';
+        statusEl.className = 'text-xs mt-1 text-red-600';
+    });
+}
+
+// --- 3. Sales Manager Modal Logic ---
+let salesProjectId = null;
+
+function openSalesManagerModal(projectId, projectCode, currentManager) {
+    salesProjectId = projectId;
+    const modal = document.getElementById('salesManagerModal');
+    const projectCodeEl = document.getElementById('salesModalProjectCode');
+    const select = document.getElementById('salesManagerSelect');
+    const statusEl = document.getElementById('salesUpdateStatus');
+
+    projectCodeEl.textContent = projectCode;
+    statusEl.textContent = '';
+
+    fetch('/projects/api/sales-managers/')
+        .then(response => response.json())
+        .then(data => {
+            select.innerHTML = '<option value="">-- Unassigned --</option>';
+            data.sales_managers.forEach(mgr => {
+                const option = document.createElement('option');
+                option.value = mgr.id;
+                option.textContent = mgr.name;
+                if (mgr.name === currentManager) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            modal.classList.remove('hidden');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error loading sales managers');
+        });
+}
+
+function closeSalesManagerModal() {
+    document.getElementById('salesManagerModal').classList.add('hidden');
+    salesProjectId = null;
+}
+
+function saveSalesManager() {
+    const select = document.getElementById('salesManagerSelect');
+    const statusEl = document.getElementById('salesUpdateStatus');
+    const newManagerId = select.value;
+
+    statusEl.textContent = 'Updating...';
+    statusEl.className = 'text-xs mt-1 text-blue-600';
+
+    const formData = new FormData();
+    formData.append('sales_manager_id', newManagerId);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch(`/projects/${salesProjectId}/update-sales-manager/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusEl.textContent = 'Saved';
+            statusEl.className = 'text-xs mt-1 text-green-600';
+
+            document.getElementById(`sales_display_${salesProjectId}`).textContent = data.new_value;
+
+            setTimeout(() => {
+                closeSalesManagerModal();
+            }, 800);
+        } else {
+            statusEl.textContent = 'Error: ' + data.error;
+            statusEl.className = 'text-xs mt-1 text-red-600';
+        }
+    })
+    .catch(err => {
+        statusEl.textContent = 'Update failed';
+        statusEl.className = 'text-xs mt-1 text-red-600';
+    });
+}
+
+// --- 4. MIS Status Modal Logic ---
+let misProjectId = null;
+
+function openMisStatusModal(projectId, projectCode, currentStatus) {
+    misProjectId = projectId;
+    const modal = document.getElementById('misStatusModal');
+    const projectCodeEl = document.getElementById('misModalProjectCode');
+    const select = document.getElementById('misStatusSelect');
+    const statusEl = document.getElementById('misUpdateStatus');
+
+    projectCodeEl.textContent = projectCode;
+    select.value = currentStatus || '';
+    statusEl.textContent = '';
+
+    modal.classList.remove('hidden');
+}
+
+function closeMisStatusModal() {
+    document.getElementById('misStatusModal').classList.add('hidden');
+    misProjectId = null;
+}
+
+function saveMisStatus() {
+    const select = document.getElementById('misStatusSelect');
+    const statusEl = document.getElementById('misUpdateStatus');
+    const newStatus = select.value;
+
+    statusEl.textContent = 'Updating...';
+    statusEl.className = 'text-xs mt-1 text-blue-600';
+
+    const formData = new FormData();
+    formData.append('mis_status', newStatus);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch(`/projects/${misProjectId}/update-mis-status/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusEl.textContent = 'Saved';
+            statusEl.className = 'text-xs mt-1 text-green-600';
+
+            setTimeout(() => {
+                closeMisStatusModal();
+                window.location.reload(); // Reload to show updated status
+            }, 800);
+        } else {
+            statusEl.textContent = 'Error: ' + data.error;
+            statusEl.className = 'text-xs mt-1 text-red-600';
+        }
+    })
+    .catch(err => {
+        statusEl.textContent = 'Update failed';
+        statusEl.className = 'text-xs mt-1 text-red-600';
+    });
+}
+
+// Global Modal Close Logic
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeOperationModeModal();
+        closeCoordinatorModal();
+        closeSalesManagerModal();
+        closeMisStatusModal();
+    }
+});
+
+window.onclick = function(event) {
+    const opModal = document.getElementById('operationModeModal');
+    const coModal = document.getElementById('coordinatorModal');
+    const saModal = document.getElementById('salesManagerModal');
+    const miModal = document.getElementById('misStatusModal');
+
+    if (event.target == opModal) closeOperationModeModal();
+    if (event.target == coModal) closeCoordinatorModal();
+    if (event.target == saModal) closeSalesManagerModal();
+    if (event.target == miModal) closeMisStatusModal();
+}
+</script>
+
+{% endblock %}

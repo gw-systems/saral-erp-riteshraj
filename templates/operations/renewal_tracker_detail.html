@@ -1,0 +1,558 @@
+{% extends 'base.html' %}
+
+{% block title %}Renewal Tracker - {{ tracker.project_card.project.project_code }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <a href="{% url 'projects:renewal_tracker_list' %}" class="text-gray-500 hover:text-gray-600 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                            <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                        </a>
+                        <h1 class="text-3xl font-bold text-gray-900">Agreement Renewal Tracker</h1>
+                    </div>
+                    <p class="text-gray-600 mt-1">
+                        Project:
+                        <a href="{% url 'projects:project_card_by_project' tracker.project_card.project.project_id %}"
+                           class="text-blue-600 hover:text-blue-800 hover:underline font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                            {{ tracker.project_card.project.project_code }}
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Status Badge -->
+                <div>
+                    {% if tracker.status.code == 'pending' %}
+                        <span class="px-4 py-2 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    {% elif tracker.status.code == 'in_progress' %}
+                        <span class="px-4 py-2 text-sm font-semibold rounded-full bg-orange-100 text-orange-800">In Progress</span>
+                    {% elif tracker.status.code == 'client_responded' %}
+                        <span class="px-4 py-2 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">Client Responded</span>
+                    {% elif tracker.status.code == 'renewed' %}
+                        <span class="px-4 py-2 text-sm font-semibold rounded-full bg-green-100 text-green-800">Renewed</span>
+                    {% else %}
+                        <span class="px-4 py-2 text-sm font-semibold rounded-full bg-gray-100 text-gray-800">{{ tracker.get_status_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column - Details & Actions -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Agreement Details -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Agreement Details</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Agreement End Date</label>
+                            <p class="text-gray-900 font-semibold text-lg">{{ tracker.project_card.agreement_end_date|date:"d M Y" }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Days Remaining</label>
+                            <p class="text-gray-900 font-semibold text-lg">
+                                {% with days_left=tracker.project_card.agreement_end_date|timeuntil %}
+                                    {{ days_left }}
+                                {% endwith %}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Sales Manager</label>
+                            <p class="text-gray-900 font-medium">{{ tracker.project_card.project.sales_manager|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Security Deposit</label>
+                            <p class="text-gray-900 font-medium">₹{{ tracker.project_card.security_deposit|floatformat:0 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Progress -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Workflow Progress (Stage {{ tracker.get_workflow_stage }}/7)</h2>
+
+                    <div class="space-y-4">
+                        <!-- Stage 1: Initial Email -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.initial_email_sent %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-gray-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">Initial Email</p>
+                                    {% if tracker.initial_email_sent %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Sent on {{ tracker.initial_email_sent|date:"d M Y" }}
+                                        </span>
+                                    {% else %}
+                                        <a href="{% url 'projects:renewal_tracker_send_email' tracker.id %}"
+                                           class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Send Now
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 2: First Reminder -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.first_reminder_sent %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-gray-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">1st Reminder</p>
+                                    {% if tracker.first_reminder_sent %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Sent on {{ tracker.first_reminder_sent|date:"d M Y" }}
+                                        </span>
+                                    {% elif tracker.initial_email_sent %}
+                                        <a href="{% url 'projects:renewal_tracker_send_email' tracker.id %}"
+                                           class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Send Now
+                                        </a>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">Pending initial email</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 3: Second Reminder -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.second_reminder_sent %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-gray-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">2nd Reminder</p>
+                                    {% if tracker.second_reminder_sent %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Sent on {{ tracker.second_reminder_sent|date:"d M Y" }}
+                                        </span>
+                                    {% elif tracker.first_reminder_sent %}
+                                        <a href="{% url 'projects:renewal_tracker_send_email' tracker.id %}"
+                                           class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Send Now
+                                        </a>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">Pending 1st reminder</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 4: Sales Manager Informed (1st) -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.sales_manager_informed_1_date %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-purple-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">Sales Manager Informed (1st)</p>
+                                    {% if tracker.sales_manager_informed_1_date %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Informed on {{ tracker.sales_manager_informed_1_date|date:"d M Y" }}
+                                        </span>
+                                    {% elif tracker.second_reminder_sent %}
+                                        <a href="{% url 'projects:renewal_tracker_inform_sales' tracker.id '1' %}"
+                                           class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Inform Now
+                                        </a>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">Pending 2nd reminder</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 5: Third Reminder -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.third_reminder_sent %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-gray-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">3rd Reminder</p>
+                                    {% if tracker.third_reminder_sent %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Sent on {{ tracker.third_reminder_sent|date:"d M Y" }}
+                                        </span>
+                                    {% elif tracker.sales_manager_informed_1_date %}
+                                        <a href="{% url 'projects:renewal_tracker_send_email' tracker.id %}"
+                                           class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Send Now
+                                        </a>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">Pending sales inform (1st)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 6: Sales Manager Informed (2nd) -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.sales_manager_informed_2_date %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-purple-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">Sales Manager Informed (2nd)</p>
+                                    {% if tracker.sales_manager_informed_2_date %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Informed on {{ tracker.sales_manager_informed_2_date|date:"d M Y" }}
+                                        </span>
+                                    {% elif tracker.third_reminder_sent %}
+                                        <a href="{% url 'projects:renewal_tracker_inform_sales' tracker.id '2' %}"
+                                           class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Inform Now
+                                        </a>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">Pending 3rd reminder</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 7: Final Intimation -->
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if tracker.final_intimation_sent %}
+                                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="h-8 w-8 rounded-full bg-red-300"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-medium text-gray-900">Final Intimation</p>
+                                    {% if tracker.final_intimation_sent %}
+                                        <span class="text-xs text-green-600">
+                                            <svg class="inline h-4 w-4 mr-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Sent on {{ tracker.final_intimation_sent|date:"d M Y" }}
+                                        </span>
+                                    {% elif tracker.sales_manager_informed_2_date %}
+                                        <a href="{% url 'projects:renewal_tracker_send_email' tracker.id %}"
+                                           class="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            Send Now
+                                        </a>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">Pending sales inform (2nd)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Client Response -->
+                {% if tracker.client_responded %}
+                <div class="bg-green-50 border-l-4 border-green-400 p-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" width="20" height="20" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-sm font-medium text-green-800">Client Responded</h3>
+                            <div class="mt-2 text-sm text-green-700">
+                                <p><strong>Date:</strong> {{ tracker.client_response_date|date:"d M Y" }}</p>
+                                <p class="mt-2"><strong>Response:</strong></p>
+                                <p class="whitespace-pre-wrap">{{ tracker.client_response_summary }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-900">Client Response</h2>
+                        <a href="{% url 'projects:renewal_tracker_client_response' tracker.id %}"
+                           class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Record Response
+                        </a>
+                    </div>
+                    <p class="text-gray-500 text-sm">No client response recorded yet</p>
+                </div>
+                {% endif %}
+
+                <!-- Activity Timeline -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Activity Timeline</h2>
+
+                    {% if logs %}
+                    <div class="flow-root">
+                        <ul class="-mb-8">
+                            {% for log in logs %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if not forloop.last %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                                <svg class="h-5 w-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div>
+                                                <div class="text-sm">
+                                                    <span class="font-medium text-gray-900">{{ log.get_action_type_display }}</span>
+                                                </div>
+                                                <p class="mt-0.5 text-xs text-gray-500">
+                                                    {{ log.action_date|date:"d M Y" }} by {{ log.performed_by.get_full_name }}
+                                                </p>
+                                            </div>
+                                            {% if log.notes %}
+                                            <div class="mt-2 text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                                                <p class="whitespace-pre-wrap">{{ log.notes }}</p>
+                                            </div>
+                                            {% endif %}
+                                            {% if log.email_sent_to %}
+                                            <div class="mt-2 text-xs text-gray-600">
+                                                <p class="flex items-center gap-1">
+                                                    <svg class="inline h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                    Email sent to: {{ log.email_sent_to }}
+                                                </p>
+                                                {% if log.email_subject %}
+                                                <p>Subject: {{ log.email_subject }}</p>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-sm">No activity yet</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Right Column - Quick Actions -->
+            <div class="space-y-6">
+
+                <!-- Next Action Card -->
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-2">Next Action Required</h3>
+                    <p class="text-blue-100 text-sm mb-4">{{ tracker.get_next_action }}</p>
+                    <div class="text-xs text-blue-200">
+                        Workflow Stage: {{ tracker.get_workflow_stage }}/7
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+
+                    <div class="space-y-3">
+                        {% if not tracker.client_responded %}
+                        <a href="{% url 'projects:renewal_tracker_client_response' tracker.id %}"
+                           class="block w-full px-4 py-2 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            Record Client Response
+                        </a>
+                        {% endif %}
+
+                        <button onclick="document.getElementById('addNoteModal').classList.remove('hidden')"
+                                class="block w-full px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700 transition text-sm font-medium">
+                            Add Note
+                        </button>
+
+                        <button onclick="document.getElementById('updateStatusModal').classList.remove('hidden')"
+                                class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                            Update Status
+                        </button>
+
+                        <a href="{% url 'projects:project_card_detail' tracker.project_card.id %}"
+                           class="block w-full px-4 py-2 border border-gray-300 text-gray-700 text-center rounded-lg hover:bg-gray-50 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            View Project Card
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Status Info -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Tracker Info</h3>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <span class="text-gray-500">Created:</span>
+                            <span class="text-gray-900 font-medium">{{ tracker.created_at|date:"d M Y" }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Created by:</span>
+                            <span class="text-gray-900 font-medium">{{ tracker.created_by.get_full_name }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Last updated:</span>
+                            <span class="text-gray-900 font-medium">{{ tracker.updated_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        {% if tracker.last_updated_by %}
+                        <div>
+                            <span class="text-gray-500">Updated by:</span>
+                            <span class="text-gray-900 font-medium">{{ tracker.last_updated_by.get_full_name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Remarks -->
+                {% if tracker.remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-yellow-800 mb-2">Remarks</h4>
+                    <p class="text-sm text-yellow-700 whitespace-pre-wrap">{{ tracker.remarks }}</p>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div id="addNoteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Note</h3>
+            <form method="POST" action="{% url 'projects:renewal_tracker_update_status' tracker.id %}">
+                {% csrf_token %}
+                <textarea name="notes" rows="4" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your notes here..."></textarea>
+
+                <input type="hidden" name="status" value="{{ tracker.status }}">
+
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="button" onclick="document.getElementById('addNoteModal').classList.add('hidden')"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Note
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="updateStatusModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Update Status</h3>
+            <form method="POST" action="{% url 'projects:renewal_tracker_update_status' tracker.id %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Status</label>
+                    <select name="status" required
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="pending" {% if tracker.status.code == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="in_progress" {% if tracker.status.code == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="client_responded" {% if tracker.status.code == 'client_responded' %}selected{% endif %}>Client Responded</option>
+                        <option value="renewed" {% if tracker.status.code == 'renewed' %}selected{% endif %}>Renewed</option>
+                        <option value="not_renewed" {% if tracker.status.code == 'not_renewed' %}selected{% endif %}>Not Renewed</option>
+                        <option value="cancelled" {% if tracker.status.code == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optional)</label>
+                    <textarea name="notes" rows="3"
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                              placeholder="Reason for status change..."></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('updateStatusModal').classList.add('hidden')"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

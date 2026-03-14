@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ rfq.rfq_id }} - RFQ Detail{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ rfq.rfq_id }}</h1>
+                    <p class="mt-2 text-sm text-gray-600">{{ rfq.city }} • {{ rfq.area_required_sqft|floatformat:0 }} Sq Ft • {{ rfq.product }}</p>
+                </div>
+                <a href="{% url 'supply:rfq_list' %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+
+            <!-- Status -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-gray-500 uppercase">Status</p>
+                    <svg class="h-4 w-4 text-gray-500" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full
+                    {% if rfq.status == 'open' %}bg-blue-100 text-blue-800
+                    {% elif rfq.status == 'closed' %}bg-green-100 text-green-800
+                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                    {{ rfq.get_status_display }}
+                </span>
+            </div>
+
+            <!-- Vendors Sent -->
+            <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-purple-50 uppercase">Vendors Sent</p>
+                    <svg class="h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <p class="text-2xl font-bold">{{ total_sent }}</p>
+                <p class="text-xs text-purple-50 mt-1">Total</p>
+            </div>
+
+            <!-- Responses Received -->
+            <div class="bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-md p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-green-50 uppercase">Responses</p>
+                    <svg class="h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <p class="text-2xl font-bold">{{ responded }}</p>
+                <p class="text-xs text-green-50 mt-1">{{ response_rate|floatformat:1 }}%</p>
+            </div>
+
+            <!-- Pending -->
+            <div class="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-md p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-amber-50 uppercase">Pending</p>
+                    <svg class="h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <p class="text-2xl font-bold">{{ pending }}</p>
+                <p class="text-xs text-amber-50 mt-1">Awaiting</p>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: RFQ Details -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- RFQ Information Card -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-white">RFQ Details</h2>
+                        <a href="{% url 'supply:rfq_edit' rfq.rfq_id %}"
+                           class="inline-flex items-center px-3 py-1 border border-white rounded-lg text-sm font-medium text-white hover:bg-white hover:text-emerald-600 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            <svg class="w-4 h-4 mr-1" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit
+                        </a>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">City</p>
+                                <p class="text-sm font-medium text-gray-900">{{ rfq.city }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Area Required</p>
+                                <p class="text-sm font-medium text-gray-900">{{ rfq.area_required_sqft|floatformat:0 }} Sq Ft</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Product</p>
+                                <p class="text-sm font-medium text-gray-900">{{ rfq.product }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Tenure</p>
+                                <p class="text-sm font-medium text-gray-900">{{ rfq.get_tenure_display|default:"-" }}</p>
+                            </div>
+                        </div>
+                        {% if rfq.remarks %}
+                        <div class="pt-4 border-t border-gray-200">
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Remarks</p>
+                            <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ rfq.remarks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Expected Rates Card -->
+                {% if rfq.storage_rate_sqft or rfq.storage_rate_pallet or rfq.storage_rate_mt or rfq.handling_rate_pallet %}
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white">Expected Rates</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            {% if rfq.storage_rate_sqft %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm text-gray-600">Storage (Sq Ft)</span>
+                                <span class="text-sm font-bold text-gray-900">₹{{ rfq.storage_rate_sqft }}</span>
+                            </div>
+                            {% endif %}
+                            {% if rfq.storage_rate_pallet %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm text-gray-600">Storage (Pallet)</span>
+                                <span class="text-sm font-bold text-gray-900">₹{{ rfq.storage_rate_pallet }}</span>
+                            </div>
+                            {% endif %}
+                            {% if rfq.storage_rate_mt %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm text-gray-600">Storage (MT)</span>
+                                <span class="text-sm font-bold text-gray-900">₹{{ rfq.storage_rate_mt }}</span>
+                            </div>
+                            {% endif %}
+                            {% if rfq.handling_rate_pallet %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm text-gray-600">Handling (Pallet)</span>
+                                <span class="text-sm font-bold text-gray-900">₹{{ rfq.handling_rate_pallet }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Vendor Mappings Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white">Sent to Vendors</h2>
+                    </div>
+                    {% if mappings %}
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Vendor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Deadline</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Sent At</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Response</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for mapping in mappings %}
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <a href="{% url 'supply:vendor_detail' mapping.vendor_contact.vendor_code.vendor_code %}"
+                                           class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            {{ mapping.vendor_contact.vendor_code.vendor_short_name }}
+                                        </a>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm text-gray-700">{{ mapping.sent_to_email }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm text-gray-900">{{ mapping.deadline_date|date:"M d, Y" }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-xs text-gray-500">{{ mapping.sent_at|date:"M d, Y H:i" }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {% if mapping.follow_up_status == 'responded' or mapping.follow_up_status == 'quoted' %}bg-green-100 text-green-800
+                                            {% elif mapping.follow_up_status == 'declined' %}bg-red-100 text-red-800
+                                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                            {{ mapping.get_follow_up_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if mapping.quoted_rate %}
+                                            <span class="text-sm font-semibold text-green-600">₹{{ mapping.quoted_rate }}</span>
+                                        {% else %}
+                                            <span class="text-sm text-gray-500">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-12 text-center">
+                        <svg class="mx-auto h-16 w-16 text-gray-500 mb-4" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <p class="text-gray-700 font-medium mb-2">Not sent to any vendors yet</p>
+                        <p class="text-sm text-gray-500 mb-4">Send this RFQ to vendors to collect quotations</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Right Column: Actions -->
+            <div class="space-y-6">
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white">Quick Actions</h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <!-- Send to Vendors -->
+                        <a href="{% url 'supply:rfq_send' rfq.rfq_id %}"
+                           class="block w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-center font-medium rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            <svg class="w-5 h-5 inline-block mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Send to Vendors
+                        </a>
+
+                        <!-- Edit RFQ -->
+                        <a href="{% url 'supply:rfq_edit' rfq.rfq_id %}"
+                           class="block w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 text-center font-medium rounded-lg hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            <svg class="w-5 h-5 inline-block mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit RFQ
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Status Change -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white">Change Status</h2>
+                    </div>
+                    <div class="p-6">
+                        <form method="post" action="{% url 'supply:rfq_toggle_status' rfq.rfq_id %}">
+                            {% csrf_token %}
+                            <select name="status" onchange="this.form.submit()"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="open" {% if rfq.status == 'open' %}selected{% endif %}>Open</option>
+                                <option value="closed" {% if rfq.status == 'closed' %}selected{% endif %}>Closed</option>
+                                <option value="postponed" {% if rfq.status == 'postponed' %}selected{% endif %}>Postponed</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Metadata -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white">Metadata</h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Created By</p>
+                            <p class="text-sm font-medium text-gray-900">{{ rfq.created_by.get_full_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Created At</p>
+                            <p class="text-sm text-gray-700">{{ rfq.created_at|date:"F d, Y - H:i" }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Last Updated</p>
+                            <p class="text-sm text-gray-700">{{ rfq.updated_at|date:"F d, Y - H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

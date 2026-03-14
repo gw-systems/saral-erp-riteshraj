@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load operations_filters %}
+
+{% block title %}Dispute Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dispute Management</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Track and resolve project disputes
+            </p>
+        </div>
+        {% if user.role == 'operation_coordinator' or user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' %}
+        <a href="{% url 'operations:dispute_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition">
+            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            Raise Dispute
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Total Disputes</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ total_disputes }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Open</p>
+                    <p class="text-2xl font-semibold text-yellow-600">{{ open_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-orange-500 rounded-md p-3">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">In Progress</p>
+                    <p class="text-2xl font-semibold text-orange-600">{{ in_progress_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Resolved</p>
+                    <p class="text-2xl font-semibold text-green-600">{{ resolved_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <form method="GET" class="space-y-4">
+            <!-- Row 1: Dropdowns -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="status_filter" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" id="status_filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Statuses</option>
+                        <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>Open</option>
+                        <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="dispute" {% if request.GET.status == 'dispute' %}selected{% endif %}>Dispute</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="priority_filter" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select name="priority" id="priority_filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Priorities</option>
+                        <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>High</option>
+                        <option value="critical" {% if request.GET.priority == 'critical' %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="title_filter" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <select name="title" id="title_filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Titles</option>
+                        <option value="Storage Space" {% if request.GET.title == 'Storage Space' %}selected{% endif %}>Storage Space</option>
+                        <option value="Handling" {% if request.GET.title == 'Handling' %}selected{% endif %}>Handling</option>
+                        <option value="Manpower/OT" {% if request.GET.title == 'Manpower/OT' %}selected{% endif %}>Manpower/OT</option>
+                        <option value="Operations" {% if request.GET.title == 'Operations' %}selected{% endif %}>Operations</option>
+                        <option value="MIS / Stock Issue" {% if request.GET.title == 'MIS / Stock Issue' %}selected{% endif %}>MIS / Stock Issue</option>
+                        <option value="Billing Issue" {% if request.GET.title == 'Billing Issue' %}selected{% endif %}>Billing Issue</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'operations:dispute_list' %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+                        Clear
+                    </a>
+                </div>
+            </div>
+
+            <!-- Row 2: Universal Search -->
+            <div>
+                <label for="search_filter" class="block text-sm font-medium text-gray-700 mb-1">Universal Search</label>
+                <input type="text" name="search" id="search_filter" value="{{ request.GET.search }}" placeholder="Search by project code, client name, description, or raised by..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+        </form>
+    </div>
+
+    <!-- Disputes Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">All Disputes</h2>
+        </div>
+        <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Disputes table">
+            <table class="min-w-full divide-y divide-gray-200">
+                <caption class="sr-only">List of disputes</caption>
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" style="min-width: 110px;" class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th scope="col" style="min-width: 180px;" class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th scope="col" style="min-width: 160px;" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                        <th scope="col" style="min-width: 100px;" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                        <th scope="col" style="min-width: 100px;" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th scope="col" style="min-width: 150px;" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Raised By</th>
+                        <th scope="col" style="min-width: 90px;" class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">TAT</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for dispute in disputes %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500">
+                            {{ dispute.raised_at|date:"d M Y" }}
+                        </td>
+                        <td class="px-2 py-2 whitespace-nowrap">
+                            <a href="{% url 'operations:dispute_detail' dispute.dispute_id %}"
+                            class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate block">
+                                {{ dispute.project.project_code }}
+                            </a>
+                        </td>
+                        <td class="px-2 py-2">
+                            <div class="text-xs font-medium text-gray-900 truncate">{{ dispute.title|format_dispute_title }}</div>
+                        </td>
+                        <td class="px-2 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if dispute.priority.code == 'critical' %}bg-red-100 text-red-800
+                                {% elif dispute.priority.code == 'high' %}bg-orange-100 text-orange-800
+                                {% elif dispute.priority.code == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ dispute.priority.label }}
+                            </span>
+                        </td>
+                        <td class="px-2 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if dispute.status.code == 'open' %}bg-yellow-100 text-yellow-800
+                                {% elif dispute.status.code == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% elif dispute.status.code == 'resolved' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ dispute.status.label }}
+                            </span>
+                        </td>
+                        <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-500 truncate">
+                            {{ dispute.raised_by.get_full_name }}
+                        </td>
+                        <td class="px-2 py-2 whitespace-nowrap text-xs">
+                            {% if dispute.status.code == 'resolved' and dispute.calculated_tat_days %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                    {% if dispute.calculated_tat_days <= 1 %}bg-green-100 text-green-800
+                                    {% elif dispute.calculated_tat_days <= 3 %}bg-yellow-100 text-yellow-800
+                                    {% elif dispute.calculated_tat_days <= 7 %}bg-orange-100 text-orange-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ dispute.calculated_tat_days }}d
+                                </span>
+                            {% elif dispute.status != 'resolved' %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                    Pending
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500 text-xs">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <svg width="48" height="48" aria-hidden="true" class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p class="mt-2 text-sm font-medium">No disputes found</p>
+                            <p class="mt-1 text-sm">Try adjusting your filters or create a new dispute.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if disputes.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Showing {{ disputes.start_index }} to {{ disputes.end_index }} of {{ disputes.paginator.count }} results
+            </div>
+            <div class="flex space-x-2">
+                {% if disputes.has_previous %}
+                <a href="?page={{ disputes.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.project %}&project={{ request.GET.project }}{% endif %}{% if request.GET.title %}&title={{ request.GET.title }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                
+                <span class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium bg-blue-50 text-blue-600">
+                    Page {{ disputes.number }} of {{ disputes.paginator.num_pages }}
+                </span>
+                
+                {% if disputes.has_next %}
+                <a href="?page={{ disputes.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.project %}&project={{ request.GET.project }}{% endif %}{% if request.GET.title %}&title={{ request.GET.title }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

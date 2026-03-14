@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Mapping - MiniERP{% endblock %}
+
+{% block content %}
+
+<main class="max-w-[95%] mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Project Mapping</h1>
+                <p class="text-sm text-gray-500 mt-1">Project assignments to Sales & Operations Coordinators</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                    <svg width="16" height="16" aria-hidden="true" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-4 mb-6">
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-100">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Projects</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ total_projects }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-rose-50 to-red-50 rounded-xl p-4 border-2 border-rose-100">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Unassigned Ops</p>
+                        <p class="text-xs text-gray-500">(Excludes GW)</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ unassigned_operations }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-100">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Unassigned Sales</p>
+                        <p class="text-xs text-gray-500">(Excludes GW)</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ unassigned_sales }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-100">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Unassigned Backup</p>
+                        <p class="text-xs text-gray-500">(Excludes GW)</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ unassigned_backup }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}bg-red-50 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 border-l-4 border-green-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %} p-4 rounded-r-lg">
+                <p class="{% if message.tags == 'error' %}text-red-700{% elif message.tags == 'success' %}text-green-700{% else %}text-blue-700{% endif %} font-medium">
+                    {{ message }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-6 bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <form method="GET" class="grid grid-cols-1 gap-6 md:grid-cols-7">
+            <!-- Search -->
+            <div class="md:col-span-2">
+                <label for="search" class="block text-sm font-semibold text-gray-900 mb-2">Search</label>
+                <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Code, client, location..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+            </div>
+            
+            <!-- Status -->
+            <div>
+                <label for="status" class="block text-sm font-semibold text-gray-900 mb-2">Status</label>
+                <select name="status" id="status" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    <option value="">Active + Notice + Not Started</option>
+                    <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Notice Period" {% if status_filter == 'Notice Period' %}selected{% endif %}>Notice Period</option>
+                    <option value="Operation Not Started" {% if status_filter == 'Operation Not Started' %}selected{% endif %}>Operation Not Started</option>
+                    <option value="Inactive" {% if status_filter == 'Inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            
+            <!-- Series -->
+            <div>
+                <label for="series" class="block text-sm font-semibold text-gray-900 mb-2">Series</label>
+                <select name="series" id="series" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    <option value="">All Series</option>
+                    <option value="WAAS" {% if series_filter == 'WAAS' %}selected{% endif %}>WAAS</option>
+                    <option value="SAAS" {% if series_filter == 'SAAS' %}selected{% endif %}>SAAS</option>
+                    <option value="GW" {% if series_filter == 'GW' %}selected{% endif %}>GW</option>
+                </select>
+            </div>
+            
+            <!-- Sales Manager -->
+            <div>
+                <label for="sales_manager" class="block text-sm font-semibold text-gray-900 mb-2">Sales Manager</label>
+                <select name="sales_manager" id="sales_manager" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    <option value="">All Sales</option>
+                    <option value="unassigned" {% if sales_manager_filter == 'unassigned' %}selected{% endif %}>⚠️ Unassigned</option>
+                    {% for sm in sales_managers %}
+                    <option value="{{ sm }}" {% if sales_manager_filter == sm %}selected{% endif %}>{{ sm }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Operation Coordinator -->
+            <div>
+                <label for="operation_coordinator" class="block text-sm font-semibold text-gray-900 mb-2">Operation Coordinator</label>
+                <select name="operation_coordinator" id="operation_coordinator" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    <option value="">All Operations</option>
+                    <option value="unassigned" {% if operation_coordinator_filter == 'unassigned' %}selected{% endif %}>⚠️ Unassigned</option>
+                    {% for oc in operation_coordinators %}
+                    <option value="{{ oc }}" {% if operation_coordinator_filter == oc %}selected{% endif %}>{{ oc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Backup Coordinator -->
+            <div>
+                <label for="backup_coordinator" class="block text-sm font-semibold text-gray-900 mb-2">Backup Coordinator</label>
+                <select name="backup_coordinator" id="backup_coordinator" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    <option value="">All Backup</option>
+                    <option value="unassigned" {% if backup_coordinator_filter == 'unassigned' %}selected{% endif %}>⚠️ Unassigned</option>
+                    {% for bc in backup_coordinators %}
+                    <option value="{{ bc }}" {% if backup_coordinator_filter == bc %}selected{% endif %}>{{ bc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="md:col-span-7 flex items-center space-x-3">
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition text-sm">
+                    Apply Filters
+                </button>
+                {% if search_query or sales_manager_filter or operation_coordinator_filter or backup_coordinator_filter or series_filter or status_filter != 'Active' %}
+                <a href="{% url 'projects:project_mapping' %}" class="px-6 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm">
+                    Clear All
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Projects Table -->
+    {% if projects %}
+    <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operation Coordinator</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Backup Coordinator</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in projects %}
+                    <tr class="hover:bg-gray-50 transition" data-project-id="{{ project.project_id }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-blue-600">{{ project.code }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ project.client_name }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">{{ project.vendor_name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ project.location }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if project.project_status == 'Active' %}bg-green-100 text-green-800
+                                {% elif project.project_status == 'Operation Not Started' %}bg-yellow-100 text-yellow-800
+                                {% elif project.project_status == 'Notice Period' %}bg-orange-100 text-orange-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ project.project_status }}
+                            </span>
+                        </td>
+                        
+                        <!-- Operation Coordinator Column -->
+                        <td class="px-6 py-4">
+                            {% if project.series_type == 'GW' %}
+                                <span class="text-xs text-gray-500 italic">N/A (GW Series)</span>
+                            {% else %}
+                                <div class="flex items-center space-x-2">
+                                    <select 
+                                        class="coordinator-dropdown block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3"
+                                        onchange="updateCoordinator('{{ project.project_id }}', 'operations', this.value, this)"
+                                        data-project-id="{{ project.project_id }}"
+                                        data-field="operations">
+                                        <option value="">-- Select Operations --</option>
+                                        {% for oc in operation_coordinators %}
+                                        <option value="{{ oc }}" {% if project.operation_coordinator == oc %}selected{% endif %}>{{ oc }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="status-indicator text-xs"></span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Backup Coordinator Column -->
+                        <td class="px-6 py-4">
+                            {% if project.series_type == 'GW' %}
+                                <span class="text-xs text-gray-500 italic">N/A (GW Series)</span>
+                            {% else %}
+                                <div class="flex items-center space-x-2">
+                                    <select 
+                                        class="coordinator-dropdown block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3"
+                                        onchange="updateCoordinator('{{ project.project_id }}', 'backup', this.value, this)"
+                                        data-project-id="{{ project.project_id }}"
+                                        data-field="backup">
+                                        <option value="">-- Select Backup --</option>
+                                        {% for bc in backup_coordinators %}
+                                        <option value="{{ bc }}" {% if project.backup_coordinator == bc %}selected{% endif %}>{{ bc }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="status-indicator text-xs"></span>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+        <svg width="48" height="48" aria-hidden="true" class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+        <p class="mt-1 text-sm text-gray-500">Try adjusting your filters</p>
+    </div>
+    {% endif %}
+
+</main>
+
+<script>
+function updateCoordinator(projectId, managerType, managerId, selectElement) {
+    const statusIndicator = selectElement.parentElement.querySelector('.status-indicator');
+    const originalValue = selectElement.getAttribute('data-original-value') || selectElement.value;
+    
+    // Show loading
+    statusIndicator.textContent = '⏳';
+    statusIndicator.className = 'status-indicator text-xs text-blue-600';
+    selectElement.disabled = true;
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('project_id', projectId);
+    formData.append('manager_type', managerType);
+    formData.append('manager_id', managerId);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    // Send update
+    fetch('{% url "projects:update_project_managers" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Update failed');
+        return response.text();
+    })
+    .then(() => {
+        statusIndicator.textContent = '✅';
+        statusIndicator.className = 'status-indicator text-xs text-green-600';
+        selectElement.setAttribute('data-original-value', managerId);
+        setTimeout(() => {
+            statusIndicator.textContent = '';
+        }, 2000);
+    })
+    .catch(error => {
+        statusIndicator.textContent = '❌';
+        statusIndicator.className = 'status-indicator text-xs text-red-600';
+        selectElement.value = originalValue;
+        alert('Failed to update coordinator. Please try again.');
+    })
+    .finally(() => {
+        selectElement.disabled = false;
+    });
+}
+</script>
+
+{% endblock %}

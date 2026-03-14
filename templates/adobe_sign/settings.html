@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Adobe Sign Settings{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <a href="{% url 'adobe_sign:dashboard' %}" class="text-gray-500 hover:text-gray-700 transition">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Adobe Sign Settings
+                </h1>
+            </div>
+            <p class="text-sm text-gray-600 ml-8">Configure your Adobe Sign integration to enable e-signatures</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="mb-6 {% if is_configured %}bg-green-50 border-l-4 border-green-500{% else %}bg-amber-50 border-l-4 border-amber-500{% endif %} rounded-r-xl p-5 shadow-sm">
+            <div class="flex items-center">
+                {% if is_configured %}
+                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-green-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-green-800">Connected</h3>
+                    <p class="text-sm text-green-700">Adobe Sign is configured and ready to use.</p>
+                </div>
+                {% else %}
+                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-amber-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-amber-800">Not Connected</h3>
+                    <p class="text-sm text-amber-700">{{ config_error }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Settings Form -->
+        <form method="post" action="{% url 'adobe_sign:settings' %}" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Section 1: API Credentials -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600">
+                    <h2 class="text-lg font-bold text-white flex items-center">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                        API Credentials
+                    </h2>
+                </div>
+                <div class="p-6 space-y-5">
+                    <!-- Integration Key -->
+                    <div>
+                        <label for="integration_key" class="block text-sm font-semibold text-gray-700 mb-1">
+                            Integration Key
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="password" name="integration_key" id="integration_key"
+                                   class="flex-1 form-control border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                   placeholder="{% if integration_key_configured %}Key is configured (leave blank to keep current){% else %}Paste your Adobe Sign Integration Key here{% endif %}"
+                                   autocomplete="off">
+                            <button type="button" onclick="toggleKeyVisibility()"
+                                    class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition text-gray-600"
+                                    title="Show/Hide key">
+                                <svg width="20" height="20" aria-hidden="true" id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {% if integration_key_configured %}
+                        <p class="mt-1 text-xs text-green-600 flex items-center">
+                            <svg width="14" height="14" aria-hidden="true" class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Key is saved (encrypted). Leave blank to keep current key.
+                        </p>
+                        {% else %}
+                        <p class="mt-1 text-xs text-gray-500">
+                            Get this from your Adobe Sign account: Account > Adobe Sign API > Integration Key
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- API Base URL -->
+                    <div>
+                        <label for="api_base_url" class="block text-sm font-semibold text-gray-700 mb-1">
+                            API Base URL
+                        </label>
+                        <input type="text" name="api_base_url" id="api_base_url"
+                               value="{{ settings.api_base_url }}"
+                               class="w-full form-control border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                               placeholder="https://api.in1.adobesign.com/api/rest/v6">
+                        <p class="mt-1 text-xs text-gray-500">
+                            India: <code class="bg-gray-100 px-1 rounded">https://api.in1.adobesign.com/api/rest/v6</code> |
+                            US: <code class="bg-gray-100 px-1 rounded">https://api.na1.adobesign.com/api/rest/v6</code>
+                        </p>
+                    </div>
+
+                    <!-- Test Connection -->
+                    <div class="pt-2">
+                        <button type="button" id="test-connection-btn" onclick="testConnection()"
+                                class="inline-flex items-center px-4 py-2.5 bg-gray-100 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition text-sm">
+                            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Test Connection
+                        </button>
+                        <span id="test-result" class="ml-3 text-sm hidden"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Director Information -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600">
+                    <h2 class="text-lg font-bold text-white flex items-center">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Director / Signing Authority
+                    </h2>
+                </div>
+                <div class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="director_name" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Director Name
+                            </label>
+                            <input type="text" name="director_name" id="director_name"
+                                   value="{{ settings.director_name }}"
+                                   class="w-full form-control border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="e.g., Vivek Tiwari">
+                        </div>
+                        <div>
+                            <label for="director_title" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Title
+                            </label>
+                            <input type="text" name="director_title" id="director_title"
+                                   value="{{ settings.director_title }}"
+                                   class="w-full form-control border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="e.g., Managing Director">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="director_email" class="block text-sm font-semibold text-gray-700 mb-1">
+                            Director Email (Adobe Sign Account)
+                        </label>
+                        <input type="email" name="director_email" id="director_email"
+                               value="{{ settings.director_email }}"
+                               class="w-full form-control border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="director@company.com">
+                        <p class="mt-1 text-xs text-gray-500">
+                            This must be the email linked to the Adobe Sign account. All agreements will be sent through this account.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Defaults -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-gray-600 to-gray-700">
+                    <h2 class="text-lg font-bold text-white flex items-center">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Default Settings
+                    </h2>
+                </div>
+                <div class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="default_expiration_days" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Default Expiry (Days)
+                            </label>
+                            <input type="number" name="default_expiration_days" id="default_expiration_days"
+                                   value="{{ settings.default_expiration_days }}"
+                                   min="1" max="365"
+                                   class="w-full form-control border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
+                        </div>
+                        <div>
+                            <label for="default_reminder_frequency" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Default Reminder
+                            </label>
+                            <select name="default_reminder_frequency" id="default_reminder_frequency"
+                                    class="w-full form-select border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
+                                <option value="DAILY_UNTIL_SIGNED" {% if settings.default_reminder_frequency == 'DAILY_UNTIL_SIGNED' %}selected{% endif %}>Daily</option>
+                                <option value="EVERY_OTHER_DAY" {% if settings.default_reminder_frequency == 'EVERY_OTHER_DAY' %}selected{% endif %}>Every Other Day</option>
+                                <option value="EVERY_THIRD_DAY" {% if settings.default_reminder_frequency == 'EVERY_THIRD_DAY' %}selected{% endif %}>Every 3rd Day</option>
+                                <option value="EVERY_FIFTH_DAY" {% if settings.default_reminder_frequency == 'EVERY_FIFTH_DAY' %}selected{% endif %}>Every 5th Day</option>
+                                <option value="WEEKLY_UNTIL_SIGNED" {% if settings.default_reminder_frequency == 'WEEKLY_UNTIL_SIGNED' %}selected{% endif %}>Weekly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex items-center justify-between">
+                <a href="{% url 'adobe_sign:dashboard' %}"
+                   class="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-300 transition">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-pink-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    Save Settings
+                </button>
+            </div>
+        </form>
+
+        <!-- Section 4: Setup Guide -->
+        <div class="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    Setup Guide — Adobe Sign Admin Console
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-6">
+                    <!-- Step 1 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Log in to Adobe Sign as Admin</h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Go to <a href="https://secure.in1.adobesign.com/account/accountSettingsPage" target="_blank" class="text-purple-600 underline hover:text-purple-800">Adobe Sign Admin Console</a>
+                                and log in with the director's Adobe Sign account email.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Create Integration Key</h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Navigate to <strong>Account > Adobe Sign API > API Information</strong>, then click <strong>"Integration Key"</strong>.
+                            </p>
+                            <ul class="mt-2 text-sm text-gray-600 list-disc list-inside space-y-1">
+                                <li>Name it: <code class="bg-gray-100 px-1 rounded">GodamWale ERP</code></li>
+                                <li>Select ALL scopes (agreement_read, agreement_write, agreement_send, user_read, etc.)</li>
+                                <li>Click <strong>Save</strong></li>
+                                <li>Copy the full key (it may extend beyond the visible area!)</li>
+                            </ul>
+                            <div class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p class="text-xs text-amber-800 flex items-start">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
+                                    <strong>Important:</strong>&nbsp;Integration Keys require an Enterprise or Developer subscription. If you don't see the option, contact Adobe support.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Paste Key Above & Save</h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Paste the Integration Key in the field above, fill in the director details, and click <strong>Save Settings</strong>.
+                                Then click <strong>Test Connection</strong> to verify.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Webhook (Optional) -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-sm">4</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Setup Webhook <span class="text-xs font-normal text-gray-400">(Optional — for auto-status updates)</span></h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                In Adobe Sign Admin Console: <strong>Account > Webhooks > Create</strong>
+                            </p>
+                            <ul class="mt-2 text-sm text-gray-600 list-disc list-inside space-y-1">
+                                <li>URL: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">{{ webhook_url }}</code></li>
+                                <li>Events: Agreement All Signed, Agreement Recalled, Agreement Expired, E-Signed</li>
+                                <li>Add the webhook secret to your server's <code class="bg-gray-100 px-1 rounded">.env</code> file as <code class="bg-gray-100 px-1 rounded">ADOBE_SIGN_WEBHOOK_SECRET</code></li>
+                            </ul>
+                            <p class="mt-2 text-xs text-gray-500">
+                                Without a webhook, you can still manually sync agreement status from each agreement's detail page.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleKeyVisibility() {
+    const input = document.getElementById('integration_key');
+    const icon = document.getElementById('eye-icon');
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+
+function testConnection() {
+    const btn = document.getElementById('test-connection-btn');
+    const result = document.getElementById('test-result');
+
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Testing...';
+    result.className = 'ml-3 text-sm hidden';
+
+    fetch('{% url "adobe_sign:test_connection" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        result.classList.remove('hidden');
+        if (data.success) {
+            result.className = 'ml-3 text-sm text-green-600 font-medium';
+            result.innerHTML = '<span class="flex items-center"><svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Connected! Account: ' + (data.email || 'OK') + '</span>';
+        } else {
+            result.className = 'ml-3 text-sm text-red-600 font-medium';
+            result.innerHTML = '<span class="flex items-center"><svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' + (data.error || 'Connection failed') + '</span>';
+        }
+    })
+    .catch(err => {
+        result.classList.remove('hidden');
+        result.className = 'ml-3 text-sm text-red-600 font-medium';
+        result.innerHTML = 'Network error: ' + err.message;
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Test Connection';
+    });
+}
+</script>
+{% endblock %}

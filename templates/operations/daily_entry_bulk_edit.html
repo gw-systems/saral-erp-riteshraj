@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load operations_filters %}
+
+{% block title %}Bulk Edit - Daily Space{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-orange-600 to-orange-800 rounded-lg shadow-lg p-6 text-white">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold flex items-center gap-2">
+                    <svg class="h-7 w-7" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Bulk Edit Entries
+                </h1>
+                <p class="mt-2 text-orange-100">Edit existing entries for {{ target_date|date:"F d, Y" }}</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'operations:daily_entry_list' %}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 rounded-lg hover:bg-orange-50 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Back to List
+                </a>
+                <a href="{% url 'operations:daily_entry_bulk' %}" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-400 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    New Bulk Entry
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Selector -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Select Date to Edit
+                </label>
+                <input type="date"
+                       id="edit_date"
+                       value="{{ target_date|date:'Y-m-d' }}"
+                       max="{{ today|date:'Y-m-d' }}"
+                       onchange="window.location.href='?date=' + this.value"
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            </div>
+
+            <div class="text-right">
+                <p class="text-sm font-medium text-gray-700">Existing Entries</p>
+                <p class="text-3xl font-bold text-orange-600">{{ existing_entries|length }}</p>
+                <p class="text-xs text-gray-500">out of {{ projects.count }} projects</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Form -->
+    <form method="POST" id="bulk-edit-form">
+        {% csrf_token %}
+
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-900">Edit Project Entries</h2>
+                    <div class="text-sm text-gray-600">
+                        <span id="modified-count" class="font-bold text-orange-600">0</span> modified
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-64">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">Space Utilized</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">Inventory (₹)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remarks</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase w-24">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in projects %}
+                    {% with entry=existing_entries|get_item:project.project_id %}
+                    <tr class="hover:bg-gray-50 transition {% if entry %}bg-green-50{% endif %}"
+                        data-project-id="{{ project.project_id }}"
+                        data-original-space="{{ entry.space_utilized|default:'' }}"
+                        data-original-unit="{{ entry.unit|default:'' }}"
+                        data-original-inventory="{{ entry.inventory_value|default:'' }}"
+                        data-original-remarks="{{ entry.remarks|default:'' }}">
+                        <td class="px-6 py-4">
+                            <a href="{% url 'projects:project_detail' project_id=project.project_id %}?return_url={{ request.get_full_path|urlencode }}"
+                               class="text-sm font-medium text-blue-600 hover:text-blue-800 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                {{ project.project_code }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex rounded-md shadow-sm">
+                                <input type="number"
+                                    name="space_{{ project.project_id }}"
+                                    value="{{ entry.space_utilized|default:'' }}"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0.00"
+                                    class="space-input flex-1 min-w-0 block w-20 px-3 py-2 rounded-none rounded-l-lg text-sm border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+
+                                <select name="unit_{{ project.project_id }}"
+                                        class="unit-input inline-flex items-center px-3 py-2 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                    {% for code, label in dropdowns.storage_units %}
+                                    <option value="{{ code }}" {% if entry.unit == code %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-xs text-gray-500">₹</span>
+                                <input type="number"
+                                    name="inventory_{{ project.project_id }}"
+                                    value="{{ entry.inventory_value|default:'' }}"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0.00"
+                                    class="inventory-input w-full pl-6 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <input type="text"
+                                name="remarks_{{ project.project_id }}"
+                                value="{{ entry.remarks|default:'' }}"
+                                placeholder="Optional notes..."
+                                class="remarks-input w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            {% if entry %}
+                            <span class="status-badge inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                <svg class="h-3 w-3" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Exists
+                            </span>
+                            {% else %}
+                            <span class="status-badge inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                Empty
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-600">
+                        Changes will be saved for <strong>{{ target_date|date:"F d, Y" }}</strong>
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'operations:daily_entry_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition shadow-sm">
+                            <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                            </svg>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('tbody tr[data-project-id]');
+    const modifiedCount = document.getElementById('modified-count');
+
+    rows.forEach(row => {
+        const projectId = row.dataset.projectId;
+        const spaceInput = row.querySelector('.space-input');
+        const unitInput = row.querySelector('.unit-input');
+        const inventoryInput = row.querySelector('.inventory-input');
+        const remarksInput = row.querySelector('.remarks-input');
+        const statusBadge = row.querySelector('.status-badge');
+
+        const originalSpace = row.dataset.originalSpace;
+        const originalUnit = row.dataset.originalUnit;
+        const originalInventory = row.dataset.originalInventory;
+        const originalRemarks = row.dataset.originalRemarks;
+
+        function checkModified() {
+            const spaceChanged = spaceInput.value !== originalSpace;
+            const unitChanged = unitInput.value !== originalUnit;
+            const inventoryChanged = inventoryInput.value !== originalInventory;
+            const remarksChanged = remarksInput.value !== originalRemarks;
+
+            const isModified = spaceChanged || unitChanged || inventoryChanged || remarksChanged;
+
+            if (isModified) {
+                row.classList.add('bg-yellow-50');
+                row.classList.remove('bg-green-50');
+                statusBadge.className = 'status-badge inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800';
+                statusBadge.innerHTML = '<svg class="h-3 w-3" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg> Modified';
+            } else if (originalSpace || originalInventory) {
+                row.classList.remove('bg-yellow-50');
+                row.classList.add('bg-green-50');
+                statusBadge.className = 'status-badge inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800';
+                statusBadge.innerHTML = '<svg class="h-3 w-3" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Exists';
+            } else {
+                row.classList.remove('bg-yellow-50', 'bg-green-50');
+                statusBadge.className = 'status-badge inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600';
+                statusBadge.textContent = 'Empty';
+            }
+
+            updateModifiedCount();
+        }
+
+        spaceInput.addEventListener('input', checkModified);
+        unitInput.addEventListener('change', checkModified);
+        inventoryInput.addEventListener('input', checkModified);
+        remarksInput.addEventListener('input', checkModified);
+    });
+
+    function updateModifiedCount() {
+        const count = document.querySelectorAll('.bg-yellow-50').length;
+        modifiedCount.textContent = count;
+    }
+});
+</script>
+
+{% endblock %}

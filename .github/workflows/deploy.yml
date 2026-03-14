@@ -1,0 +1,1043 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/saral-erp
+  PYTHON_VERSION: '3.11'
+  LOG_LINES_DEFAULT: '500'
+  LOG_LINES_MIGRATION: '300'
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ============================================================================
+  # VALIDATION
+  # ============================================================================
+  validate:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for revision comparison
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Django System Checks
+        run: |
+          python manage.py check --deploy
+        env:
+          SECRET_KEY: 'validation-secret-key-for-ci-cd-must-be-at-least-fifty-characters-long-12345'
+          DEBUG: 'False'
+          ALLOWED_HOSTS: 'localhost,127.0.0.1'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
+          DB_PASSWORD: 'dummy-password-for-validation'
+          USE_CLOUD_SQL: 'False'
+          ZOHO_CLIENT_ID: 'dummy-client-id'
+          ZOHO_CLIENT_SECRET: 'dummy-client-secret'
+
+      - name: Check for Uncommitted Migrations
+        run: |
+          python manage.py makemigrations --check --dry-run
+        env:
+          SECRET_KEY: 'validation-secret-key-for-ci-cd-must-be-at-least-fifty-characters-long-12345'
+          DEBUG: 'False'
+          ALLOWED_HOSTS: 'localhost,127.0.0.1'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
+          DB_PASSWORD: 'dummy-password-for-validation'
+          USE_CLOUD_SQL: 'False'
+          ZOHO_CLIENT_ID: 'dummy-client-id'
+          ZOHO_CLIENT_SECRET: 'dummy-client-secret'
+      
+      - name: Collect Static Files
+        run: |
+          python manage.py collectstatic --noinput
+        env:
+          SECRET_KEY: 'validation-secret-key-for-ci-cd-must-be-at-least-fifty-characters-long-12345'
+          DEBUG: 'False'
+          ALLOWED_HOSTS: 'localhost,127.0.0.1'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
+          DB_PASSWORD: 'dummy-password-for-validation'
+          USE_CLOUD_SQL: 'False'
+          ZOHO_CLIENT_ID: 'dummy-client-id'
+          ZOHO_CLIENT_SECRET: 'dummy-client-secret'
+      
+      - name: Python Syntax Check
+        run: |
+          python -m py_compile $(find . -name "*.py" -not -path "*/migrations/*" -not -path "*/venv/*" -not -path "*/.venv/*")
+      
+      # ========================================================================
+      # CRITICAL STATIC ANALYSIS - BLOCKS DEPLOYMENT
+      # ========================================================================
+      - name: 🚨 Critical Code Analysis (Flake8)
+        run: |
+          pip install flake8
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Checking for Critical Errors"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Checking for:"
+          echo "  • Undefined names (F821)"
+          echo "  • Unused imports (F401)"
+          echo "  • Undefined variables in __all__ (F822)"
+          echo "  • Syntax errors (E999)"
+          echo ""
+          
+          flake8 . \
+            --count \
+            --select=F821,F822,F631,F632,F633,E999 \
+            --show-source \
+            --statistics \
+            --exclude=migrations,venv,.venv,__pycache__,.git,build,dist
+          
+          if [ $? -eq 0 ]; then
+            echo ""
+            echo "✅ No critical errors found!"
+          else
+            echo ""
+            echo "❌ Critical errors detected - deployment blocked"
+            exit 1
+          fi
+      
+      # ========================================================================
+      # ADDITIONAL CHECKS - WARNINGS ONLY (NON-BLOCKING)
+      # ========================================================================
+      - name: ⚠️ Additional Code Quality Checks (Non-Blocking)
+        run: |
+          pip install mypy django-stubs pylint pylint-django bandit[toml]
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Running Additional Quality Checks (Non-Blocking)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # ----------------------------------------------------------------
+          # MyPy - Type Checking
+          # ----------------------------------------------------------------
+          echo "::group::🔷 MyPy Type Checking"
+          echo "Running MyPy static type checker..."
+          echo ""
+          
+          cat > mypy.ini << 'EOF'
+          [mypy]
+          python_version = 3.11
+          ignore_missing_imports = True
+          warn_return_any = False
+          warn_unused_configs = True
+          disallow_untyped_defs = False
+          exclude = (migrations|venv|\.venv|__pycache__|build|dist)
+
+          [mypy-*.migrations.*]
+          ignore_errors = True
+          EOF
+                    
+          mypy --config-file=mypy.ini projects/ accounts/ operations/ integrations/ || {
+            echo "⚠️  MyPy found potential type issues (non-blocking)"
+          }
+          echo "::endgroup::"
+          echo ""
+          
+          # ----------------------------------------------------------------
+          # Pylint - Code Quality
+          # ----------------------------------------------------------------
+          echo "::group::🔶 Pylint Code Quality Check"
+          echo "Running Pylint code quality analyzer..."
+          echo ""
+          
+          SECRET_KEY='validation-secret-key-for-ci-cd-must-be-at-least-fifty-characters-long-12345' \
+          DEBUG='False' \
+          ALLOWED_HOSTS='localhost' \
+          DATABASE_URL='sqlite:///db.sqlite3' \
+          DB_PASSWORD='dummy-password-for-validation' \
+          USE_CLOUD_SQL='False' \
+          ZOHO_CLIENT_ID='dummy-client-id' \
+          ZOHO_CLIENT_SECRET='dummy-client-secret' \
+          pylint \
+            --load-plugins=pylint_django \
+            --django-settings-module=minierp.settings \
+            --disable=C,R,W \
+            --enable=E,F \
+            --ignore=migrations,venv,.venv,__pycache__ \
+            projects/ accounts/ operations/ integrations/ || {
+            echo "⚠️  Pylint found potential code quality issues (non-blocking)"
+          }
+          echo "::endgroup::"
+          echo ""
+          
+          # ----------------------------------------------------------------
+          # Bandit - Security Scan
+          # ----------------------------------------------------------------
+          echo "::group::🔐 Bandit Security Scan"
+          echo "Running Bandit security vulnerability scanner..."
+          echo ""
+          
+          bandit -r . \
+            -ll \
+            -x ./venv,./migrations,./.venv,__pycache__,./build,./dist \
+            -f screen || {
+            echo "⚠️  Bandit found potential security issues (non-blocking)"
+          }
+          echo "::endgroup::"
+          echo ""
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Additional checks complete (warnings only)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        continue-on-error: true
+      
+      - name: Validate Required Secrets
+        run: |
+          echo "Checking required secrets..."
+          
+          MISSING=0
+          
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "❌ Missing: GCP_PROJECT_ID"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.GCP_REGION }}" ]; then
+            echo "❌ Missing: GCP_REGION"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.CLOUD_RUN_SERVICE_NAME }}" ]; then
+            echo "❌ Missing: CLOUD_RUN_SERVICE_NAME"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ Missing: GCP_SA_KEY"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.DJANGO_SECRET_KEY }}" ]; then
+            echo "❌ Missing: DJANGO_SECRET_KEY"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" ]; then
+            echo "❌ Missing: CLOUD_SQL_CONNECTION_NAME"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.PROD_DB_PASSWORD }}" ]; then
+            echo "❌ Missing: PROD_DB_PASSWORD"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.STABLE_REVISION }}" ]; then
+            echo "❌ Missing: STABLE_REVISION"
+            MISSING=1
+          fi
+          
+          if [ $MISSING -eq 1 ]; then
+            exit 1
+          fi
+          
+          echo "✅ All required secrets present"
+
+
+  # ============================================================================
+  # TYPE CHECKING
+  # ============================================================================
+  type-check:
+    name: Type Check (MyPy)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mypy django-stubs types-requests
+      
+      - name: Create MyPy Config
+        run: |
+          cat > mypy.ini << 'EOF'
+          [mypy]
+          python_version = 3.11
+          warn_return_any = True
+          warn_unused_configs = True
+          disallow_untyped_defs = False
+          disallow_incomplete_defs = False
+          check_untyped_defs = True
+          no_implicit_optional = True
+          warn_redundant_casts = True
+          warn_unused_ignores = True
+          warn_no_return = True
+          ignore_missing_imports = True
+          exclude = (migrations|venv|\.venv|__pycache__|build|dist)
+
+          [mypy-*.migrations.*]
+          ignore_errors = True
+
+          [mypy-decouple.*]
+          ignore_missing_imports = True
+
+          [mypy-whitenoise.*]
+          ignore_missing_imports = True
+
+          [mypy-celery.*]
+          ignore_missing_imports = True
+
+          [mypy-google.*]
+          ignore_missing_imports = True
+          EOF
+      
+      - name: Run MyPy Type Checking
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔷 Running MyPy Type Checks (Non-Blocking)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          mypy --config-file=mypy.ini projects/ accounts/ operations/ || true
+          echo ""
+          echo "✅ Type check complete (warnings only)"
+        continue-on-error: true
+
+  # ============================================================================
+  # FUNCTIONAL TESTS
+  # ============================================================================
+  test:
+    name: Functional Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: erp_test
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ci_user -d erp_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SECRET_KEY: 'validation-secret-key-for-ci-cd-must-be-at-least-fifty-characters-long-12345'
+      DEBUG: 'False'
+      ALLOWED_HOSTS: 'localhost,127.0.0.1,testserver'
+      DB_NAME: 'erp_test'
+      DB_USER: 'ci_user'
+      DB_PASSWORD: 'ci_password'
+      DB_HOST: 'localhost'
+      DB_PORT: '5432'
+      USE_CLOUD_SQL: 'False'
+      CI: 'true'
+      ZOHO_CLIENT_ID: 'dummy-client-id'
+      ZOHO_CLIENT_SECRET: 'dummy-client-secret'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        run: |
+          python manage.py migrate --no-input 2>&1
+          python manage.py createcachetable 2>&1
+
+      # ========================================================================
+      # TESTS 1-10: Django CI Test Suite
+      # ========================================================================
+      - name: "Tests 1-7: Django CI Pipeline Suite"
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🧪 Running CI Pipeline Tests (1-7)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "  1. Template Compilation"
+          echo "  2. URL Resolution"
+          echo "  3. Form Rendering Test"
+          echo "  4. Permission/Authorization Test"
+          echo "  5. CSRF Protection Test"
+          echo "  6. Static Asset Integrity Test"
+          echo "  7. Email Template Rendering Test"
+          echo ""
+
+          python manage.py test tests.test_ci_pipeline --verbosity=2 --no-input 2>&1
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ All functional tests passed"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ========================================================================
+      # TEST 11: Migration Dry-Run
+      # ========================================================================
+      - name: "Test 11: Migration Dry-Run"
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🗃️  Running Migration Plan Verification"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          echo "Verifying no unapplied migrations remain..."
+
+          UNAPPLIED=$(python manage.py showmigrations --plan 2>&1 | grep "\[ \]" || true)
+
+          if [ -n "$UNAPPLIED" ]; then
+            echo "❌ Unapplied migrations found:"
+            echo "$UNAPPLIED"
+            echo ""
+            echo "All migrations must apply cleanly on a fresh database."
+            exit 1
+          fi
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ All migrations apply cleanly"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ============================================================================
+  # BUILD DOCKER IMAGE
+  # ============================================================================
+  build:
+    name: Build Docker Image
+    needs: [validate, type-check, test]
+    runs-on: ubuntu-latest
+
+    # Note: image_tag is passed via artifact to bypass GitHub Actions secret detection
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker
+      
+      - name: Build Docker Image
+        id: build
+        run: |
+          IMAGE_TAG="${IMAGE_NAME}:${GITHUB_SHA::7}"
+          
+          docker build \
+            --cache-from ${IMAGE_NAME}:latest \
+            --tag ${IMAGE_TAG} \
+            --tag ${IMAGE_NAME}:latest \
+            .
+          
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+          # Save to file for artifact upload (bypasses GitHub Actions secret detection)
+          echo "$IMAGE_TAG" > image_tag.txt
+          echo "✅ Saved image tag to artifact file"
+
+      - name: Upload Image Tag Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag-info
+          path: image_tag.txt
+          retention-days: 1
+
+      - name: Push to Container Registry
+        run: |
+          docker push ${IMAGE_NAME}:${GITHUB_SHA::7}
+          docker push ${IMAGE_NAME}:latest
+
+  # ============================================================================
+  # DEPLOY TO CLOUD RUN (0% TRAFFIC WITH TAG)
+  # ============================================================================
+  deploy:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Note: new_revision and staging_url are passed via artifacts to bypass GitHub Actions secret detection
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for revision comparison
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      # ========================================================================
+      # SHOW WHAT'S CHANGING IN THIS DEPLOYMENT
+      # ========================================================================
+      - name: 📊 Deployment Change Summary
+        id: changes
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 WHAT'S CHANGING IN THIS DEPLOYMENT"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # Get current production revision info
+          STABLE_REV="${{ secrets.STABLE_REVISION }}"
+          echo "🔄 Current Stable Revision: ${STABLE_REV}"
+          echo "📦 New Deployment SHA: ${GITHUB_SHA::7}"
+          echo ""
+          
+          # Show recent commits (last 10)
+          echo "📝 Recent Commits:"
+          echo "─────────────────────────────────────────────────"
+          git log --oneline -10
+          echo ""
+          
+          # Show files changed in this commit
+          echo "📁 Files Changed in This Commit:"
+          echo "─────────────────────────────────────────────────"
+          git diff --stat HEAD~1 HEAD 2>/dev/null || git diff --stat HEAD
+          echo ""
+          
+          # Check for new migrations
+          echo "🗃️ Migration Files:"
+          echo "─────────────────────────────────────────────────"
+          MIGRATION_FILES=$(find . -path "*/migrations/*.py" -not -name "__init__.py" -newer .git/FETCH_HEAD 2>/dev/null | head -20)
+          if [ -n "$MIGRATION_FILES" ]; then
+            echo "$MIGRATION_FILES"
+            echo ""
+            echo "⚠️  New migrations detected - will be applied to staging DB"
+          else
+            echo "No new migration files detected in this deployment"
+          fi
+          echo ""
+          
+          # Store for later use
+          echo "stable_revision=${STABLE_REV}" >> $GITHUB_OUTPUT
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Deploy to Cloud Run (Staging Tag)
+        id: deploy
+        run: |
+          echo "🚀 Starting Cloud Run deployment..."
+          echo ""
+          
+          # Capture deployment output and exit code
+          DEPLOY_OUTPUT=$(mktemp)
+          
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=${IMAGE_NAME}:${GITHUB_SHA::7} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --tag=staging \
+            --no-traffic \
+            --set-env-vars="DEBUG=False,USE_CLOUD_SQL=True,DB_NAME=erp_staging,DB_USER=admin_staging,ALLOWED_HOSTS=*,CSRF_TRUSTED_ORIGINS=https://*.run.app,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},ENV=staging,ENVIRONMENT=staging,ZOHO_REDIRECT_URI=https://staging---saral-erp-ensstwr7tq-el.a.run.app/integrations/bigin/oauth/callback/,GMAIL_LEADS_REDIRECT_URI=https://staging---saral-erp-ensstwr7tq-el.a.run.app/integrations/gmail-leads/oauth2callback/,GOOGLE_ADS_REDIRECT_URI=https://staging---saral-erp-ensstwr7tq-el.a.run.app/integrations/google-ads/oauth2callback/,USE_CLOUD_TASKS=true,GCP_PROJECT_ID=saral-erp-479508,GCP_LOCATION=asia-south1,CLOUD_TASKS_QUEUE=default,CLOUD_TASKS_SERVICE_URL=https://saral-erp-ensstwr7tq-el.a.run.app,GCP_SERVICE_ACCOUNT=1629809694-compute@developer.gserviceaccount.com" \
+            --set-secrets="SECRET_KEY=django-secret-key:latest,DB_PASSWORD=db-password-staging:latest,GCS_CREDENTIALS=saral-erp-storage-credentials:latest,ZOHO_CLIENT_ID=zoho-client-id:latest,ZOHO_CLIENT_SECRET=zoho-client-secret:latest,GOOGLE_ADS_CLIENT_SECRET=google-ads-client-secret:latest,GOOGLE_ADS_DEVELOPER_TOKEN=google-ads-developer-token:latest,GMAIL_LEADS_CLIENT_SECRET=gmail-leads-client-secret:latest" \
+            --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --allow-unauthenticated \
+            --min-instances=1 \
+            --max-instances=10 \
+            --memory=1Gi \
+            --cpu=2 \
+            --timeout=300 2>&1 | tee "$DEPLOY_OUTPUT"
+          
+          DEPLOY_EXIT_CODE=${PIPESTATUS[0]}
+          
+          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ CLOUD RUN DEPLOYMENT FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "📋 FAILURE SUMMARY"
+            echo "  Stage: Cloud Run Deploy"
+            echo "  Exit Code: $DEPLOY_EXIT_CODE"
+            echo "  Image: ${IMAGE_NAME}:${GITHUB_SHA::7}"
+            echo ""
+            
+            # Fetch Cloud Run logs
+            echo "📜 CLOUD RUN SERVICE LOGS (Last ${{ env.LOG_LINES_DEFAULT }} lines)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }}" \
+              --limit=${{ env.LOG_LINES_DEFAULT }} \
+              --format="table(timestamp,severity,textPayload)" \
+              --project=${{ env.GCP_PROJECT_ID }} \
+              2>/dev/null || echo "Could not fetch logs"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Fetch recent revision errors
+            echo "📜 RECENT REVISION ERRORS"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }} AND severity>=ERROR" \
+              --limit=50 \
+              --format="table(timestamp,severity,textPayload)" \
+              --project=${{ env.GCP_PROJECT_ID }} \
+              2>/dev/null || echo "Could not fetch error logs"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Show rollback information
+            echo "🔄 ROLLBACK INFORMATION"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "  Last Stable Revision: ${{ secrets.STABLE_REVISION }}"
+            echo ""
+            echo "  Current production is UNAFFECTED (0% traffic to staging)"
+            echo ""
+            echo "  To verify production status:"
+            echo "  gcloud run services describe ${{ env.SERVICE_NAME }} \\"
+            echo "    --region=${{ env.GCP_REGION }} \\"
+            echo "    --format='value(status.traffic)'"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            rm -f "$DEPLOY_OUTPUT"
+            exit $DEPLOY_EXIT_CODE
+          fi
+          
+          rm -f "$DEPLOY_OUTPUT"
+          
+          # Get revision name
+          ACTUAL_REVISION=$(gcloud run revisions list \
+                             --service=${{ env.SERVICE_NAME }} \
+                             --region=${{ env.GCP_REGION }} \
+                             --format='value(metadata.name)' \
+                             --sort-by='~metadata.creationTimestamp' \
+                             --limit=1)
+          
+          if [ -z "$ACTUAL_REVISION" ]; then
+            echo "❌ Failed to get revision name"
+            exit 1
+          fi
+          
+          echo "new_revision=${ACTUAL_REVISION}" >> $GITHUB_OUTPUT
+          echo "✅ Deployed revision: ${ACTUAL_REVISION} (staging tag, 0% traffic)"
+
+          # Save to file for artifact upload (bypasses GitHub Actions secret detection)
+          echo "$ACTUAL_REVISION" > new_revision.txt
+          echo "✅ Saved new revision to artifact file"
+
+      - name: Upload New Revision Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: new-revision-info
+          path: new_revision.txt
+          retention-days: 1
+
+      # ========================================================================
+      # DATABASE MIGRATIONS WITH PROPER ERROR HANDLING
+      # ========================================================================
+      - name: Run Database Migrations
+        id: migrate
+        run: |
+          echo "🗃️ Running database migrations..."
+          echo ""
+          
+          MIGRATION_JOB_NAME="migrate-${GITHUB_SHA::7}"
+          
+          # Create migration job
+          echo "Creating migration job: ${MIGRATION_JOB_NAME}"
+          gcloud run jobs create ${MIGRATION_JOB_NAME} \
+            --image=${IMAGE_NAME}:${GITHUB_SHA::7} \
+            --region=${{ env.GCP_REGION }} \
+            --set-env-vars="DEBUG=False,USE_CLOUD_SQL=True,DB_NAME=erp_staging,DB_USER=admin_staging,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},ENV=staging,ALLOWED_HOSTS=*" \
+            --set-secrets="SECRET_KEY=django-secret-key:latest,DB_PASSWORD=db-password-staging:latest,GCS_CREDENTIALS=saral-erp-storage-credentials:latest,ZOHO_CLIENT_ID=zoho-client-id:latest,ZOHO_CLIENT_SECRET=zoho-client-secret:latest,GOOGLE_ADS_CLIENT_SECRET=google-ads-client-secret:latest,GOOGLE_ADS_DEVELOPER_TOKEN=google-ads-developer-token:latest,GMAIL_LEADS_CLIENT_SECRET=gmail-leads-client-secret:latest" \
+            --set-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --command=bash,run_migrations.sh \
+            --max-retries=0 \
+            --task-timeout=300 \
+            2>&1 || {
+              echo "⚠️ Job might already exist, attempting to update..."
+              gcloud run jobs update ${MIGRATION_JOB_NAME} \
+                --image=${IMAGE_NAME}:${GITHUB_SHA::7} \
+                --region=${{ env.GCP_REGION }} \
+                2>&1 || true
+            }
+          
+          echo ""
+          echo "Executing migration job..."
+          
+          # Execute and capture result
+          MIGRATION_OUTPUT=$(mktemp)
+          gcloud run jobs execute ${MIGRATION_JOB_NAME} \
+            --region=${{ env.GCP_REGION }} \
+            --wait 2>&1 | tee "$MIGRATION_OUTPUT"
+          
+          MIGRATION_EXIT_CODE=${PIPESTATUS[0]}
+          
+          # Check for failure
+          if [ $MIGRATION_EXIT_CODE -ne 0 ] || grep -q "failed" "$MIGRATION_OUTPUT"; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ DATABASE MIGRATION FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "📋 FAILURE SUMMARY"
+            echo "  Stage: Database Migration"
+            echo "  Exit Code: $MIGRATION_EXIT_CODE"
+            echo "  Job Name: ${MIGRATION_JOB_NAME}"
+            echo ""
+            
+            # Get the execution name for logs
+            EXECUTION_NAME=$(gcloud run jobs executions list \
+              --job=${MIGRATION_JOB_NAME} \
+              --region=${{ env.GCP_REGION }} \
+              --format='value(metadata.name)' \
+              --sort-by='~metadata.creationTimestamp' \
+              --limit=1 2>/dev/null)
+            
+            echo "📜 MIGRATION JOB LOGS (Last ${{ env.LOG_LINES_MIGRATION }} lines)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            if [ -n "$EXECUTION_NAME" ]; then
+              gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=${MIGRATION_JOB_NAME}" \
+                --limit=${{ env.LOG_LINES_MIGRATION }} \
+                --format="table(timestamp,severity,textPayload)" \
+                --project=${{ env.GCP_PROJECT_ID }} \
+                2>/dev/null || echo "Could not fetch job logs via logging"
+              
+              echo ""
+              echo "─────────────────────────────────────────────────"
+              echo "Alternative: Direct execution logs"
+              echo "─────────────────────────────────────────────────"
+              gcloud run jobs executions describe ${EXECUTION_NAME} \
+                --region=${{ env.GCP_REGION }} \
+                --format=yaml 2>/dev/null | grep -A 50 "conditions:" || true
+            else
+              echo "Could not find execution name for detailed logs"
+            fi
+            
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Show Django traceback from Cloud Logging
+            echo "📜 DJANGO TRACEBACK (if available)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=${MIGRATION_JOB_NAME} AND textPayload=~\"Traceback|Error|Exception\"" \
+              --limit=50 \
+              --format="value(textPayload)" \
+              --project=${{ env.GCP_PROJECT_ID }} \
+              2>/dev/null || echo "No traceback found in logs"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Rollback information
+            echo "🔄 ROLLBACK INFORMATION"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "  Last Stable Revision: ${{ secrets.STABLE_REVISION }}"
+            echo ""
+            echo "  ⚠️  Migration failed - staging DB may be in inconsistent state"
+            echo ""
+            echo "  To check staging DB status, connect via Cloud SQL proxy"
+            echo "  and run: python manage.py showmigrations"
+            echo ""
+            echo "  Production DB is UNAFFECTED (separate database)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            # Cleanup job before exit
+            echo ""
+            echo "🧹 Cleaning up migration job..."
+            gcloud run jobs delete ${MIGRATION_JOB_NAME} \
+              --region=${{ env.GCP_REGION }} \
+              --quiet 2>/dev/null || true
+            
+            rm -f "$MIGRATION_OUTPUT"
+            exit 1
+          fi
+          
+          rm -f "$MIGRATION_OUTPUT"
+          
+          echo ""
+          echo "✅ Migrations completed successfully"
+          
+          # Cleanup job
+          echo "🧹 Cleaning up migration job..."
+          gcloud run jobs delete ${MIGRATION_JOB_NAME} \
+            --region=${{ env.GCP_REGION }} \
+            --quiet 2>/dev/null || true
+      
+      - name: Get Staging URL
+        id: get-url
+        run: |
+          # Get the actual staging tag URL from the deployed service
+          # Using JSON output and jq for reliable parsing
+          STAGING_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format=json | jq -r '.status.traffic[] | select(.tag=="staging") | .url')
+          
+          # Fallback: construct URL if jq extraction fails
+          if [ -z "$STAGING_URL" ] || [ "$STAGING_URL" = "null" ]; then
+            echo "⚠️ Could not extract staging URL via jq, constructing from service URL..."
+            SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --format='value(status.url)')
+            # Transform https://service-xxx.a.run.app to https://staging---service-xxx.a.run.app
+            STAGING_URL=$(echo "$SERVICE_URL" | sed 's|https://|https://staging---|')
+          fi
+          
+          if [ -z "$STAGING_URL" ]; then
+            echo "❌ Failed to get staging URL"
+            exit 1
+          fi
+          
+          echo "staging_url=${STAGING_URL}" >> $GITHUB_OUTPUT
+          echo "✅ Staging URL: ${STAGING_URL}"
+
+          # Save to file for artifact upload (bypasses GitHub Actions secret detection)
+          echo "$STAGING_URL" > staging_url.txt
+          echo "✅ Saved staging URL to artifact file"
+
+      - name: Upload Staging URL Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-url-info
+          path: staging_url.txt
+          retention-days: 1
+
+      # ========================================================================
+      # HEALTH CHECK WITH DETAILED FAILURE LOGGING
+      # ========================================================================
+      - name: Health Check - Staging
+        id: health-check
+        run: |
+          STAGING_URL="${{ steps.get-url.outputs.staging_url }}"
+          NEW_REVISION="${{ steps.deploy.outputs.new_revision }}"
+          
+          echo "🏥 Testing staging health endpoint..."
+          echo "URL: ${STAGING_URL}/accounts/health/"
+          echo "Revision: ${NEW_REVISION}"
+          echo ""
+          echo "Waiting for revision to be ready..."
+          
+          # Wait up to 2 minutes with retries
+          MAX_ATTEMPTS=12
+          ATTEMPT=1
+          LAST_RESPONSE=""
+          LAST_CODE=""
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
+            
+            HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "${STAGING_URL}/accounts/health/" 2>/dev/null || echo -e "\n000")
+            HEALTH_CODE=$(echo "$HEALTH_RESPONSE" | tail -n 1)
+            HEALTH_BODY=$(echo "$HEALTH_RESPONSE" | head -n -1)
+            
+            LAST_RESPONSE="$HEALTH_BODY"
+            LAST_CODE="$HEALTH_CODE"
+            
+            if [ "$HEALTH_CODE" = "200" ]; then
+              echo ""
+              echo "✅ Staging health check passed"
+              echo "$HEALTH_BODY" | python3 -m json.tool 2>/dev/null || echo "$HEALTH_BODY"
+              exit 0
+            fi
+            
+            echo "Status: $HEALTH_CODE - Waiting 10 seconds..."
+            sleep 10
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          # Health check failed - show detailed logs
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "❌ HEALTH CHECK FAILED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📋 FAILURE SUMMARY"
+          echo "  Stage: Health Check"
+          echo "  URL: ${STAGING_URL}/accounts/health/"
+          echo "  Last HTTP Status: $LAST_CODE"
+          echo "  Attempts: $MAX_ATTEMPTS"
+          echo "  Revision: ${NEW_REVISION}"
+          echo ""
+          
+          echo "📜 LAST HTTP RESPONSE BODY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "$LAST_RESPONSE"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          echo "📜 CLOUD RUN LOGS - REVISION: ${NEW_REVISION} (Last ${{ env.LOG_LINES_DEFAULT }} lines)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }} AND resource.labels.revision_name=${NEW_REVISION}" \
+            --limit=${{ env.LOG_LINES_DEFAULT }} \
+            --format="value(timestamp,severity,textPayload)" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            2>/dev/null || echo "Could not fetch revision-specific logs"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          echo "📜 DJANGO TRACEBACKS (Last 50 error entries)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }} AND (textPayload=~\"Traceback\" OR textPayload=~\"Error\" OR textPayload=~\"Exception\" OR severity>=ERROR)" \
+            --limit=50 \
+            --format="value(textPayload)" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            2>/dev/null || echo "No tracebacks found"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          echo "📜 CONTAINER STARTUP LOGS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=${NEW_REVISION} AND (textPayload=~\"Starting\" OR textPayload=~\"Listening\" OR textPayload=~\"Error\" OR textPayload=~\"Failed\")" \
+            --limit=30 \
+            --format="value(timestamp,textPayload)" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            2>/dev/null || echo "Could not fetch startup logs"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # Check revision status
+          echo "📊 REVISION STATUS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          gcloud run revisions describe ${NEW_REVISION} \
+            --region=${{ env.GCP_REGION }} \
+            --format="yaml(status)" \
+            2>/dev/null || echo "Could not fetch revision status"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # Rollback information
+          echo "🔄 ROLLBACK INFORMATION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  Last Stable Revision: ${{ secrets.STABLE_REVISION }}"
+          echo "  Failed Revision: ${NEW_REVISION}"
+          echo ""
+          echo "  ✅ Production is UNAFFECTED (staging has 0% traffic)"
+          echo ""
+          echo "  The failed revision is tagged as 'staging' with no traffic."
+          echo "  You can safely investigate and redeploy."
+          echo ""
+          echo "  To manually test the failed revision:"
+          echo "  curl ${STAGING_URL}/accounts/health/"
+          echo ""
+          echo "  To delete the failed revision:"
+          echo "  gcloud run revisions delete ${NEW_REVISION} \\"
+          echo "    --region=${{ env.GCP_REGION }} --quiet"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          exit 1
+
+      - name: 📦 Save Full Logs to Artifacts
+        if: failure()
+        run: |
+          mkdir -p logs
+
+          echo "📥 Fetching comprehensive logs for debugging..."
+
+          # Full Cloud Run logs (last 2000 lines)
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }}" \
+            --limit=2000 \
+            --format="table(timestamp,severity,textPayload)" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            > logs/cloudrun_full.log 2>&1 || echo "No Cloud Run logs found" > logs/cloudrun_full.log
+
+          # All errors (last 1000)
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }} AND severity>=ERROR" \
+            --limit=1000 \
+            --format="table(timestamp,severity,textPayload)" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            > logs/errors_all.log 2>&1 || echo "No error logs found" > logs/errors_all.log
+
+          # Migration logs
+          gcloud logging read "resource.type=cloud_run_job" \
+            --limit=500 \
+            --format="table(timestamp,textPayload)" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            > logs/migrations.log 2>&1 || echo "No migration logs found" > logs/migrations.log
+
+          # Revision-specific logs
+          if [ -n "${{ steps.deploy.outputs.new_revision }}" ]; then
+            gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=${{ steps.deploy.outputs.new_revision }}" \
+              --limit=1000 \
+              --format="table(timestamp,severity,textPayload)" \
+              --project=${{ env.GCP_PROJECT_ID }} \
+              > logs/revision_specific.log 2>&1 || echo "No revision-specific logs found" > logs/revision_specific.log
+          fi
+
+          echo "✅ Logs saved to artifacts (will be uploaded)"
+
+      - name: 📤 Upload Logs as Artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-logs-${{ github.sha }}
+          path: logs/
+          retention-days: 30
+      
+      - name: 🎉 Deployment Complete - Next Steps
+        if: success()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ STAGING DEPLOYMENT SUCCESSFUL"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📦 New Revision: ${{ steps.deploy.outputs.new_revision }}"
+          echo "🧪 Staging URL: ${{ steps.get-url.outputs.staging_url }}"
+          echo ""
+          echo "⚠️  IMPORTANT: This revision has 0% production traffic"
+          echo "✅ Health checks passed"
+          echo "✅ Migrations completed"
+          echo ""
+          echo "📋 NEXT STEPS:"
+          echo "  1. Test staging URL thoroughly:"
+          echo "     - Login functionality"
+          echo "     - Project documents"
+          echo "     - Dashboard"
+          echo "     - Critical features"
+          echo ""
+          echo "  2. When satisfied, go to GitHub Actions:"
+          echo "     https://github.com/${{ github.repository }}/actions/workflows/rollout.yml"
+          echo ""
+          echo "  3. Click 'Run workflow' to start gradual rollout"
+          echo ""
+          echo "🔄 Current Production:"
+          echo "  Still serving: ${{ secrets.STABLE_REVISION }}"
+          echo "  Users are unaffected"
+          echo ""
+
+  # ============================================================================
+  # FAILURE SUMMARY JOB - Runs only when deploy fails

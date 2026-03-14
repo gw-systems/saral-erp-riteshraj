@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">📋 Sync Logs</h1>
+        <p class="text-gray-600 text-sm mt-1">Google Ads synchronization history and operation logs</p>
+    </div>
+
+    <!-- Sub Navigation -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-2">
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'google_ads:dashboard' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">📊 Dashboard</a>
+            <a href="{% url 'google_ads:detailed_report' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">📑 Detailed Report</a>
+            <a href="{% url 'google_ads:search_terms' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">🔍 Search Terms</a>
+            <a href="{% url 'google_ads:sync_logs' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium transition">📋 Sync Logs</a>
+            {% if request.user.role == 'admin' %}
+            <a href="{% url 'accounts:admin_dashboard_integrations' %}?tab=google_ads" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">⚙️ Settings</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sync Run History -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-800">Sync Run History</h2>
+            <p class="text-sm text-gray-500">One row per sync run</p>
+        </div>
+        {% if batch_logs %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Started</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Progress</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Errors</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Duration</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in batch_logs %}
+                    <tr class="border-t border-gray-200 hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ log.started_at|date:"M d, Y g:i A" }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ log.get_sync_type_display|default:log.sync_type }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 text-xs font-semibold rounded
+                                {% if log.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif log.status == 'running' %}bg-blue-100 text-blue-800
+                                {% elif log.status == 'failed' %}bg-red-100 text-red-800
+                                {% elif log.status == 'partial' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ log.get_status_display|default:log.status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-700">{{ log.overall_progress_percent }}%</td>
+                        <td class="px-4 py-3 text-gray-700">{{ log.errors_count|default:"0" }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ log.duration_display }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ log.triggered_by_user|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-12 text-center text-gray-500">No sync runs found. Trigger a sync to see history here.</div>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-4">
+        <form method="GET" class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[140px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Log Level</label>
+                <select name="level" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <option value="">All Levels</option>
+                    <option value="INFO" {% if selected_level == 'INFO' %}selected{% endif %}>Info</option>
+                    <option value="SUCCESS" {% if selected_level == 'SUCCESS' %}selected{% endif %}>Success</option>
+                    <option value="WARNING" {% if selected_level == 'WARNING' %}selected{% endif %}>Warning</option>
+                    <option value="ERROR" {% if selected_level == 'ERROR' %}selected{% endif %}>Error</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Operation Log Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-800">Operation Log</h2>
+            <p class="text-sm text-gray-500">Individual API calls and sync events</p>
+        </div>
+
+        {% if logs %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Time</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Level</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Operation</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Message</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for log in logs %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">{{ log.started_at|date:"M d, Y h:i:s A" }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded
+                                {% if log.level == 'ERROR' %}bg-red-100 text-red-800
+                                {% elif log.level == 'CRITICAL' %}bg-red-200 text-red-900
+                                {% elif log.level == 'WARNING' %}bg-yellow-100 text-yellow-800
+                                {% elif log.level == 'SUCCESS' %}bg-green-100 text-green-800
+                                {% elif log.level == 'INFO' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {{ log.level }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-900 font-medium">{{ log.operation|default:"—" }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ log.message|truncatechars:150 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center bg-gray-50">
+            <div class="text-sm text-gray-600">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} logs
+            </div>
+            <div class="flex gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page=1&level={{ selected_level }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}&level={{ selected_level }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Previous</a>
+                {% endif %}
+                <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ page_obj.number }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&level={{ selected_level }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&level={{ selected_level }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Last</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="p-12 text-center text-gray-500">
+            <p class="text-lg">No logs found</p>
+            <p class="text-sm mt-2">Logs will appear here after sync operations</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Director Analytics - Advanced Insights{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Advanced Analytics</h1>
+                <p class="text-gray-600 mt-2">Comprehensive Business Intelligence & Performance Metrics</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'accounts:director_home' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Dashboard
+                </a>
+                <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Financial Analytics Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Financial Analytics
+            </h2>
+            <div class="grid lg:grid-cols-2 gap-6">
+
+                <!-- Monthly Revenue Trend -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Monthly Revenue Trend (Last 12 Months)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="revenue-trend-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Revenue by Client -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 10 Clients by Revenue (YTD)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="client-revenue-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Billing Status Distribution -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Billing Status Distribution (Current Month)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="billing-status-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Adhoc vs Monthly -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Billing Type Split (YTD)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="adhoc-monthly-chart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Operational Analytics Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Operational Metrics
+            </h2>
+            <div class="grid lg:grid-cols-2 gap-6">
+
+                <!-- Projects by Status -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Projects by Status</h3>
+                    <div style="height: 300px;">
+                        <canvas id="project-status-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Warehouse Capacity by City -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Warehouse Capacity by City (Top 10)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="city-capacity-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Vendor Performance -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 10 Vendors by Warehouse Count</h3>
+                    <div style="height: 300px;">
+                        <canvas id="vendor-performance-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dispute Resolution Rate -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Dispute Resolution Rate (Last 6 Months)</h3>
+                    <div class="flex items-center justify-center" style="height: 300px;">
+                        <div class="text-center">
+                            <div class="text-7xl font-bold text-blue-600">{{ dispute_resolution_rate }}%</div>
+                            <p class="text-sm text-gray-600 mt-4">Resolution Rate</p>
+                            <div class="mt-6">
+                                <div class="w-80 bg-gray-200 rounded-full h-4 mx-auto">
+                                    <div class="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full transition duration-500" style="width: {{ dispute_resolution_rate }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Coordinator Analytics Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Team Performance - Coordinators
+            </h2>
+            <div class="grid lg:grid-cols-1 gap-6">
+
+                <!-- Projects per Coordinator -->
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Active Projects by Coordinator (Top 10)</h3>
+                    <p class="text-sm text-gray-600 mb-4">Shows projects where coordinator is primary or secondary</p>
+                    <div style="height: 400px;">
+                        <canvas id="coordinator-projects-chart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Chart.js default configuration
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+// Parse data from Django context
+const financialData = {
+    revenueTrend: {
+        labels: {{ revenue_trend_labels|safe }},
+        data: {{ revenue_trend_data|safe }}
+    },
+    clientRevenue: {
+        labels: {{ client_revenue_labels|safe }},
+        data: {{ client_revenue_data|safe }}
+    },
+    billingStatus: {
+        labels: {{ billing_status_labels|safe }},
+        data: {{ billing_status_counts|safe }}
+    },
+    adhocMonthly: {
+        labels: {{ adhoc_vs_monthly_labels|safe }},
+        data: {{ adhoc_vs_monthly_data|safe }}
+    }
+};
+
+const operationalData = {
+    projectStatus: {
+        labels: {{ project_status_labels|safe }},
+        data: {{ project_status_counts|safe }}
+    },
+    cityCapacity: {
+        labels: {{ city_capacity_labels|safe }},
+        data: {{ city_capacity_data|safe }}
+    },
+    vendorPerformance: {
+        labels: {{ vendor_labels|safe }},
+        data: {{ vendor_counts|safe }}
+    }
+};
+
+const coordinatorData = {
+    labels: {{ coordinator_labels|safe }},
+    data: {{ coordinator_project_counts|safe }}
+};
+
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Revenue Trend Chart
+    new Chart(document.getElementById('revenue-trend-chart'), {
+        type: 'line',
+        data: {
+            labels: financialData.revenueTrend.labels,
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: financialData.revenueTrend.data,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: ₹' + context.parsed.y.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value/1000) + 'K';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Client Revenue Chart
+    new Chart(document.getElementById('client-revenue-chart'), {
+        type: 'bar',
+        data: {
+            labels: financialData.clientRevenue.labels,
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: financialData.clientRevenue.data,
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '₹' + context.parsed.x.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value/1000) + 'K';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Billing Status Chart
+    new Chart(document.getElementById('billing-status-chart'), {
+        type: 'doughnut',
+        data: {
+            labels: financialData.billingStatus.labels,
+            datasets: [{
+                data: financialData.billingStatus.data,
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(251, 146, 60, 0.8)',
+                    'rgba(239, 68, 68, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Adhoc vs Monthly Chart
+    new Chart(document.getElementById('adhoc-monthly-chart'), {
+        type: 'pie',
+        data: {
+            labels: financialData.adhocMonthly.labels,
+            datasets: [{
+                data: financialData.adhocMonthly.data,
+                backgroundColor: [
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(236, 72, 153, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ₹' + context.parsed.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Project Status Chart
+    new Chart(document.getElementById('project-status-chart'), {
+        type: 'doughnut',
+        data: {
+            labels: operationalData.projectStatus.labels,
+            datasets: [{
+                data: operationalData.projectStatus.data,
+                backgroundColor: [
+                    'rgba(34, 197, 94, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(251, 146, 60, 0.8)',
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(156, 163, 175, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // City Capacity Chart
+    new Chart(document.getElementById('city-capacity-chart'), {
+        type: 'bar',
+        data: {
+            labels: operationalData.cityCapacity.labels,
+            datasets: [{
+                label: 'Capacity (sq ft)',
+                data: operationalData.cityCapacity.data,
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString('en-IN') + ' sq ft';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return (value/1000) + 'K';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Vendor Performance Chart
+    new Chart(document.getElementById('vendor-performance-chart'), {
+        type: 'bar',
+        data: {
+            labels: operationalData.vendorPerformance.labels,
+            datasets: [{
+                label: 'Warehouses',
+                data: operationalData.vendorPerformance.data,
+                backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.x + ' warehouses';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Coordinator Projects Chart
+    new Chart(document.getElementById('coordinator-projects-chart'), {
+        type: 'bar',
+        data: {
+            labels: coordinatorData.labels,
+            datasets: [{
+                label: 'Active Projects',
+                data: coordinatorData.data,
+                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.x + ' projects';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+});
+</script>
+{% endblock %}

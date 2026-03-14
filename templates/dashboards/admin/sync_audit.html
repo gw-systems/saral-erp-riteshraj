@@ -1,0 +1,954 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Integration Sync Audit - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .status-running {
+        background-color: #DBEAFE;
+        color: #1E40AF;
+    }
+    .status-completed {
+        background-color: #D1FAE5;
+        color: #065F46;
+    }
+    .status-failed {
+        background-color: #FEE2E2;
+        color: #991B1B;
+    }
+    .status-partial {
+        background-color: #FEF3C7;
+        color: #92400E;
+    }
+    .spinner {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .expandable-row {
+        display: none;
+    }
+    .expandable-row.expanded {
+        display: table-row;
+    }
+    .pulse-dot {
+        animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <a href="{% url 'accounts:admin_dashboard_home' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-2 text-sm">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Back to Admin Home
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">Integration Sync Audit</h1>
+                <p class="text-gray-600 mt-2">Monitor and control all system integrations</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
+                <span class="text-xs text-gray-500">Auto-refresh: <span id="countdown">30s</span></span>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+            <!-- Total Syncs Today -->
+            <div class="smooth-card bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-3">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm font-semibold text-white text-opacity-90 uppercase tracking-wide">Syncs Today</p>
+                <p class="text-5xl font-bold mt-2" id="syncs-today">{{ syncs_today|default:0 }}</p>
+                <div class="mt-3">
+                    <p class="text-sm text-white text-opacity-75" id="syncs-running">{{ running_syncs|default:0 }} currently running</p>
+                </div>
+            </div>
+
+            <!-- Success Rate -->
+            <div class="smooth-card bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-3">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm font-semibold text-white text-opacity-90 uppercase tracking-wide">Success Rate</p>
+                <p class="text-5xl font-bold mt-2" id="success-rate">{{ success_rate|default:100 }}%</p>
+                <div class="mt-3">
+                    <p class="text-sm text-white text-opacity-75">Last 24 hours</p>
+                </div>
+            </div>
+
+            <!-- Total Records Synced -->
+            <div class="smooth-card bg-gradient-to-br from-purple-500 to-indigo-700 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-3">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm font-semibold text-white text-opacity-90 uppercase tracking-wide">Records Today</p>
+                <p class="text-5xl font-bold mt-2" id="records-today">{{ records_today|default:0 }}</p>
+                <div class="mt-3">
+                    <p class="text-sm text-white text-opacity-75">Created + Updated</p>
+                </div>
+            </div>
+
+            <!-- Last Sync -->
+            <div class="smooth-card bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-3">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm font-semibold text-white text-opacity-90 uppercase tracking-wide">Last Sync</p>
+                <p class="text-2xl font-bold mt-2" id="last-sync-type">{{ last_sync_type|default:"None" }}</p>
+                <div class="mt-3">
+                    <p class="text-sm text-white text-opacity-75" id="last-sync-time">{{ last_sync_time|default:"Never" }}</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Live Progress -->
+        <div id="live-progress-section" class="bg-white rounded-xl shadow-md p-6 mb-8 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-blue-600 mr-2 spinner" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="live-progress-title">Sync in Progress</span>
+                </h3>
+                <div class="flex items-center space-x-2">
+                    <button onclick="stopCurrentSync()" id="btn-stop-sync" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                        </svg>
+                        Stop Sync
+                    </button>
+                    <button onclick="forceStopCurrentSync()" id="btn-force-stop-sync" class="hidden inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Force Stop
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overall Progress Bar -->
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Overall Progress</span>
+                    <span id="overall-progress-text">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="overall-progress-bar" class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Current Module Info -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs text-gray-500 mb-1">Current Module</p>
+                    <p class="text-lg font-semibold text-gray-900" id="current-module">-</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs text-gray-500 mb-1">Records Processed</p>
+                    <p class="text-lg font-semibold text-gray-900" id="current-module-progress">0 / -</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs text-gray-500 mb-1">Elapsed Time</p>
+                    <p class="text-lg font-semibold text-gray-900" id="elapsed-time">0s</p>
+                </div>
+            </div>
+
+            <!-- Module Progress Bars -->
+            <div id="module-progress-bars" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Sync Controls -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center mb-4">
+                <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Sync Controls
+            </h3>
+
+            <!-- All Modules Sync -->
+            <div class="mb-6">
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-3">All Modules</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button onclick="triggerSync('bigin_full')" id="btn-bigin-full" class="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition text-sm font-medium shadow-md">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Full Sync (All)
+                    </button>
+
+                    <button onclick="triggerSync('bigin_incremental')" id="btn-bigin-incremental" class="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-lg hover:from-green-700 hover:to-emerald-800 transition text-sm font-medium shadow-md">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Incremental Sync (All)
+                    </button>
+
+                    <button onclick="forceTokenRefresh()" id="btn-token-refresh" class="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-orange-600 to-red-700 text-white rounded-lg hover:from-orange-700 hover:to-red-800 transition text-sm font-medium shadow-md">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                        Refresh Token
+                    </button>
+                </div>
+            </div>
+
+            <!-- Individual Modules Sync - Incremental -->
+            <div class="mb-6">
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-3">Individual Modules (Incremental)</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <!-- Contacts -->
+                    <button onclick="triggerModuleSync('Contacts', false)" class="inline-flex items-center justify-center px-3 py-2 bg-white border-2 border-purple-500 text-purple-700 rounded-lg hover:bg-purple-50 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        Contacts
+                    </button>
+
+                    <!-- Pipelines -->
+                    <button onclick="triggerModuleSync('Pipelines', false)" class="inline-flex items-center justify-center px-3 py-2 bg-white border-2 border-indigo-500 text-indigo-700 rounded-lg hover:bg-indigo-50 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Pipelines
+                    </button>
+
+                    <!-- Accounts -->
+                    <button onclick="triggerModuleSync('Accounts', false)" class="inline-flex items-center justify-center px-3 py-2 bg-white border-2 border-blue-500 text-blue-700 rounded-lg hover:bg-blue-50 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Accounts
+                    </button>
+
+                    <!-- Products -->
+                    <button onclick="triggerModuleSync('Products', false)" class="inline-flex items-center justify-center px-3 py-2 bg-white border-2 border-green-500 text-green-700 rounded-lg hover:bg-green-50 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Products
+                    </button>
+
+                    <!-- Notes -->
+                    <button onclick="triggerModuleSync('Notes', false)" class="inline-flex items-center justify-center px-3 py-2 bg-white border-2 border-yellow-500 text-yellow-700 rounded-lg hover:bg-yellow-50 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Notes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Individual Modules Sync - Full -->
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-3">Individual Modules (Full Sync)</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <!-- Contacts Full -->
+                    <button onclick="triggerModuleSync('Contacts', true)" class="inline-flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        Contacts
+                    </button>
+
+                    <!-- Pipelines Full -->
+                    <button onclick="triggerModuleSync('Pipelines', true)" class="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Pipelines
+                    </button>
+
+                    <!-- Accounts Full -->
+                    <button onclick="triggerModuleSync('Accounts', true)" class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Accounts
+                    </button>
+
+                    <!-- Products Full -->
+                    <button onclick="triggerModuleSync('Products', true)" class="inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Products
+                    </button>
+
+                    <!-- Notes Full -->
+                    <button onclick="triggerModuleSync('Notes', true)" class="inline-flex items-center justify-center px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm font-medium shadow-sm">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Notes
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sync History Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Sync History
+                </h3>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="p-8 text-center">
+                <svg aria-hidden="true" width="32" height="32" class="spinner h-8 w-8 text-blue-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-gray-500 text-sm">Loading sync history...</p>
+            </div>
+
+            <!-- Table -->
+            <div id="sync-table" class="overflow-x-auto hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Sync Type
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Started
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Duration
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Records
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Success Rate
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="sync-tbody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data loaded via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="p-8 text-center hidden">
+                <svg aria-hidden="true" width="48" height="48" class="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                <p class="text-gray-500">No sync history found</p>
+                <p class="text-gray-500 text-sm mt-1">Trigger a sync to see results here</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Notification Toast -->
+<div id="notification-toast" class="hidden fixed top-4 right-4 z-50 max-w-sm">
+    <div id="toast-content" class="bg-white rounded-lg shadow-xl border border-gray-200 p-4 flex items-start space-x-3">
+        <div id="toast-icon" class="flex-shrink-0">
+            <!-- Icon injected via JavaScript -->
+        </div>
+        <div class="flex-1">
+            <p id="toast-title" class="text-sm font-medium text-gray-900"></p>
+            <p id="toast-message" class="text-sm text-gray-600 mt-1"></p>
+        </div>
+        <button onclick="hideNotification()" class="flex-shrink-0 text-gray-500 hover:text-gray-600">
+            <svg aria-hidden="true" width="16" height="16" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh countdown
+let countdownSeconds = 30;
+let countdownInterval;
+
+function startCountdown() {
+    countdownInterval = setInterval(() => {
+        countdownSeconds--;
+        document.getElementById('countdown').textContent = countdownSeconds + 's';
+
+        if (countdownSeconds <= 0) {
+            refreshData();
+            countdownSeconds = 30;
+        }
+    }, 1000);
+}
+
+// Load sync history
+function loadSyncHistory() {
+    fetch('{% url "bigin:sync_history_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            updateSummaryCards(data.summary);
+            renderSyncTable(data.syncs);
+            document.getElementById('loading-state').classList.add('hidden');
+
+            if (data.syncs.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('sync-table').classList.add('hidden');
+            } else {
+                document.getElementById('empty-state').classList.add('hidden');
+                document.getElementById('sync-table').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading sync history:', error);
+            showNotification('error', 'Error', 'Failed to load sync history');
+        });
+}
+
+// Update summary cards
+function updateSummaryCards(summary) {
+    document.getElementById('syncs-today').textContent = summary.syncs_today || 0;
+    document.getElementById('syncs-running').textContent = (summary.running_syncs || 0) + ' currently running';
+    document.getElementById('success-rate').textContent = (summary.success_rate || 100) + '%';
+    document.getElementById('records-today').textContent = summary.records_today || 0;
+    document.getElementById('last-sync-type').textContent = summary.last_sync_type || 'None';
+    document.getElementById('last-sync-time').textContent = summary.last_sync_time || 'Never';
+}
+
+// Render sync table
+function renderSyncTable(syncs) {
+    const tbody = document.getElementById('sync-tbody');
+    tbody.innerHTML = '';
+
+    syncs.forEach(sync => {
+        const rows = createSyncRow(sync);
+        tbody.appendChild(rows.mainRow);
+        tbody.appendChild(rows.detailsRow);
+    });
+}
+
+// Create sync row and details row
+function createSyncRow(sync) {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-gray-50';
+    tr.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${sync.sync_type_display}</div>
+            ${sync.modules && sync.modules.length > 0 ? `<div class="text-xs text-gray-500">${sync.modules.join(', ')}</div>` : ''}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="status-badge status-${sync.status}">
+                ${sync.status === 'running' ? '<svg aria-hidden="true" width="12" height="12" class="spinner h-3 w-3 mr-1 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' : ''}
+                ${sync.status_display}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${sync.started_at}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${sync.duration_display}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">${sync.total_records_synced}</div>
+            <div class="text-xs text-gray-500">${sync.records_created} created, ${sync.records_updated} updated</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <div class="flex items-center">
+                <div class="text-sm font-medium ${sync.success_rate >= 95 ? 'text-green-600' : sync.success_rate >= 80 ? 'text-yellow-600' : 'text-red-600'}">
+                    ${sync.success_rate}%
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <button onclick="toggleDetails(${sync.id})" class="text-blue-600 hover:text-blue-800 font-medium">
+                Details
+            </button>
+        </td>
+    `;
+
+    // Create expandable details row
+    const detailsRow = document.createElement('tr');
+    detailsRow.id = `details-${sync.id}`;
+    detailsRow.className = 'expandable-row bg-gray-50';
+    detailsRow.innerHTML = `
+        <td colspan="7" class="px-6 py-4">
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <h4 class="text-sm font-semibold text-gray-900 mb-3">Sync Details</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <p class="text-xs text-gray-500">Triggered By</p>
+                        <p class="text-sm font-medium text-gray-900">${sync.triggered_by || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">User</p>
+                        <p class="text-sm font-medium text-gray-900">${sync.triggered_by_user || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Errors</p>
+                        <p class="text-sm font-medium ${sync.errors_count > 0 ? 'text-red-600' : 'text-gray-900'}">${sync.errors_count}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Completed At</p>
+                        <p class="text-sm font-medium text-gray-900">${sync.completed_at || 'In Progress'}</p>
+                    </div>
+                </div>
+                ${sync.module_results && Object.keys(sync.module_results).length > 0 ? `
+                    <h5 class="text-xs font-semibold text-gray-700 mb-2">Module Results</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${Object.entries(sync.module_results).map(([module, results]) => `
+                            <div class="bg-gray-50 rounded p-3 border border-gray-200 ${results.errors > 0 ? 'border-red-300 bg-red-50' : ''}">
+                                <p class="text-sm font-medium text-gray-900">${module}</p>
+                                <div class="mt-1 text-xs text-gray-600 space-y-0.5">
+                                    <p>Synced: ${results.synced || 0}</p>
+                                    <p>Created: ${results.created || 0}</p>
+                                    <p>Updated: ${results.updated || 0}</p>
+                                    ${results.errors > 0 ? `<p class="text-red-600 font-semibold">Errors: ${results.errors}</p>` : ''}
+                                    ${results.error_message ? `
+                                        <div class="mt-2 p-2 bg-red-100 rounded border border-red-200">
+                                            <p class="text-red-700 font-medium">${results.error_message}</p>
+                                            ${results.traceback ? `
+                                                <details class="mt-1">
+                                                    <summary class="text-xs text-red-600 cursor-pointer hover:text-red-800">Show traceback</summary>
+                                                    <pre class="text-xs text-red-800 mt-1 overflow-x-auto whitespace-pre-wrap">${results.traceback}</pre>
+                                                </details>
+                                            ` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                ${sync.error_message ? `
+                    <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+                        <p class="text-xs font-semibold text-red-800">Error Message</p>
+                        <p class="text-sm text-red-700 mt-1">${sync.error_message}</p>
+                        ${sync.error_details && sync.error_details.traceback ? `
+                            <details class="mt-2">
+                                <summary class="text-xs text-red-600 cursor-pointer hover:text-red-800">Show full traceback</summary>
+                                <pre class="text-xs text-red-800 mt-1 overflow-x-auto whitespace-pre-wrap bg-red-100 p-2 rounded">${sync.error_details.traceback}</pre>
+                            </details>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        </td>
+    `;
+
+    // Return both rows as an object
+    return { mainRow: tr, detailsRow: detailsRow };
+}
+
+// Toggle details
+function toggleDetails(syncId) {
+    const detailsRow = document.getElementById(`details-${syncId}`);
+    if (!detailsRow) {
+        console.error('[Details] Could not find details row for sync ID:', syncId);
+        return;
+    }
+    detailsRow.classList.toggle('expanded');
+}
+
+// Trigger sync
+function triggerSync(syncType) {
+    const button = document.getElementById(`btn-${syncType.replace('_', '-')}`);
+    button.disabled = true;
+    button.classList.add('opacity-50', 'cursor-not-allowed');
+
+    const url = syncType === 'bigin_full'
+        ? '{% url "bigin:trigger_bigin_sync" %}?full=true'
+        : '{% url "bigin:trigger_bigin_sync" %}';
+
+    fetch(url, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('success', 'Sync Started', data.message);
+                setTimeout(() => refreshData(), 2000);
+            } else {
+                showNotification('error', 'Sync Failed', data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error triggering sync:', error);
+            showNotification('error', 'Error', 'Failed to trigger sync');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+}
+
+// Trigger module sync (called directly from buttons)
+function triggerModuleSync(moduleName, fullSync = false) {
+    const formData = new FormData();
+    formData.append('module', moduleName);
+    formData.append('full', fullSync ? 'true' : 'false');
+
+    const syncType = fullSync ? 'full' : 'incremental';
+
+    fetch('{% url "bigin:trigger_module_sync" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('success', 'Module Sync Started', `${moduleName} ${syncType} sync started successfully`);
+                setTimeout(() => refreshData(), 2000);
+            } else {
+                showNotification('error', 'Sync Failed', data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error triggering module sync:', error);
+            showNotification('error', 'Error', 'Failed to start module sync');
+        });
+}
+
+// Force token refresh
+function forceTokenRefresh() {
+    const button = document.getElementById('btn-token-refresh');
+    button.disabled = true;
+    button.classList.add('opacity-50', 'cursor-not-allowed');
+
+    fetch('{% url "bigin:force_token_refresh" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('success', 'Token Refreshed', data.message);
+            } else {
+                showNotification('error', 'Refresh Failed', data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing token:', error);
+            showNotification('error', 'Error', 'Failed to refresh token');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+}
+
+// Refresh data
+function refreshData() {
+    loadSyncHistory();
+    loadLiveProgress();
+    countdownSeconds = 30;
+}
+
+// Load live progress for running syncs
+let currentSyncId = null;
+let progressInterval = null;
+
+function loadLiveProgress() {
+    fetch('{% url "bigin:sync_progress_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.running_syncs && data.running_syncs.length > 0) {
+                const sync = data.running_syncs[0]; // Show first running sync
+                currentSyncId = sync.id;
+                showLiveProgress(sync);
+            } else {
+                hideLiveProgress();
+                currentSyncId = null;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading progress:', error);
+        });
+}
+
+function showLiveProgress(sync) {
+    const section = document.getElementById('live-progress-section');
+    section.classList.remove('hidden');
+
+    // Update overall progress
+    document.getElementById('overall-progress-text').textContent = sync.overall_progress_percent + '%';
+    document.getElementById('overall-progress-bar').style.width = sync.overall_progress_percent + '%';
+
+    // Update current module info
+    document.getElementById('current-module').textContent = sync.current_module || '-';
+    document.getElementById('current-module-progress').textContent =
+        `${sync.current_module_progress.toLocaleString()} ${sync.current_module_total > 0 ? '/ ' + sync.current_module_total.toLocaleString() : ''}`;
+
+    // Format elapsed time
+    const elapsed = sync.elapsed_seconds;
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    let timeStr = '';
+    if (hours > 0) timeStr += hours + 'h ';
+    if (minutes > 0) timeStr += minutes + 'm ';
+    timeStr += seconds + 's';
+    document.getElementById('elapsed-time').textContent = timeStr;
+
+    // Update title and buttons based on stop status and staleness
+    const staleThreshold = 60; // Consider sync stale if no progress for 60 seconds
+    const isStale = elapsed > staleThreshold && sync.current_module_progress === 0;
+
+    if (sync.stop_requested) {
+        document.getElementById('live-progress-title').textContent = 'Sync Stopping...';
+        document.getElementById('btn-stop-sync').disabled = true;
+        document.getElementById('btn-stop-sync').classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Show force stop button if sync has been stopping for more than 30 seconds
+        if (elapsed > 30) {
+            document.getElementById('btn-force-stop-sync').classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('live-progress-title').textContent = 'Sync in Progress - ' + sync.sync_type_display;
+        document.getElementById('btn-stop-sync').disabled = false;
+        document.getElementById('btn-stop-sync').classList.remove('opacity-50', 'cursor-not-allowed');
+
+        // Show force stop button if sync is stale (no progress and running for > 60s)
+        if (isStale) {
+            document.getElementById('btn-force-stop-sync').classList.remove('hidden');
+            document.getElementById('live-progress-title').textContent = 'Sync Stalled - ' + sync.sync_type_display;
+        } else {
+            document.getElementById('btn-force-stop-sync').classList.add('hidden');
+        }
+    }
+
+    // Render module progress bars
+    renderModuleProgressBars(sync.module_results);
+
+    // Start progress polling if not already started
+    if (!progressInterval) {
+        progressInterval = setInterval(loadLiveProgress, 2000); // Poll every 2 seconds
+    }
+}
+
+function hideLiveProgress() {
+    const section = document.getElementById('live-progress-section');
+    section.classList.add('hidden');
+
+    // Stop polling
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+}
+
+function renderModuleProgressBars(moduleResults) {
+    const container = document.getElementById('module-progress-bars');
+    if (!moduleResults || Object.keys(moduleResults).length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '<div class="text-xs font-semibold text-gray-700 mb-2">Module Progress</div>';
+    for (const [module, results] of Object.entries(moduleResults)) {
+        const percent = results.synced > 0 ? Math.round((results.synced / (results.synced + 100)) * 100) : 0;
+        html += `
+            <div class="bg-gray-50 rounded-lg p-3">
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium text-gray-700">${module}</span>
+                    <span class="text-gray-500">${results.synced.toLocaleString()} synced</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full" style="width: 100%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>${results.created} created, ${results.updated} updated</span>
+                    ${results.errors > 0 ? `<span class="text-red-600">${results.errors} errors</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
+// Stop current sync
+function stopCurrentSync() {
+    if (!currentSyncId) {
+        showNotification('error', 'Error', 'No running sync to stop');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to stop the current sync? It will complete the current module and then stop.')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('sync_id', currentSyncId);
+
+    fetch('{% url "bigin:stop_sync_api" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('success', 'Stop Requested', data.message);
+                // Update UI immediately
+                document.getElementById('live-progress-title').textContent = 'Sync Stopping...';
+                document.getElementById('btn-stop-sync').disabled = true;
+            } else {
+                showNotification('error', 'Stop Failed', data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error stopping sync:', error);
+            showNotification('error', 'Error', 'Failed to stop sync');
+        });
+}
+
+// Force stop current sync (for stale syncs)
+function forceStopCurrentSync() {
+    if (!currentSyncId) {
+        showNotification('error', 'Error', 'No running sync to force stop');
+        return;
+    }
+
+    if (!confirm('WARNING: Force stop will immediately terminate the sync without waiting for cleanup. Only use this if the sync is not responding. Continue?')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('sync_id', currentSyncId);
+
+    fetch('{% url "bigin:force_stop_sync_api" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('success', 'Force Stopped', data.message);
+                // Refresh page after force stop
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showNotification('error', 'Force Stop Failed', data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error force stopping sync:', error);
+            showNotification('error', 'Error', 'Failed to force stop sync');
+        });
+}
+
+// Show notification
+function showNotification(type, title, message) {
+    const toast = document.getElementById('notification-toast');
+    const icon = document.getElementById('toast-icon');
+    const titleEl = document.getElementById('toast-title');
+    const messageEl = document.getElementById('toast-message');
+
+    const icons = {
+        success: '<svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        error: '<svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        info: '<svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    };
+
+    icon.innerHTML = icons[type] || icons.info;
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        hideNotification();
+    }, 5000);
+}
+
+function hideNotification() {
+    document.getElementById('notification-toast').classList.add('hidden');
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadSyncHistory();
+    loadLiveProgress(); // Load progress immediately on page load
+    startCountdown();
+});
+</script>
+{% endblock %}

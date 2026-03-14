@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Entry Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Daily Space Utilization</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Track daily space and inventory for your projects
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'operations:daily_entry_all_history' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                View All History
+            </a>
+            <a href="{% url 'operations:daily_entry_single' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Single Entry
+            </a>
+            <a href="{% url 'operations:daily_entry_bulk' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Bulk Entry
+            </a>
+            <a href="{% url 'operations:daily_entry_bulk_edit' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Bulk Edit
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Assigned Projects</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ projects.count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Date Selector Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-5 flex-1">
+                    <label for="date-selector" class="block text-sm font-medium text-gray-500 mb-1">Select Date</label>
+                    <input type="date"
+                           id="date-selector"
+                           name="date"
+                           value="{{ selected_date|date:'Y-m-d' }}"
+                           max="{{ today|date:'Y-m-d' }}"
+                           class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 {% if is_sunday %}bg-red-500{% else %}bg-green-500{% endif %} rounded-md p-3">
+                    <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Status</p>
+                    <p class="text-lg font-semibold {% if is_sunday %}text-red-600{% else %}text-green-600{% endif %}">
+                        {% if is_sunday %}
+                            Sunday - Holiday
+                        {% else %}
+                            Working Day
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar Only -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="GET" class="space-y-4">
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+
+            <div class="flex items-end gap-4">
+                <!-- Single Search Box -->
+                <div class="flex-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Projects</label>
+                    <input type="text"
+                           id="search"
+                           name="search"
+                           value="{{ search_query }}"
+                           placeholder="Search by client name, vendor name, location, or project code..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Action Buttons -->
+                <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition shadow-sm">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Search
+                </button>
+
+                {% if search_query %}
+                <a href="?date={{ selected_date|date:'Y-m-d' }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Grouped Entries with Column Headers -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-900">
+                Entries for {{ selected_date|date:"d M Y" }}
+                {% if selected_date != today %}
+                    <span class="ml-2 text-sm font-normal text-gray-500">(Historical View)</span>
+                {% endif %}
+            </h2>
+            <div class="text-sm text-gray-500">
+                {{ grouped_entries|length }} project(s)
+            </div>
+        </div>
+
+        <!-- Column Headers (Fixed at top) -->
+        <div class="px-6 py-3 bg-gray-100 border-b border-gray-200">
+            <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div class="col-span-4">Project</div>
+                <div class="col-span-2 text-right">Space</div>
+                <div class="col-span-2 text-right">Inventory</div>
+                <div class="col-span-2 text-right">GW (30%)</div>
+                <div class="col-span-1 text-center">Edit</div>
+                <div class="col-span-1 text-center">History</div>
+            </div>
+        </div>
+
+        <div class="divide-y divide-gray-200">
+            {% for group in grouped_entries %}
+            <div class="project-group">
+                <!-- Project Row (Clickable) -->
+                <div class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition"
+                     onclick="toggleHistory('project-{{ group.project.project_id }}')">
+                    <div class="grid grid-cols-12 gap-4 items-center">
+                        <!-- Project Info (4 columns) -->
+                        <div class="col-span-4 flex items-center space-x-3">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-gray-500 transform transition-transform history-arrow flex-shrink-0"
+                                 id="arrow-project-{{ group.project.project_id }}"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            <div class="min-w-0 flex-1">
+                                <a href="{% url 'projects:project_card_by_project' group.project.project_id %}"
+                                   class="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                   onclick="event.stopPropagation();">
+                                    {{ group.project.project_code }}
+                                </a>
+                                <p class="text-xs text-gray-500 mt-0.5 truncate">
+                                    {{ group.project.client_name }}
+                                    {% if group.project.location %} &bull; {{ group.project.location }}{% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        {% if group.latest_entry %}
+                            <!-- Space (2 columns) -->
+                            <div class="col-span-2 text-right">
+                                <span class="text-sm font-semibold text-gray-900">{{ group.latest_entry.space_utilized }} {{ group.latest_entry.unit }}</span>
+                            </div>
+
+                            <!-- Inventory (2 columns) -->
+                            <div class="col-span-2 text-right">
+                                <span class="text-sm font-semibold text-gray-900">&#8377;{{ group.latest_entry.inventory_value|floatformat:2 }}</span>
+                            </div>
+
+                            <!-- GW Inventory (2 columns) -->
+                            <div class="col-span-2 text-right">
+                                <span class="text-sm font-semibold text-green-700">
+                                    {% if group.latest_entry.gw_inventory %}
+                                        &#8377;{{ group.latest_entry.gw_inventory|floatformat:2 }}
+                                    {% else %}
+                                        &mdash;
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Edit Button (1 column) -->
+                            <div class="col-span-1 text-center">
+                                <a href="{% url 'operations:daily_entry_edit' group.latest_entry.id %}"
+                                   class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                   onclick="event.stopPropagation();"
+                                   title="Edit this entry">
+                                    <svg aria-hidden="true" width="12" height="12" class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Edit
+                                </a>
+                            </div>
+
+                            <!-- History Badge + View All Button (1 column) -->
+                            <div class="col-span-1 text-center">
+                                <a href="{% url 'operations:daily_entry_history' group.project.project_id %}"
+                                   class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                   onclick="event.stopPropagation();"
+                                   title="View complete history">
+                                    <svg aria-hidden="true" width="12" height="12" class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    View All
+                                </a>
+                            </div>
+                        {% else %}
+                            <!-- No Entry Message -->
+                            <div class="col-span-8 text-right">
+                                <span class="text-sm text-gray-500">No entry for this date</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- History Table (Hidden by default) -->
+                <div id="history-project-{{ group.project.project_id }}" class="hidden bg-gray-50">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-100 border-t border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Space</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inventory</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider bg-green-50">GW (30%)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entered By</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                {% for entry in group.history %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                                        {{ entry.entry_date|date:"d M Y" }}
+                                        {% if entry.entry_date == selected_date %}
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Selected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                                        {{ entry.space_utilized }} {{ entry.unit }}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                                        &#8377;{{ entry.inventory_value|floatformat:2 }}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-green-700 font-semibold bg-green-50">
+                                        {% if entry.gw_inventory %}
+                                            &#8377;{{ entry.gw_inventory|floatformat:2 }}
+                                        {% else %}
+                                            <span class="text-gray-500">&mdash;</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-3 text-sm text-gray-600">
+                                        {{ entry.remarks|truncatewords:10|default:"&mdash;" }}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
+                                        {{ entry.entered_by.get_full_name }}
+                                    </td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-center text-sm">
+                                        <a href="{% url 'operations:daily_entry_edit' entry.id %}"
+                                           class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                           onclick="event.stopPropagation();"
+                                           title="Edit this entry">
+                                            <svg aria-hidden="true" width="12" height="12" class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                            Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="px-6 py-12 text-center text-gray-500">
+                <svg aria-hidden="true" width="48" height="48" class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                <p class="mt-2 text-sm font-medium">No entries found</p>
+                <p class="mt-1 text-sm">
+                    {% if search_query %}
+                        Try adjusting your search
+                    {% else %}
+                        No entries recorded for {{ selected_date|date:"d M Y" }}
+                    {% endif %}
+                </p>
+                <div class="mt-4">
+                    <a href="{% url 'operations:daily_entry_single' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        Create Entry
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Date selector change handler
+document.getElementById('date-selector').addEventListener('change', function() {
+    const selectedDate = this.value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('date', selectedDate);
+    // Preserve other query params
+    window.location.href = currentUrl.toString();
+});
+
+// Toggle history visibility
+function toggleHistory(projectId) {
+    const historyDiv = document.getElementById('history-' + projectId);
+    const arrow = document.getElementById('arrow-' + projectId);
+
+    if (historyDiv.classList.contains('hidden')) {
+        historyDiv.classList.remove('hidden');
+        arrow.style.transform = 'rotate(90deg)';
+    } else {
+        historyDiv.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+</script>
+{% endblock %}

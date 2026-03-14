@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulk Entry - Daily Space{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Bulk Entry for All Projects</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Enter data for all your assigned projects at once
+            </p>
+        </div>
+        <a href="{% url 'operations:daily_entry_single' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+            Switch to Single Entry
+        </a>
+    </div>
+
+    <!-- Date Selection Card -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+                <label for="bulk_entry_date" class="block text-sm font-medium text-gray-700 mb-2">
+                    Select Date for Bulk Entry <span class="text-red-500">*</span>
+                </label>
+                <input type="date"
+                       id="bulk_entry_date"
+                       name="bulk_entry_date"
+                       value="{{ today|date:'Y-m-d' }}"
+                       max="{{ today|date:'Y-m-d' }}"
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="mt-1 text-xs text-gray-500">All entries will be created for this date</p>
+            </div>
+
+            <!-- Copy Last Entry Button -->
+            <div class="mx-4">
+                <button type="button" onclick="copyLastEntryData()" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-sm transition shadow-sm">
+                    <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                    </svg>
+                    Copy Last Entry
+                </button>
+                <p class="mt-1 text-xs text-gray-500 text-center">Quick fill</p>
+            </div>
+
+            <div class="text-right">
+                <p class="text-sm font-medium text-gray-700">Total Projects</p>
+                <p class="text-3xl font-bold text-blue-600">{{ projects.count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Entry Form -->
+    <form method="POST" id="bulk-entry-form" onsubmit="return handleFormSubmit(event)">
+        {% csrf_token %}
+        <input type="hidden" name="entry_date" id="hidden_entry_date" value="{{ today|date:'Y-m-d' }}">
+
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-900">Project Entries</h2>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto max-h-[70vh] overflow-y-auto" tabindex="0" role="region" aria-label="Daily entry table">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <caption class="sr-only">Daily entry form for projects</caption>
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                                Project
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                                Min Billable
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                                Space Utilized <span class="text-red-500">*</span>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                                Inventory (₹) <span class="text-red-500">*</span>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Remarks
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for project in projects %}
+                        <tr class="hover:bg-gray-50 transition" data-project-id="{{ project.project_id }}">
+                            <!-- 1. Cleaned Project Column -->
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-bold text-gray-900">{{ project.project_code }}</div>
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {% if project.billing_unit == 'sqft' and project.minimum_billable_sqft %}
+                                    <span class="font-medium text-blue-600">{{ project.minimum_billable_sqft }}</span> Sq. Ft.
+                                {% elif project.billing_unit == 'pallet' and project.minimum_billable_pallets %}
+                                    <span class="font-medium text-blue-600">{{ project.minimum_billable_pallets }}</span> Pallets
+                                {% else %}
+                                    <span class="text-gray-500">—</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- 2. Space Utilized with Unit Dropdown -->
+                            <td class="px-6 py-4">
+                                <div class="flex rounded-md shadow-sm">
+                                    <input type="number"
+                                           name="space_{{ project.project_id }}"
+                                           step="0.01"
+                                           min="0"
+                                           placeholder="0.00"
+                                           data-min-sqft="{{ project.minimum_billable_sqft|default:'' }}"
+                                           data-min-pallets="{{ project.minimum_billable_pallets|default:'' }}"
+                                           data-billing-unit="{{ project.billing_unit }}"
+                                           class="space-input flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-lg text-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                                    <select name="unit_{{ project.project_id }}"
+                                            class="unit-input inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        {% for code, label in dropdowns.storage_units %}
+                                        <option value="{{ code }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2 text-xs text-gray-500">₹</span>
+                                    <input type="number"
+                                           name="inventory_{{ project.project_id }}"
+                                           step="0.01"
+                                           min="0"
+                                           placeholder="0.00"
+                                           class="inventory-input w-full pl-6 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <input type="text"
+                                       name="remarks_{{ project.project_id }}"
+                                       placeholder="Optional notes..."
+                                       class="remarks-input w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <p class="text-sm font-medium">No projects assigned</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Footer -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-600">
+                        <span id="filled-count">0</span> of {{ projects.count }} projects filled
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'operations:daily_entry_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" id="submit-btn" class="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition shadow-sm">
+                            Save All Entries
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// CRITICAL: Prevent form submission on Enter key - MULTIPLE METHODS
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bulk-entry-form');
+    const dateInput = document.getElementById('bulk_entry_date');
+    const hiddenDateInput = document.getElementById('hidden_entry_date');
+    const spaceInputs = document.querySelectorAll('.space-input');
+    const inventoryInputs = document.querySelectorAll('.inventory-input');
+    const remarksInputs = document.querySelectorAll('.remarks-input');
+    const unitSelects = document.querySelectorAll('.unit-input');
+    const filledCount = document.getElementById('filled-count');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // METHOD 1: Prevent Enter on FORM level
+    form.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        }
+    });
+
+    // METHOD 2: Prevent Enter on form SUBMIT event
+    form.addEventListener('submit', function(event) {
+        // Only allow if submit button was clicked
+        if (!submitBtn.hasAttribute('data-clicked')) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        }
+    });
+
+    // METHOD 3: Mark when submit button is actually clicked
+    submitBtn.addEventListener('click', function() {
+        this.setAttribute('data-clicked', 'true');
+    });
+
+    // METHOD 4: Prevent Enter on ALL inputs individually
+    const allInputs = [...spaceInputs, ...inventoryInputs, ...remarksInputs, ...unitSelects, dateInput];
+    allInputs.forEach(input => {
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Move to next input instead
+                const inputs = Array.from(allInputs);
+                const currentIndex = inputs.indexOf(this);
+                if (currentIndex < inputs.length - 1) {
+                    inputs[currentIndex + 1].focus();
+                }
+                return false;
+            }
+        });
+
+        input.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        });
+    });
+
+    // Sync date inputs
+    dateInput.addEventListener('change', function() {
+        hiddenDateInput.value = this.value;
+    });
+
+    // Count filled entries
+    function updateFilledCount() {
+        let count = 0;
+        spaceInputs.forEach((input, index) => {
+            const inventoryInput = inventoryInputs[index];
+            if (input.value || inventoryInput.value) {
+                count++;
+            }
+        });
+        filledCount.textContent = count;
+    }
+
+    // Add listeners
+    spaceInputs.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            updateFilledCount();
+        });
+    });
+
+    inventoryInputs.forEach(input => {
+        input.addEventListener('input', updateFilledCount);
+    });
+
+    // Initial count
+    updateFilledCount();
+});
+
+// Handle form submission - only via button click
+function handleFormSubmit(event) {
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Check if button was marked as clicked
+    if (!submitBtn.hasAttribute('data-clicked')) {
+        event.preventDefault();
+        alert('Please use the "Save All Entries" button to submit the form.');
+        return false;
+    }
+
+    // Prevent double submission
+    if (submitBtn.disabled) {
+        event.preventDefault();
+        return false;
+    }
+
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Saving...';
+
+    // Allow form to submit
+    return true;
+}
+
+// Copy Last Entry Data Function
+function copyLastEntryData() {
+    const selectedDate = document.getElementById('bulk_entry_date').value;
+
+    if (!selectedDate) {
+        alert('Please select a date first');
+        return;
+    }
+
+    if (!confirm(`Copy data from last previous filled entries?\n\nThis will fill all fields including Units with the most recent values for each project.`)) {
+        return;
+    }
+
+    // Show loading indicator
+    const originalBtn = event.target.closest('button');
+    const originalHTML = originalBtn.innerHTML;
+    originalBtn.disabled = true;
+    originalBtn.innerHTML = 'Loading...';
+
+    // Fetch last entry data
+    fetch(`/operations/api/get-previous-day-data/?date=${selectedDate}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.entries) {
+                let copiedCount = 0;
+
+                // Fill in the data
+                data.entries.forEach(entry => {
+                    const projectId = entry.project_id;
+                    const spaceInput = document.querySelector(`input[name="space_${projectId}"]`);
+                    const unitInput = document.querySelector(`select[name="unit_${projectId}"]`);
+                    const inventoryInput = document.querySelector(`input[name="inventory_${projectId}"]`);
+                    const remarksInput = document.querySelector(`input[name="remarks_${projectId}"]`);
+
+                    if (spaceInput && inventoryInput) {
+                        if (entry.space_utilized !== null) spaceInput.value = entry.space_utilized;
+                        if (entry.inventory_value !== null) inventoryInput.value = entry.inventory_value;
+                        if (entry.remarks) remarksInput.value = entry.remarks;
+
+                        // Copy Unit Selection - use code directly since dropdown values are now codes
+                        if (unitInput && entry.unit) {
+                            unitInput.value = entry.unit;
+                        }
+
+                        copiedCount++;
+
+                        // Trigger update count
+                        spaceInput.dispatchEvent(new Event('input'));
+                    }
+                });
+
+                const lastDateMsg = data.last_entry_date ? ` (from ${data.last_entry_date})` : '';
+                alert(`Successfully copied ${copiedCount} entries from last filled data${lastDateMsg}`);
+            } else {
+                alert(data.message || 'No previous entries found');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading previous entry data. Please try again.');
+        })
+        .finally(() => {
+            // Restore button
+            originalBtn.disabled = false;
+            originalBtn.innerHTML = originalHTML;
+        });
+}
+</script>
+{% endblock %}

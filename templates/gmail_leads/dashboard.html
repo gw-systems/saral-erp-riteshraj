@@ -1,0 +1,624 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Bigin-style toggle buttons for column visibility */
+    .toggle-btn {
+        padding: 6px 12px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 4px;
+    }
+
+    .toggle-btn.active {
+        border-color: #10b981;
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .toggle-btn.inactive {
+        border-color: #e5e7eb;
+        background: #f9fafb;
+        color: #6b7280;
+    }
+
+    .toggle-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Table styling */
+    .leads-table {
+        font-size: 13px;
+    }
+
+    .leads-table th {
+        background: #f9fafb;
+        font-weight: 600;
+        padding: 12px 8px;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .leads-table td {
+        padding: 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .leads-table tr:hover {
+        background: #f0fdf4;
+    }
+
+    /* Message preview - single line */
+    .message-preview {
+        max-height: 24px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /* Badge styles */
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-contact {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-saas {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* Stats cards */
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card h3 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .stat-card p {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    /* Filter section */
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .filter-section label {
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    /* Line clamp for message preview */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-[98%] mx-auto py-8 px-4">
+    <div class="mb-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Gmail Lead Fetcher</h1>
+                <p class="text-gray-600">Contact Us & SAAS Inventory Leads</p>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Leads</p>
+                        <h3 class="text-blue-600">{{ stats.total }}</h3>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Contact Us</p>
+                        <h3 class="text-green-600">{{ stats.contact_us }}</h3>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Today Contact Us</p>
+                        <h3 class="text-purple-600">{{ stats.today_contact_us }}</h3>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">SAAS Inventory</p>
+                        <h3 class="text-yellow-600">{{ stats.saas_inventory }}</h3>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Today SAAS Inventory</p>
+                        <h3 class="text-pink-600">{{ stats.today_saas_inventory }}</h3>
+                    </div>
+                    <div class="bg-pink-100 p-3 rounded-full">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected Accounts Status (Read-only) -->
+        {% if tokens %}
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center">
+            <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                <p class="font-semibold text-green-900">{{ tokens|length }} Gmail account(s) connected</p>
+                <p class="text-sm text-green-700">{% for token in tokens %}{{ token.email_account }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 flex items-center">
+            <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+                <p class="font-semibold text-yellow-900">No Gmail accounts connected</p>
+                <p class="text-sm text-yellow-700">Contact administrator to connect Gmail accounts for lead fetching</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <form method="get" class="space-y-4">
+                <!-- Row 1: Date & Lead Type -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label>Start Date</label>
+                        <input type="date" name="start_date" value="{{ start_date }}"
+                               class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90">
+                    </div>
+                    <div>
+                        <label>End Date</label>
+                        <input type="date" name="end_date" value="{{ end_date }}"
+                               class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90">
+                    </div>
+                    <div>
+                        <label>Lead Type</label>
+                        <select name="lead_type" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90">
+                            <option value="">All Types</option>
+                            <option value="CONTACT_US" {% if selected_lead_type == 'CONTACT_US' %}selected{% endif %}>Contact Us</option>
+                            <option value="SAAS_INVENTORY" {% if selected_lead_type == 'SAAS_INVENTORY' %}selected{% endif %}>SAAS Inventory</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Search</label>
+                        <input type="text" name="search" value="{{ search }}" placeholder="Name, email, company..."
+                               class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90">
+                    </div>
+                </div>
+
+                <!-- Row 2: Multi-select filters -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label>UTM Campaign</label>
+                        <select name="utm_campaign" multiple class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90" size="1">
+                            <option value="">All Campaigns</option>
+                            {% for campaign in utm_campaigns %}
+                            <option value="{{ campaign }}" {% if campaign in selected_utm_campaigns %}selected{% endif %}>{{ campaign }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label>UTM Medium</label>
+                        <select name="utm_medium" multiple class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90" size="1">
+                            <option value="">All Mediums</option>
+                            {% for medium in utm_mediums %}
+                            <option value="{{ medium }}" {% if medium in selected_utm_mediums %}selected{% endif %}>{{ medium }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label>UTM Content</label>
+                        <select name="utm_content" multiple class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white bg-white bg-opacity-90" size="1">
+                            <option value="">All Content</option>
+                            {% for content in utm_contents %}
+                            <option value="{{ content }}" {% if content in selected_utm_contents %}selected{% endif %}>{{ content }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button type="submit"
+                                class="flex-1 px-6 py-2 bg-white text-purple-600 rounded-lg hover:bg-opacity-90 transition font-semibold shadow-lg">
+                            🔍 Apply Filters
+                        </button>
+                        <a href="{% url 'gmail_leads:dashboard' %}"
+                           class="flex-1 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold shadow-lg text-center">
+                            🗑️ Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Column Visibility Toggle (Bigin-style) -->
+        <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+            <h3 class="text-sm font-bold text-gray-700 mb-3">📊 Visible Columns:</h3>
+            <div class="flex flex-wrap">
+                <button class="toggle-btn active" data-column="lead_type" onclick="toggleColumn('lead_type')">Lead Type</button>
+                <button class="toggle-btn active" data-column="date" onclick="toggleColumn('date')">Date</button>
+                <button class="toggle-btn active" data-column="time" onclick="toggleColumn('time')">Time</button>
+                <button class="toggle-btn inactive" data-column="form_name" onclick="toggleColumn('form_name')">Name</button>
+                <button class="toggle-btn inactive" data-column="form_email" onclick="toggleColumn('form_email')">Email</button>
+                <button class="toggle-btn inactive" data-column="form_phone" onclick="toggleColumn('form_phone')">Phone</button>
+                <button class="toggle-btn inactive" data-column="form_company" onclick="toggleColumn('form_company')">Company</button>
+                <button class="toggle-btn active" data-column="utm_campaign" onclick="toggleColumn('utm_campaign')">UTM Campaign</button>
+                <button class="toggle-btn active" data-column="utm_medium" onclick="toggleColumn('utm_medium')">UTM Medium</button>
+                <button class="toggle-btn active" data-column="utm_term" onclick="toggleColumn('utm_term')">UTM Term</button>
+                <button class="toggle-btn active" data-column="utm_content" onclick="toggleColumn('utm_content')">UTM Content</button>
+                <button class="toggle-btn active" data-column="gclid" onclick="toggleColumn('gclid')">GCLID</button>
+                <button class="toggle-btn inactive" data-column="from_name" onclick="toggleColumn('from_name')">From Name</button>
+                <button class="toggle-btn inactive" data-column="from_email" onclick="toggleColumn('from_email')">From Email</button>
+                <button class="toggle-btn active" data-column="reply_to_email" onclick="toggleColumn('reply_to_email')">Reply-To</button>
+                <button class="toggle-btn inactive" data-column="subject" onclick="toggleColumn('subject')">Subject</button>
+                <button class="toggle-btn inactive" data-column="message_preview" onclick="toggleColumn('message_preview')">Message</button>
+            </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white">Lead Emails ({{ leads|length }})</h2>
+            </div>
+
+            {% if leads %}
+            <div class="overflow-x-auto">
+                <table class="w-full leads-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left col-lead_type">Type</th>
+                            <th class="text-left col-date">Date</th>
+                            <th class="text-left col-time">Time</th>
+                            <th class="text-left col-form_name" style="display: none;">Name</th>
+                            <th class="text-left col-form_email" style="display: none;">Email</th>
+                            <th class="text-left col-form_phone" style="display: none;">Phone</th>
+                            <th class="text-left col-form_company" style="display: none;">Company</th>
+                            <th class="text-left col-utm_campaign">Campaign</th>
+                            <th class="text-left col-utm_medium">Medium</th>
+                            <th class="text-left col-utm_term">Term</th>
+                            <th class="text-left col-utm_content">Content</th>
+                            <th class="text-left col-gclid">GCLID</th>
+                            <th class="text-left col-from_name" style="display: none;">From Name</th>
+                            <th class="text-left col-from_email" style="display: none;">From Email</th>
+                            <th class="text-left col-reply_to_email">Reply-To</th>
+                            <th class="text-left col-subject" style="display: none;">Subject</th>
+                            <th class="text-left col-message_preview" style="display: none;">Message Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in leads %}
+                        <tr>
+                            <td class="col-lead_type">
+                                <span class="badge {% if lead.lead_type == 'CONTACT_US' %}badge-contact{% else %}badge-saas{% endif %}">
+                                    {{ lead.get_lead_type_display }}
+                                </span>
+                            </td>
+                            <td class="col-date">{{ lead.date_received|date:"M d, Y" }}</td>
+                            <td class="col-time">{{ lead.time_received|time:"g:i A" }}</td>
+                            <td class="col-form_name" style="display: none;">
+                                <div class="font-semibold text-gray-900">{{ lead.form_name|default:"-" }}</div>
+                            </td>
+                            <td class="col-form_email" style="display: none;">
+                                <a href="mailto:{{ lead.form_email }}" class="text-blue-600 hover:underline">{{ lead.form_email|default:"-" }}</a>
+                            </td>
+                            <td class="col-form_phone" style="display: none;">{{ lead.form_phone|default:"-" }}</td>
+                            <td class="col-form_company" style="display: none;">{{ lead.form_company_name|default:"-" }}</td>
+                            <td class="col-utm_campaign">
+                                <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">{{ lead.utm_campaign|default:"-" }}</span>
+                            </td>
+                            <td class="col-utm_medium">
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{{ lead.utm_medium|default:"-" }}</span>
+                            </td>
+                            <td class="col-utm_term">{{ lead.utm_term|default:"-" }}</td>
+                            <td class="col-utm_content">{{ lead.utm_content|default:"-" }}</td>
+                            <td class="col-gclid">
+                                <span class="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">{{ lead.gclid|default:"-"|truncatechars:20 }}</span>
+                            </td>
+                            <td class="col-form_name" style="display: none;">{{ lead.from_name|default:"-" }}</td>
+                            <td class="col-from_email" style="display: none;">{{ lead.from_email|default:"-" }}</td>
+                            <td class="col-reply_to_email">
+                                <a href="mailto:{{ lead.reply_to_email }}" class="text-blue-600 hover:underline">{{ lead.reply_to_email|default:"-" }}</a>
+                            </td>
+                            <td class="col-subject" style="display: none;">{{ lead.subject|truncatechars:50 }}</td>
+                            <td class="col-message_preview" style="display: none;">
+                                <div class="max-w-md">
+                                    <div class="message-preview text-sm text-gray-700">
+                                        {{ lead.message_preview|default:"-"|truncatewords:15 }}
+                                    </div>
+                                    {% if lead.message_preview|length > 50 or lead.full_message_body %}
+                                    <button onclick="showFullMessage({{ lead.id }}, '{{ lead.form_name|escapejs }}', '{{ lead.form_email|escapejs }}', '{{ lead.get_lead_type_display|escapejs }}', '{{ lead.date_received|date:"M d, Y"|escapejs }}')"
+                                            class="text-blue-600 text-xs mt-0.5 font-medium hover:underline inline-flex items-center gap-1">
+                                        <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        View
+                                    </button>
+                                    <div id="full-msg-{{ lead.id }}" class="hidden">
+                                        {% if lead.full_message_body %}
+                                            {{ lead.full_message_body|linebreaksbr }}
+                                        {% else %}
+                                            {{ lead.message_preview|linebreaksbr }}
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-12 text-center">
+                <svg width="80" height="80" aria-hidden="true" class="mx-auto h-20 w-20 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No leads yet</h3>
+                <p class="text-gray-600">Connect a Gmail account and sync to fetch leads.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Full Message Modal -->
+<div id="full-message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-purple-600">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-white mb-1">📧 Full Email Message</h3>
+                    <p id="modal-lead-info" class="text-sm text-blue-100"></p>
+                </div>
+                <button onclick="closeFullMessage()" class="text-white hover:text-gray-200 transition">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div id="modal-body" class="px-6 py-6 overflow-y-auto flex-1 bg-gray-50">
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div id="modal-content" class="text-sm leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end bg-gray-50">
+            <button onclick="closeFullMessage()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Column visibility management (Bigin pattern)
+const DEFAULT_VISIBLE = ['lead_type', 'date', 'time', 'utm_campaign', 'utm_medium', 'utm_term', 'utm_content', 'gclid', 'reply_to_email'];
+
+function toggleColumn(columnName) {
+    const btn = document.querySelector(`.toggle-btn[data-column="${columnName}"]`);
+    const columns = document.querySelectorAll(`.col-${columnName}`);
+
+    // Check if columns exist
+    if (columns.length === 0) return;
+
+    const isVisible = !columns[0].style.display || columns[0].style.display === '';
+
+    columns.forEach(col => {
+        col.style.display = isVisible ? 'none' : '';
+    });
+
+    if (btn) {
+        btn.classList.toggle('active');
+        btn.classList.toggle('inactive');
+    }
+
+    // Save to localStorage
+    saveColumnPreferences();
+}
+
+function saveColumnPreferences() {
+    const visible = [];
+    document.querySelectorAll('.toggle-btn.active').forEach(btn => {
+        visible.push(btn.dataset.column);
+    });
+    localStorage.setItem('gmail_leads_visible_columns', JSON.stringify(visible));
+}
+
+function loadColumnPreferences() {
+    // Always use DEFAULT_VISIBLE on page load, ignore localStorage
+    const visible = DEFAULT_VISIBLE;
+
+    // First, hide all columns
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        const columnName = btn.dataset.column;
+        const columns = document.querySelectorAll(`.col-${columnName}`);
+
+        if (visible.includes(columnName)) {
+            // Show column
+            columns.forEach(col => col.style.display = '');
+            btn.classList.add('active');
+            btn.classList.remove('inactive');
+        } else {
+            // Hide column
+            columns.forEach(col => col.style.display = 'none');
+            btn.classList.remove('active');
+            btn.classList.add('inactive');
+        }
+    });
+
+    // Save the default preferences
+    saveColumnPreferences();
+}
+
+// Full message modal
+function showFullMessage(leadId, leadName, leadEmail, leadType, leadDate) {
+    const fullMsgDiv = document.getElementById(`full-msg-${leadId}`);
+    const modal = document.getElementById('full-message-modal');
+    const modalContent = document.getElementById('modal-content');
+    const modalLeadInfo = document.getElementById('modal-lead-info');
+
+    if (fullMsgDiv) {
+        modalContent.innerHTML = fullMsgDiv.innerHTML;
+
+        // Display lead context in modal header
+        modalLeadInfo.textContent = `${leadName} (${leadEmail}) • ${leadType} • ${leadDate}`;
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+}
+
+function closeFullMessage() {
+    const modal = document.getElementById('full-message-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFullMessage();
+    }
+});
+
+// Close modal on outside click
+document.getElementById('full-message-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFullMessage();
+    }
+});
+
+// CSRF token helper
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const trimmed = cookie.trim();
+        if (trimmed.startsWith(name + '=')) {
+            return decodeURIComponent(trimmed.substring(name.length + 1));
+        }
+    }
+    return null;
+}
+
+// Sync single account
+function syncAccount(tokenId, emailAccount) {
+    if (!confirm(`Sync leads for ${emailAccount}?`)) return;
+
+    fetch(`/integrations/gmail-leads/sync/${tokenId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'started') {
+            alert(`Sync started for ${emailAccount}. This may take a few moments.`);
+            setTimeout(() => location.reload(), 3000);
+        } else if (data.status === 'completed') {
+            alert(`Sync complete! ${data.message}`);
+            location.reload();
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Sync error:', error);
+        alert('Sync failed. Check console for details.');
+    });
+}
+
+// Load column preferences on page load
+window.addEventListener('DOMContentLoaded', loadColumnPreferences);
+</script>
+{% endblock %}

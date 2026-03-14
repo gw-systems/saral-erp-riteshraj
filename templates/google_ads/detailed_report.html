@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Google Ads - Detailed Performance Report{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Toggle Button Styles */
+.toggle-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0.125rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.toggle-btn.active {
+    background-color: #2563eb;
+    color: white;
+}
+.toggle-btn.inactive {
+    background-color: #e5e7eb;
+    color: #6b7280;
+}
+.col-hidden {
+    display: none !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 max-w-full">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+            📊 Detailed Performance Report
+        </h1>
+        <p class="text-gray-600 text-sm mt-1">Complete campaign performance breakdown with device metrics</p>
+    </div>
+
+    <!-- Sub Navigation -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-2">
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'google_ads:dashboard' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                📊 Dashboard
+            </a>
+            <a href="{% url 'google_ads:detailed_report' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium transition">
+                📑 Detailed Report
+            </a>
+            <a href="{% url 'google_ads:search_terms' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                🔍 Search Terms
+            </a>
+            <a href="{% url 'google_ads:sync_logs' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                📋 Sync Logs
+            </a>
+            {% if request.user.role == 'admin' %}
+            <a href="{% url 'accounts:admin_dashboard_integrations' %}?tab=google_ads" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                ⚙️ Settings
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Name</label>
+                <select name="campaign_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Campaigns</option>
+                    {% for campaign in all_campaigns %}
+                    <option value="{{ campaign }}" {% if selected_campaign == campaign %}selected{% endif %}>
+                        {{ campaign }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Status</label>
+                <select name="campaign_status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Statuses</option>
+                    {% for status in all_statuses %}
+                    <option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>
+                        {{ status }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input type="date" name="start_date" value="{{ request.GET.start_date|default:start_date }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input type="date" name="end_date" value="{{ request.GET.end_date|default:end_date }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Apply
+                </button>
+                <button type="button" onclick="exportToCSV()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </button>
+                <button type="button" onclick="exportToExcel()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Column Toggles (Visible Columns) -->
+    <div class="bg-white rounded-lg shadow-md mb-6 border border-gray-200">
+        <div class="px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">👁️ Visible Columns</span>
+                <button onclick="resetColumns()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">Reset</button>
+            </div>
+            <div class="flex flex-wrap gap-1">
+                <!-- Core Columns -->
+                <button class="toggle-btn active" data-column="date" onclick="toggleColumn('date')">Date</button>
+                <button class="toggle-btn active" data-column="campaign_id" onclick="toggleColumn('campaign_id')">Campaign ID</button>
+                <button class="toggle-btn active" data-column="campaign_name" onclick="toggleColumn('campaign_name')">Campaign Name</button>
+                <button class="toggle-btn active" data-column="campaign_status" onclick="toggleColumn('campaign_status')">Status</button>
+
+                <!-- Budget Columns -->
+                <button class="toggle-btn active" data-column="daily_budget" onclick="toggleColumn('daily_budget')">Daily Budget</button>
+                <button class="toggle-btn active" data-column="monthly_budget" onclick="toggleColumn('monthly_budget')">Monthly Budget</button>
+
+                <!-- Performance Columns -->
+                <button class="toggle-btn active" data-column="cost" onclick="toggleColumn('cost')">Cost</button>
+                <button class="toggle-btn active" data-column="impression_share" onclick="toggleColumn('impression_share')">Impr. Share</button>
+                <button class="toggle-btn active" data-column="impressions" onclick="toggleColumn('impressions')">Impressions</button>
+                <button class="toggle-btn active" data-column="clicks" onclick="toggleColumn('clicks')">Clicks</button>
+                <button class="toggle-btn active" data-column="ctr" onclick="toggleColumn('ctr')">CTR</button>
+                <button class="toggle-btn active" data-column="cpc" onclick="toggleColumn('cpc')">CPC</button>
+                <button class="toggle-btn active" data-column="conversions" onclick="toggleColumn('conversions')">Conversions</button>
+                <button class="toggle-btn active" data-column="conversion_rate" onclick="toggleColumn('conversion_rate')">Conv. Rate</button>
+                <button class="toggle-btn active" data-column="cost_per_conversion" onclick="toggleColumn('cost_per_conversion')">Cost/Conv.</button>
+
+                <!-- Mobile Device Columns -->
+                <button class="toggle-btn inactive" data-column="mobile_clicks" onclick="toggleColumn('mobile_clicks')">Mobile Clicks</button>
+                <button class="toggle-btn inactive" data-column="mobile_impressions" onclick="toggleColumn('mobile_impressions')">Mobile Impr.</button>
+                <button class="toggle-btn inactive" data-column="mobile_cost" onclick="toggleColumn('mobile_cost')">Mobile Cost</button>
+                <button class="toggle-btn inactive" data-column="mobile_conversions" onclick="toggleColumn('mobile_conversions')">Mobile Conv.</button>
+
+                <!-- Desktop Device Columns -->
+                <button class="toggle-btn inactive" data-column="desktop_clicks" onclick="toggleColumn('desktop_clicks')">Desktop Clicks</button>
+                <button class="toggle-btn inactive" data-column="desktop_impressions" onclick="toggleColumn('desktop_impressions')">Desktop Impr.</button>
+                <button class="toggle-btn inactive" data-column="desktop_cost" onclick="toggleColumn('desktop_cost')">Desktop Cost</button>
+                <button class="toggle-btn inactive" data-column="desktop_conversions" onclick="toggleColumn('desktop_conversions')">Desktop Conv.</button>
+
+                <!-- Tablet Device Columns -->
+                <button class="toggle-btn inactive" data-column="tablet_clicks" onclick="toggleColumn('tablet_clicks')">Tablet Clicks</button>
+                <button class="toggle-btn inactive" data-column="tablet_impressions" onclick="toggleColumn('tablet_impressions')">Tablet Impr.</button>
+                <button class="toggle-btn inactive" data-column="tablet_cost" onclick="toggleColumn('tablet_cost')">Tablet Cost</button>
+                <button class="toggle-btn inactive" data-column="tablet_conversions" onclick="toggleColumn('tablet_conversions')">Tablet Conv.</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto" style="max-height: calc(100vh - 180px);">
+            <table id="performance-table" class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
+                    <tr>
+                        <th class="col-date px-3 py-3 text-left font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Date</th>
+                        <th class="col-campaign_id px-3 py-3 text-left font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Campaign ID</th>
+                        <th class="col-campaign_name px-3 py-3 text-left font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Campaign Name</th>
+                        <th class="col-campaign_status px-3 py-3 text-left font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Status</th>
+                        <th class="col-daily_budget px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Daily Budget</th>
+                        <th class="col-monthly_budget px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Monthly Budget</th>
+                        <th class="col-cost px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Cost</th>
+                        <th class="col-impression_share px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Impr. Share</th>
+                        <th class="col-impressions px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Impressions</th>
+                        <th class="col-clicks px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Clicks</th>
+                        <th class="col-ctr px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">CTR %</th>
+                        <th class="col-cpc px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">CPC</th>
+                        <th class="col-conversions px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Conversions</th>
+                        <th class="col-conversion_rate px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Conv. Rate</th>
+                        <th class="col-cost_per_conversion px-3 py-3 text-right font-semibold text-gray-700 whitespace-nowrap border-r border-gray-300">Cost/Conv.</th>
+                        <!-- Mobile -->
+                        <th class="col-mobile_clicks px-3 py-3 text-right font-semibold text-blue-700 whitespace-nowrap border-r border-gray-300 col-hidden">Mobile Clicks</th>
+                        <th class="col-mobile_impressions px-3 py-3 text-right font-semibold text-blue-700 whitespace-nowrap border-r border-gray-300 col-hidden">Mobile Impr.</th>
+                        <th class="col-mobile_cost px-3 py-3 text-right font-semibold text-blue-700 whitespace-nowrap border-r border-gray-300 col-hidden">Mobile Cost</th>
+                        <th class="col-mobile_conversions px-3 py-3 text-right font-semibold text-blue-700 whitespace-nowrap border-r border-gray-300 col-hidden">Mobile Conv.</th>
+                        <!-- Desktop -->
+                        <th class="col-desktop_clicks px-3 py-3 text-right font-semibold text-green-700 whitespace-nowrap border-r border-gray-300 col-hidden">Desktop Clicks</th>
+                        <th class="col-desktop_impressions px-3 py-3 text-right font-semibold text-green-700 whitespace-nowrap border-r border-gray-300 col-hidden">Desktop Impr.</th>
+                        <th class="col-desktop_cost px-3 py-3 text-right font-semibold text-green-700 whitespace-nowrap border-r border-gray-300 col-hidden">Desktop Cost</th>
+                        <th class="col-desktop_conversions px-3 py-3 text-right font-semibold text-green-700 whitespace-nowrap border-r border-gray-300 col-hidden">Desktop Conv.</th>
+                        <!-- Tablet -->
+                        <th class="col-tablet_clicks px-3 py-3 text-right font-semibold text-purple-700 whitespace-nowrap border-r border-gray-300 col-hidden">Tablet Clicks</th>
+                        <th class="col-tablet_impressions px-3 py-3 text-right font-semibold text-purple-700 whitespace-nowrap border-r border-gray-300 col-hidden">Tablet Impr.</th>
+                        <th class="col-tablet_cost px-3 py-3 text-right font-semibold text-purple-700 whitespace-nowrap border-r border-gray-300 col-hidden">Tablet Cost</th>
+                        <th class="col-tablet_conversions px-3 py-3 text-right font-semibold text-purple-700 whitespace-nowrap col-hidden">Tablet Conv.</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for row in report_data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="col-date px-3 py-3 text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.date }}</td>
+                        <td class="col-campaign_id px-3 py-3 text-gray-900 whitespace-nowrap font-mono text-xs border-r border-gray-100">{{ row.campaign_id }}</td>
+                        <td class="col-campaign_name px-3 py-3 text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.campaign_name }}</td>
+                        <td class="col-campaign_status px-3 py-3 whitespace-nowrap border-r border-gray-100">
+                            <span class="px-2 py-1 text-xs rounded-full {% if row.campaign_status == 'ENABLED' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ row.campaign_status }}
+                            </span>
+                        </td>
+                        <td class="col-daily_budget px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">₹{{ row.daily_budget|floatformat:2 }}</td>
+                        <td class="col-monthly_budget px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">₹{{ row.monthly_budget|floatformat:2 }}</td>
+                        <td class="col-cost px-3 py-3 text-right text-gray-900 whitespace-nowrap font-semibold border-r border-gray-100">₹{{ row.cost|floatformat:2 }}</td>
+                        <td class="col-impression_share px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.impression_share|floatformat:2 }}%</td>
+                        <td class="col-impressions px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.impressions|floatformat:0 }}</td>
+                        <td class="col-clicks px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.clicks }}</td>
+                        <td class="col-ctr px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.ctr|floatformat:2 }}%</td>
+                        <td class="col-cpc px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">₹{{ row.cpc|floatformat:2 }}</td>
+                        <td class="col-conversions px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.conversions }}</td>
+                        <td class="col-conversion_rate px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">{{ row.conversion_rate|floatformat:2 }}%</td>
+                        <td class="col-cost_per_conversion px-3 py-3 text-right text-gray-900 whitespace-nowrap border-r border-gray-100">₹{{ row.cost_per_conversion|floatformat:2 }}</td>
+                        <!-- Mobile -->
+                        <td class="col-mobile_clicks px-3 py-3 text-right text-blue-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.mobile_clicks }}</td>
+                        <td class="col-mobile_impressions px-3 py-3 text-right text-blue-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.mobile_impressions|floatformat:0 }}</td>
+                        <td class="col-mobile_cost px-3 py-3 text-right text-blue-900 whitespace-nowrap border-r border-gray-100 col-hidden">₹{{ row.mobile_cost|floatformat:2 }}</td>
+                        <td class="col-mobile_conversions px-3 py-3 text-right text-blue-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.mobile_conversions }}</td>
+                        <!-- Desktop -->
+                        <td class="col-desktop_clicks px-3 py-3 text-right text-green-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.desktop_clicks }}</td>
+                        <td class="col-desktop_impressions px-3 py-3 text-right text-green-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.desktop_impressions|floatformat:0 }}</td>
+                        <td class="col-desktop_cost px-3 py-3 text-right text-green-900 whitespace-nowrap border-r border-gray-100 col-hidden">₹{{ row.desktop_cost|floatformat:2 }}</td>
+                        <td class="col-desktop_conversions px-3 py-3 text-right text-green-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.desktop_conversions }}</td>
+                        <!-- Tablet -->
+                        <td class="col-tablet_clicks px-3 py-3 text-right text-purple-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.tablet_clicks }}</td>
+                        <td class="col-tablet_impressions px-3 py-3 text-right text-purple-900 whitespace-nowrap border-r border-gray-100 col-hidden">{{ row.tablet_impressions|floatformat:0 }}</td>
+                        <td class="col-tablet_cost px-3 py-3 text-right text-purple-900 whitespace-nowrap border-r border-gray-100 col-hidden">₹{{ row.tablet_cost|floatformat:2 }}</td>
+                        <td class="col-tablet_conversions px-3 py-3 text-right text-purple-900 whitespace-nowrap col-hidden">{{ row.tablet_conversions }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="27" class="px-6 py-12 text-center text-gray-500">
+                            <svg width="64" height="64" aria-hidden="true" class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p class="text-lg">No data available for the selected filters</p>
+                            <p class="text-sm mt-2">Try adjusting your date range or account selection</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    {% if report_data %}
+    <div class="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Summary Statistics</h3>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Total Rows</p>
+                <p class="text-2xl font-bold text-gray-900">{{ report_data|length }}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Total Cost</p>
+                <p class="text-2xl font-bold text-gray-900">₹{{ total_cost|floatformat:2 }}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Total Clicks</p>
+                <p class="text-2xl font-bold text-gray-900">{{ total_clicks|floatformat:0 }}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Total Impressions</p>
+                <p class="text-2xl font-bold text-gray-900">{{ total_impressions|floatformat:0 }}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Total Conversions</p>
+                <p class="text-2xl font-bold text-gray-900">{{ total_conversions|floatformat:0 }}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Avg CTR</p>
+                <p class="text-2xl font-bold text-gray-900">{{ avg_ctr|floatformat:2 }}%</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+function exportToCSV() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{% url "google_ads:detailed_report" %}?' + params.toString();
+}
+
+function exportToExcel() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'excel');
+    window.location.href = '{% url "google_ads:detailed_report" %}?' + params.toString();
+}
+
+// Column toggle functions
+const DEFAULT_VISIBLE = ['date', 'campaign_id', 'campaign_name', 'campaign_status', 'daily_budget', 'monthly_budget', 'cost', 'impression_share', 'impressions', 'clicks', 'ctr', 'cpc', 'conversions', 'conversion_rate', 'cost_per_conversion'];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadColumnPreferences();
+});
+
+function loadColumnPreferences() {
+    const saved = localStorage.getItem('google_ads_detailed_report_visible_columns');
+    const visible = saved ? JSON.parse(saved) : DEFAULT_VISIBLE;
+
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        const column = btn.dataset.column;
+        const isVisible = visible.includes(column);
+
+        if (isVisible) {
+            btn.classList.remove('inactive');
+            btn.classList.add('active');
+            showColumn(column);
+        } else {
+            btn.classList.remove('active');
+            btn.classList.add('inactive');
+            hideColumn(column);
+        }
+    });
+}
+
+function toggleColumn(columnName) {
+    const btn = document.querySelector(`[data-column="${columnName}"]`);
+    const isActive = btn.classList.contains('active');
+
+    if (isActive) {
+        btn.classList.remove('active');
+        btn.classList.add('inactive');
+        hideColumn(columnName);
+    } else {
+        btn.classList.remove('inactive');
+        btn.classList.add('active');
+        showColumn(columnName);
+    }
+
+    saveColumnPreferences();
+}
+
+function hideColumn(columnName) {
+    document.querySelectorAll(`.col-${columnName}`).forEach(el => {
+        el.classList.add('col-hidden');
+    });
+}
+
+function showColumn(columnName) {
+    document.querySelectorAll(`.col-${columnName}`).forEach(el => {
+        el.classList.remove('col-hidden');
+    });
+}
+
+function saveColumnPreferences() {
+    const visible = [];
+    document.querySelectorAll('.toggle-btn.active').forEach(btn => {
+        visible.push(btn.dataset.column);
+    });
+    localStorage.setItem('google_ads_detailed_report_visible_columns', JSON.stringify(visible));
+}
+
+function resetColumns() {
+    localStorage.setItem('google_ads_detailed_report_visible_columns', JSON.stringify(DEFAULT_VISIBLE));
+    loadColumnPreferences();
+}
+</script>
+{% endblock %}

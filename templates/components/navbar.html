@@ -1,0 +1,1040 @@
+{% load static %}
+
+<!-- Impersonation Banner (Fixed at Very Top) -->
+{% if request.session.impersonate_admin_id %}
+<div class="fixed top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 shadow-2xl border-b-4 border-amber-400 z-[60]">
+    <div class="w-full mx-auto flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center flex-1 min-w-0">
+            <svg class="w-6 h-6 mr-3 flex-shrink-0" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="font-bold text-base">
+                IMPERSONATION MODE: {{ request.user.get_full_name }} ({{ request.user.username }})
+            </span>
+        </div>
+        <a href="{% url 'accounts:stop_impersonation' %}" class="bg-amber-400 hover:bg-amber-300 text-gray-900 px-6 py-2 rounded-lg font-bold border-2 border-amber-500 no-underline inline-flex items-center gap-2">
+            <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            STOP IMPERSONATION
+        </a>
+    </div>
+</div>
+
+<!-- Floating Emergency Stop Button (backup) -->
+<a href="{% url 'accounts:stop_impersonation' %}" class="fixed bottom-5 right-5 bg-red-600 text-white py-4 px-6 rounded-full font-bold shadow-lg no-underline text-base cursor-pointer z-[55] animate-pulse-impersonation inline-flex items-center gap-2">
+    <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+    EXIT
+</a>
+
+<style>
+@keyframes pulse-impersonation {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+}
+.animate-pulse-impersonation {
+    animation: pulse-impersonation 2s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .animate-pulse-impersonation {
+        animation: none;
+    }
+}
+
+</style>
+{% endif %}
+
+<!-- ux-guidelines.csv #50: Skeleton loading screens (always available) -->
+<style>
+@keyframes skeleton-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .skeleton { animation: none; background: #e5e7eb; }
+}
+</style>
+
+<!-- Navigation Bar (sticky, pushed down if impersonating) -->
+<nav class="navbar-main bg-white shadow-sm border-b border-gray-200 fixed {% if request.session.impersonate_admin_id %}top-[70px]{% else %}top-0{% endif %} left-0 right-0 z-50">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-2 h-16">
+            <!-- Logo and Main Navigation -->
+            <div class="flex items-center space-x-8">
+                <!-- Logo/Brand -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{% url 'accounts:dashboard' %}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                        <img src="{% static 'images/GW Logo.png' %}" alt="Logo" class="h-8 w-8 rounded-lg shadow-sm object-contain bg-white p-1" width="32" height="32">
+                        <span class="text-xl font-bold text-gray-900">{{ APP_FULL_NAME }}</span>
+                    </a>
+                </div>
+
+                <!-- Main Navigation Links -->
+                <div class="hidden lg:flex sm:items-center sm:space-x-4">
+                    <a href="{% url 'accounts:dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors">Dashboard</a>
+                    <a href="{% url 'projects:project_list_all' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors">Projects</a>
+
+                    <!-- Operations Dropdown -->
+                    {% if user.role == 'operation_coordinator' or user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' or user.role == 'super_user' %}
+                    <div class="relative group">
+                        <button type="button" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors inline-flex items-center">
+                            Operations
+                            <svg class="ml-1 h-4 w-4" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 top-full mt-2 w-56 origin-top-left rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
+                            <div class="py-1">
+                                <a href="{% url 'operations:daily_entry_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    Daily Entry
+                                </a>
+                                {% if user.role == 'operation_manager' or user.role == 'operation_coordinator' %}
+                                <a href="{% url 'operations:adhoc_billing_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Adhoc Billing
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Monthly Billing
+                                </a>
+                                <a href="{% url 'projects:project_card_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    Project Cards
+                                    {% if user.role not in 'admin,backoffice' %}<span class="text-xs text-gray-500 ml-1">(View Only)</span>{% endif %}
+                                </a>
+                                <a href="{% url 'operations:mis_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    MIS Tracking
+                                </a>
+                                <a href="{% url 'operations:lr_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8l-4-4H8zm4 11v-4m0 0V7m0 4h-4m4 0h4"/></svg>
+                                    LR / Consignment Notes
+                                </a>
+                                <a href="{% url 'operations:porter_invoice_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Porter Invoice Editor
+                                </a>
+                                {% if user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' %}
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="{% url 'operations:dispute_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    Disputes
+                                </a>
+                                <a href="{% url 'operations:holiday_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    Holidays
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Finance Dropdown -->
+                    {% if user.role == 'backoffice' or user.role == 'admin' or user.role == 'super_user' or user.role == 'finance_manager' %}
+                    <div class="relative group">
+                        <button type="button" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors inline-flex items-center">
+                            Finance
+                            <svg class="ml-1 h-4 w-4" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 top-full mt-2 w-56 origin-top-left rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
+                            <div class="py-1">
+                                <a href="{% url 'projects:project_card_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    Project Cards
+                                </a>
+                                <a href="{% url 'operations:adhoc_billing_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Adhoc Billing
+                                </a>
+                                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Monthly Billing
+                                </a>
+                                {% if user.role == 'backoffice' or user.role == 'admin' or user.role == 'super_user' %}
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="{% url 'supply:warehouse_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    Warehouses
+                                </a>
+                                <a href="{% url 'supply:location_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    Locations
+                                </a>
+                                <a href="{% url 'supply:vendor_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    Vendors
+                                </a>
+                                <a href="{% url 'projects:client_card_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    Clients
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Marketing Dropdown (Admin/Director/CRM Executive/Digital Marketing) -->
+                    {% if user.role in 'admin,director,crm_executive,digital_marketing' %}
+                    <div class="relative group">
+                        <button type="button" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors inline-flex items-center">
+                            Marketing
+                            <svg class="ml-1 h-4 w-4" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 top-full mt-2 w-56 origin-top-left rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
+                            <div class="py-1">
+                                <a href="{% url 'bigin:bigin_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    Bigin CRM Dashboard
+                                </a>
+                                <a href="{% url 'bigin:bigin_leads' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                                    Bigin Leads
+                                </a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="{% url 'gmail:inbox' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                                    Gmail Inbox
+                                </a>
+                                <a href="{% url 'gmail_leads:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    Gmail Leads
+                                </a>
+                                <a href="{% url 'google_ads:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                    Google Ads
+                                </a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="{% url 'projects:quotation_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Quotations
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Master Data (Admin/Super User Only) - STANDALONE LINK -->
+                    {% if user.role in 'admin,super_user' %}
+                    <a href="{% url 'dropdown_master_data:master_list' %}"
+                       class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors inline-flex items-center">
+                        <svg class="h-4 w-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                        Master Data
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mobile hamburger button -->
+            <button type="button" id="mobile-menu-btn" class="lg:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+                <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+            <!-- Right Side -->
+            <div class="flex items-center space-x-4">
+                <!-- Clickable Date (goes to calendar) -->
+                <a href="{% url 'activity_logs:calendar' %}" class="flex items-center text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-colors cursor-pointer group" title="Click to view calendar">
+                    <svg class="h-4 w-4 mr-2 text-gray-500 group-hover:text-blue-600 transition-colors" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span id="current-date" class="font-medium whitespace-nowrap">Loading...</span>
+                </a>
+
+                <!-- Escalation Calculator -->
+                <button onclick="toggleEscCalc()" class="relative p-2 text-gray-500 hover:text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full transition-colors cursor-pointer" aria-label="Escalation Calculator" title="Escalation Calculator">
+                    <svg class="h-6 w-6" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                </button>
+
+                <!-- Notifications -->
+                <div class="relative notification-dropdown">
+                    <button onclick="toggleNotifications()" class="relative p-2 text-gray-500 hover:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full transition-colors" aria-label="View notifications">
+                        <svg class="h-6 w-6" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span id="notificationBadge" class="hidden absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">0</span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-50">
+                        <div class="px-4 py-3 flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+                            <a href="{% url 'accounts:notifications_list' %}" class="text-xs text-blue-600 hover:text-blue-800">View All</a>
+                        </div>
+                        <!-- ux-guidelines.csv #50: Skeleton screens instead of spinners -->
+                        <div id="notificationList" class="max-h-96 overflow-y-auto">
+                            <div class="divide-y divide-gray-100" id="notif-skeleton">
+                                <div class="px-4 py-3 flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 skeleton flex-shrink-0"></div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-3 bg-gray-200 skeleton rounded w-3/4"></div>
+                                        <div class="h-3 bg-gray-200 skeleton rounded w-full"></div>
+                                        <div class="h-2 bg-gray-200 skeleton rounded w-1/3"></div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-3 flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 skeleton flex-shrink-0"></div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-3 bg-gray-200 skeleton rounded w-2/3"></div>
+                                        <div class="h-3 bg-gray-200 skeleton rounded w-5/6"></div>
+                                        <div class="h-2 bg-gray-200 skeleton rounded w-1/4"></div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-3 flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 skeleton flex-shrink-0"></div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-3 bg-gray-200 skeleton rounded w-4/5"></div>
+                                        <div class="h-3 bg-gray-200 skeleton rounded w-full"></div>
+                                        <div class="h-2 bg-gray-200 skeleton rounded w-2/5"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-3">
+                            <form method="POST" action="{% url 'accounts:notifications_mark_all_read' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full text-center text-xs text-blue-600 hover:text-blue-800 font-medium">Mark All as Read</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden sm:flex items-center space-x-3">
+                    <span class="text-sm text-gray-600 hidden sm:inline-flex items-center">
+                        Hi,&nbsp;<span class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-600 ml-1">{{ user.get_full_name }}</span>&nbsp;<svg class="inline w-4 h-4 text-yellow-400" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+                    </span>
+                    <a href="{% url 'accounts:profile' %}" class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">Profile</a>
+                    <a href="{% url 'accounts:logout' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DYNAMIC BREADCRUMB BAR (INSIDE NAV) -->
+    <div class="bg-gray-50 border-t border-gray-200">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex py-3" aria-label="Breadcrumb">
+                <ol id="breadcrumb" class="inline-flex items-center space-x-1 md:space-x-2 text-base">
+                    <!-- Breadcrumb will be generated by JavaScript -->
+                </ol>
+            </nav>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile Menu Panel (hidden by default) -->
+<div id="mobile-menu" class="lg:hidden fixed left-0 right-0 bg-white shadow-lg border-b border-gray-200 z-40 hidden overflow-y-auto max-h-[80vh]" style="top: {% if request.session.impersonate_admin_id %}134px{% else %}64px{% endif %}">
+    <div class="px-4 py-3 space-y-1">
+        <a href="{% url 'accounts:dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600">Dashboard</a>
+        <a href="{% url 'projects:project_list_all' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600">Projects</a>
+
+        {% if user.role == 'operation_coordinator' or user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' or user.role == 'super_user' %}
+        <div class="border-t border-gray-100 pt-2 mt-2">
+            <p class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Operations</p>
+            <a href="{% url 'operations:daily_entry_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Daily Entry</a>
+            {% if user.role == 'operation_manager' or user.role == 'operation_coordinator' %}
+            <a href="{% url 'operations:adhoc_billing_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Adhoc Billing</a>
+            {% endif %}
+            <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Monthly Billing</a>
+            <a href="{% url 'projects:project_card_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Project Cards</a>
+            <a href="{% url 'operations:mis_dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">MIS Tracking</a>
+            <a href="{% url 'operations:lr_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">LR / Consignment Notes</a>
+            <a href="{% url 'operations:porter_invoice_dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Porter Invoice Editor</a>
+            {% if user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' %}
+            <a href="{% url 'operations:dispute_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Disputes</a>
+            <a href="{% url 'operations:holiday_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Holidays</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if user.role == 'backoffice' or user.role == 'admin' or user.role == 'super_user' or user.role == 'finance_manager' %}
+        <div class="border-t border-gray-100 pt-2 mt-2">
+            <p class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Finance</p>
+            <a href="{% url 'projects:project_card_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Project Cards</a>
+            <a href="{% url 'operations:adhoc_billing_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Adhoc Billing</a>
+            <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Monthly Billing</a>
+            <a href="{% url 'supply:warehouse_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Warehouses</a>
+            <a href="{% url 'supply:location_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Locations</a>
+            <a href="{% url 'supply:vendor_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Vendors</a>
+            <a href="{% url 'projects:client_card_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Clients</a>
+        </div>
+        {% endif %}
+
+        {% if user.role in 'admin,director,crm_executive,digital_marketing' %}
+        <div class="border-t border-gray-100 pt-2 mt-2">
+            <p class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Marketing</p>
+            <a href="{% url 'bigin:bigin_dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Bigin CRM</a>
+            <a href="{% url 'gmail:inbox' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Gmail Inbox</a>
+            <a href="{% url 'gmail_leads:dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Gmail Leads</a>
+            <a href="{% url 'google_ads:dashboard' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Google Ads</a>
+            <a href="{% url 'projects:quotation_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Quotations</a>
+        </div>
+        {% endif %}
+
+        {% if user.role in 'admin,super_user' %}
+        <div class="border-t border-gray-100 pt-2 mt-2">
+            <a href="{% url 'dropdown_master_data:master_list' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Master Data</a>
+        </div>
+        {% endif %}
+
+        <div class="border-t border-gray-100 pt-2 mt-2">
+            <a href="{% url 'accounts:profile' %}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+            <a href="{% url 'accounts:logout' %}" class="block px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">Logout</a>
+        </div>
+    </div>
+</div>
+
+<!-- Spacer for fixed navbar (accounts for impersonation banner if present) -->
+{% if request.session.impersonate_admin_id %}
+<div style="height: 180px;"></div>
+{% else %}
+<div style="height: 110px;"></div>
+{% endif %}
+
+<script>
+// ============================================================================
+// DYNAMIC BREADCRUMB GENERATION (ENHANCED)
+// ============================================================================
+function generateBreadcrumb() {
+    const path = window.location.pathname;
+    const breadcrumb = document.getElementById('breadcrumb');
+
+    if (!breadcrumb) return;
+
+    // Comprehensive breadcrumb mapping with URLs
+    const breadcrumbMap = {
+        '/accounts/dashboard/': [
+            {label: 'Dashboard', url: '/accounts/dashboard/'}
+        ],
+        '/projects/': [
+            {label: 'Projects', url: '/projects/list/all/'}
+        ],
+        '/projects/list/all/': [
+            {label: 'Projects', url: '/projects/list/all/'},
+            {label: 'All Projects', url: null}
+        ],
+        '/projects/create/': [
+            {label: 'Projects', url: '/projects/list/all/'},
+            {label: 'Create Project', url: null}
+        ],
+        '/projects/warehouses/': [
+            {label: 'Finance', url: null},
+            {label: 'Warehouses', url: '{% url "supply:warehouse_list" %}'}
+        ],
+        '/projects/locations/': [
+            {label: 'Finance', url: null},
+            {label: 'Locations', url: '/projects/locations/'}
+        ],
+        '/operations/daily-entry/': [
+            {label: 'Operations', url: null},
+            {label: 'Daily Entry', url: '/operations/daily-entry/'}
+        ],
+        '/operations/daily-entry/single/': [
+            {label: 'Operations', url: null},
+            {label: 'Daily Entry', url: '/operations/daily-entry/'},
+            {label: 'Single Entry', url: null}
+        ],
+        '/operations/daily-entry/bulk/': [
+            {label: 'Operations', url: null},
+            {label: 'Daily Entry', url: '/operations/daily-entry/'},
+            {label: 'Bulk Entry', url: null}
+        ],
+        '/operations/disputes/': [
+            {label: 'Operations', url: null},
+            {label: 'Disputes', url: '/operations/disputes/'}
+        ],
+        '/operations/disputes/create/': [
+            {label: 'Operations', url: null},
+            {label: 'Disputes', url: '/operations/disputes/'},
+            {label: 'Raise Dispute', url: null}
+        ],
+        '/operations/project-cards/': [
+            {label: 'Finance', url: null},
+            {label: 'Project Cards', url: '/operations/project-cards/'}
+        ],
+        '/operations/adhoc-billing/': [
+            {label: 'Operations', url: null},
+            {label: 'Adhoc Billing', url: '/operations/adhoc-billing/'}
+        ],
+        '/operations/adhoc-billing/calendar/': [
+            {label: 'Operations', url: null},
+            {label: 'Adhoc Billing', url: '/operations/adhoc-billing/'},
+            {label: 'Calendar', url: null}
+        ],
+        '/operations/mis/': [
+            {label: 'Operations', url: null},
+            {label: 'MIS Tracking', url: '/operations/mis/'}
+        ],
+        '/operations/holidays/': [
+            {label: 'Operations', url: null},
+            {label: 'Holidays', url: '/operations/holidays/'}
+        ],
+        '/operations/lr/': [
+            {label: 'Operations', url: null},
+            {label: 'LR / Consignment Notes', url: '/operations/lr/'}
+        ],
+        '/operations/lr/create/': [
+            {label: 'Operations', url: null},
+            {label: 'LR / Consignment Notes', url: '/operations/lr/'},
+            {label: 'Create', url: null}
+        ],
+        '/operations/porter-invoices/': [
+            {label: 'Operations', url: null},
+            {label: 'Porter Invoice Editor', url: '/operations/porter-invoices/'}
+        ],
+        '/operations/porter-invoices/batch/': [
+            {label: 'Operations', url: null},
+            {label: 'Porter Invoice Editor', url: '/operations/porter-invoices/'},
+            {label: 'Batch Process', url: null}
+        ],
+        '/operations/porter-invoices/single/': [
+            {label: 'Operations', url: null},
+            {label: 'Porter Invoice Editor', url: '/operations/porter-invoices/'},
+            {label: 'Single Edit', url: null}
+        ],
+        '/accounts/profile/': [
+            {label: 'Profile', url: null}
+        ],
+        '/accounts/notifications/': [
+            {label: 'Notifications', url: '/accounts/notifications/'}
+        ],
+        '/master-data/': [
+            {label: 'Master Data', url: '/master-data/'}
+        ],
+    };
+
+    // Home icon (always present)
+    let html = `
+        <li class="inline-flex items-center">
+            <a href="/accounts/dashboard/" class="inline-flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                </svg>
+                Home
+            </a>
+        </li>
+    `;
+
+    // Get breadcrumb items for current path
+    let crumbs = breadcrumbMap[path];
+
+    // Dynamic matching for detail/edit pages
+    if (!crumbs) {
+        if (path.includes('/disputes/') && path.match(/\/\d+\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'Disputes', url: '/operations/disputes/'},
+                {label: 'Detail', url: null}
+            ];
+        } else if (path.includes('/project-cards/') && path.match(/\/\d+\/$/)) {
+            crumbs = [
+                {label: 'Finance', url: null},
+                {label: 'Project Cards', url: '/operations/project-cards/'},
+                {label: 'Detail', url: null}
+            ];
+        } else if (path.includes('/adhoc-billing/') && path.match(/\/\d+\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'Adhoc Billing', url: '/operations/adhoc-billing/'},
+                {label: 'Detail', url: null}
+            ];
+        } else if (path.includes('/projects/') && path.match(/\/[A-Z0-9-]+\/$/)) {
+            crumbs = [
+                {label: 'Projects', url: '/projects/list/all/'},
+                {label: 'Project Detail', url: null}
+            ];
+        } else if (path.includes('/projects/') && path.includes('/edit/')) {
+            crumbs = [
+                {label: 'Projects', url: '/projects/list/all/'},
+                {label: 'Edit Project', url: null}
+            ];
+        } else if (path.match(/\/operations\/porter-invoices\/\d+\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'Porter Invoice Editor', url: '/operations/porter-invoices/'},
+                {label: 'Session Detail', url: null}
+            ];
+        } else if (path.match(/\/operations\/lr\/\d+\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'LR / Consignment Notes', url: '/operations/lr/'},
+                {label: 'Detail', url: null}
+            ];
+        } else if (path.match(/\/operations\/lr\/\d+\/edit\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'LR / Consignment Notes', url: '/operations/lr/'},
+                {label: 'Edit', url: null}
+            ];
+        } else if (path.match(/\/operations\/lr\/\d+\/delete\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'LR / Consignment Notes', url: '/operations/lr/'},
+                {label: 'Delete', url: null}
+            ];
+        } else if (path.includes('/daily-entry/') && path.match(/\/\d+\/edit\/$/)) {
+            crumbs = [
+                {label: 'Operations', url: null},
+                {label: 'Daily Entry', url: '/operations/daily-entry/'},
+                {label: 'Edit', url: null}
+            ];
+        } else if (path.includes('/warehouses/') && (path.includes('create') || path.includes('edit'))) {
+            crumbs = [
+                {label: 'Finance', url: null},
+                {label: 'Warehouses', url: '{% url "supply:warehouse_list" %}'},
+                {label: path.includes('create') ? 'Create' : 'Edit', url: null}
+            ];
+        } else if (path.includes('/locations/') && (path.includes('create') || path.includes('edit'))) {
+            crumbs = [
+                {label: 'Finance', url: null},
+                {label: 'Locations', url: '/projects/locations/'},
+                {label: path.includes('create') ? 'Create' : 'Edit', url: null}
+            ];
+        }
+        // Master Data dropdown types
+        else if (path.match(/^\/master-data\/[^/]+\/$/)) {
+            const dropdownType = path.split('/')[2];
+            const label = dropdownType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            crumbs = [
+                {label: 'Master Data', url: '/master-data/'},
+                {label: label, url: null}
+            ];
+        } else if (path.match(/^\/master-data\/[^/]+\/[^/]+\/(edit|create)\/$/)) {
+            const dropdownType = path.split('/')[2];
+            const label = dropdownType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            const action = path.includes('create') ? 'Create' : 'Edit';
+            crumbs = [
+                {label: 'Master Data', url: '/master-data/'},
+                {label: label, url: `/master-data/${dropdownType}/`},
+                {label: action, url: null}
+            ];
+        }
+    }
+
+    // Build breadcrumb HTML
+    if (crumbs && crumbs.length > 0) {
+        crumbs.forEach((crumb, index) => {
+            const isLast = index === crumbs.length - 1;
+
+            html += `
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-gray-500" width="20" height="20" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        ${crumb.url && !isLast
+                            ? `<a href="${crumb.url}" class="ml-1 md:ml-2 text-gray-500 hover:text-blue-600 transition-colors font-medium">${crumb.label}</a>`
+                            : `<span class="ml-1 md:ml-2 ${isLast ? 'text-gray-700 font-semibold' : 'text-gray-500'}">${crumb.label}</span>`
+                        }
+                    </div>
+                </li>
+            `;
+        });
+    }
+
+    breadcrumb.innerHTML = html;
+}
+
+// ============================================================================
+// DATE UPDATE (Runs Immediately)
+// ============================================================================
+(function() {
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+        const today = new Date();
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        // Outputs like: "Friday, 16 December 2025"
+        dateEl.textContent = today.toLocaleDateString('en-GB', options);
+    }
+})();
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+let notificationInterval = null;
+
+function isAuthenticatedPage() {
+    return document.getElementById('notificationBadge') !== null;
+}
+
+function startNotificationPolling() {
+    if (!isAuthenticatedPage()) return;
+
+    fetch('{% url "accounts:notifications_api" %}')
+        .then(response => {
+            if (!response.ok) throw new Error('Not authenticated');
+            return response.json();
+        })
+        .then(data => updateNotificationBadge(data.unread_count))
+        .catch(error => console.log('Notification fetch failed:', error));
+
+    notificationInterval = setInterval(function() {
+        if (!isAuthenticatedPage()) {
+            stopNotificationPolling();
+            return;
+        }
+
+        const dropdown = document.getElementById('notificationDropdown');
+        if (dropdown && dropdown.classList.contains('hidden')) {
+            fetch('{% url "accounts:notifications_api" %}')
+                .then(response => {
+                    if (!response.ok) throw new Error('Not authenticated');
+                    return response.json();
+                })
+                .then(data => updateNotificationBadge(data.unread_count))
+                .catch(error => {
+                    console.log('Notification fetch failed:', error);
+                    stopNotificationPolling();
+                });
+        }
+    }, 60000);
+}
+
+function stopNotificationPolling() {
+    if (notificationInterval) {
+        clearInterval(notificationInterval);
+        notificationInterval = null;
+    }
+}
+
+// Pause polling when tab is inactive, resume when visible
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopNotificationPolling();
+    } else {
+        startNotificationPolling();
+    }
+});
+
+let lastNotificationFetch = 0;
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (!dropdown) return;
+
+    if (dropdown.classList.contains('hidden')) {
+        // Only fetch if >30s since last load
+        if (Date.now() - lastNotificationFetch > 30000) {
+            loadNotifications();
+        }
+        dropdown.classList.remove('hidden');
+    } else {
+        dropdown.classList.add('hidden');
+    }
+}
+
+function loadNotifications() {
+    if (!isAuthenticatedPage()) return;
+    lastNotificationFetch = Date.now();
+
+    fetch('{% url "accounts:notifications_api" %}')
+        .then(response => {
+            if (!response.ok) throw new Error('Not authenticated');
+            return response.json();
+        })
+        .then(data => {
+            updateNotificationBadge(data.unread_count);
+            renderNotifications(data.notifications);
+        })
+        .catch(error => {
+            const list = document.getElementById('notificationList');
+            if (list) {
+                list.innerHTML = '<div class="px-4 py-8 text-center text-red-600 text-sm">Failed to load</div>';
+            }
+        });
+}
+
+function updateNotificationBadge(count) {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function renderNotifications(notifications) {
+    const list = document.getElementById('notificationList');
+    if (!list) return;
+
+    if (notifications.length === 0) {
+        list.innerHTML = '<div class="px-4 py-8 text-center text-gray-500 text-sm">No notifications</div>';
+        return;
+    }
+
+    let html = '';
+    notifications.forEach(notif => {
+        // Enterprise-grade color coding based on severity
+        const severityStyles = {
+            'critical': 'bg-red-50 border-l-4 border-red-600',
+            'error': 'bg-red-50 border-l-4 border-red-500',
+            'warning': 'bg-yellow-50 border-l-4 border-yellow-500',
+            'success': 'bg-green-50 border-l-4 border-green-500',
+            'info': 'bg-blue-50 border-l-4 border-blue-500'
+        }[notif.severity] || 'bg-gray-50';
+
+        // Priority badge
+        const priorityBadge = {
+            'urgent': '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">URGENT</span>',
+            'high': '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">High</span>',
+            'normal': '',
+            'low': ''
+        }[notif.priority] || '';
+
+        // Pin indicator
+        const pinIndicator = notif.is_pinned ? '<svg class="inline w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1.293l2.707 2.707A1 1 0 0118 9v3a1 1 0 01-.293.707L15 15.414V17a1 1 0 01-1 1H6a1 1 0 01-1-1v-1.586l-2.707-2.707A1 1 0 012 12V9a1 1 0 01.293-.707L5 5.586V4z"/></svg>' : '';
+
+        html += `
+            <div class="px-4 py-3 hover:bg-gray-100 cursor-pointer ${severityStyles} ${notif.is_read ? 'opacity-60' : ''}" onclick="markAsReadAndNavigate(${notif.id}, '${notif.action_url || ''}')">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 text-lg mr-2">${notif.icon}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            ${pinIndicator}
+                            ${priorityBadge}
+                            <span class="text-xs text-gray-500 capitalize">${notif.category}</span>
+                        </div>
+                        <p class="text-sm text-gray-900 ${!notif.is_read ? 'font-semibold' : ''}">${notif.title}</p>
+                        <p class="text-xs text-gray-600 mt-1 line-clamp-2">${notif.message}</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-xs text-gray-500">${notif.time_ago}</p>
+                            ${notif.action_url ? `<span class="text-xs text-blue-600 font-medium">${notif.action_label} →</span>` : ''}
+                        </div>
+                    </div>
+                    ${!notif.is_read ? '<span class="ml-2 flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></span>' : ''}
+                </div>
+            </div>
+        `;
+    });
+    list.innerHTML = html;
+}
+
+function markAsReadAndNavigate(notifId, url) {
+    if (!isAuthenticatedPage()) return;
+
+    fetch(`/accounts/notifications/${notifId}/read/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCookie('csrftoken')}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.redirect) {
+            window.location.href = data.redirect;
+        } else if (url && url !== '') {
+            window.location.href = url;
+        } else {
+            // Just refresh notifications if no URL
+            loadNotifications();
+        }
+    })
+    .catch(error => console.log('Mark as read failed:', error));
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ============================================================================
+// ACTIVE NAV HIGHLIGHTING (ux-guidelines.csv #3)
+// "Highlight the current/active page in navigation"
+// ============================================================================
+function highlightActiveNav() {
+    const path = window.location.pathname;
+
+    // Desktop nav links
+    document.querySelectorAll('.hidden.lg\\:flex > a, .hidden.lg\\:flex .group > button').forEach(el => {
+        const href = el.getAttribute('href');
+        if (href && path.startsWith(href) && href !== '/accounts/dashboard/') {
+            el.classList.remove('text-gray-700');
+            el.classList.add('text-blue-600', 'bg-blue-50');
+        }
+    });
+
+    // Special case: Dashboard link only active on exact match
+    const dashLink = document.querySelector('.hidden.lg\\:flex > a[href="/accounts/dashboard/"]');
+    if (dashLink && path === '/accounts/dashboard/') {
+        dashLink.classList.remove('text-gray-700');
+        dashLink.classList.add('text-blue-600', 'bg-blue-50');
+    }
+
+    // Dropdown parents: highlight button when any child route is active
+    document.querySelectorAll('.hidden.lg\\:flex .group').forEach(group => {
+        const links = group.querySelectorAll('a[href]');
+        let isActive = false;
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && path.startsWith(href)) {
+                isActive = true;
+                // Also highlight the specific dropdown item
+                link.classList.add('bg-blue-50', 'text-blue-600', 'font-semibold');
+            }
+        });
+        if (isActive) {
+            const btn = group.querySelector('button');
+            if (btn) {
+                btn.classList.remove('text-gray-700');
+                btn.classList.add('text-blue-600', 'bg-blue-50');
+            }
+        }
+    });
+
+    // Mobile nav links
+    document.querySelectorAll('#mobile-menu a[href]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && path.startsWith(href) && !(href === '/accounts/dashboard/' && path !== '/accounts/dashboard/')) {
+            link.classList.add('bg-blue-50', 'text-blue-600', 'font-semibold');
+            link.classList.remove('text-gray-700');
+        }
+    });
+}
+
+// ============================================================================
+// INIT & CLEANUP
+// ============================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    generateBreadcrumb();
+    highlightActiveNav();
+    if (isAuthenticatedPage()) {
+        startNotificationPolling();
+    }
+});
+
+window.addEventListener('beforeunload', function() {
+    stopNotificationPolling();
+});
+
+// ============================================================================
+// MOBILE MENU TOGGLE
+// ============================================================================
+document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
+    const menu = document.getElementById('mobile-menu');
+    const expanded = this.getAttribute('aria-expanded') === 'true';
+    menu.classList.toggle('hidden');
+    this.setAttribute('aria-expanded', !expanded);
+});
+
+// Close mobile menu when clicking a link
+document.getElementById('mobile-menu')?.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.add('hidden');
+        document.getElementById('mobile-menu-btn').setAttribute('aria-expanded', 'false');
+    });
+});
+
+// ============================================================================
+// DROPDOWN HOVER + KEYBOARD ACCESSIBILITY
+// ============================================================================
+(function() {
+  document.querySelectorAll('.group').forEach(group => {
+    const btn = group.querySelector('button');
+    const menu = group.querySelector('[class*="absolute"]');
+    if (!menu) return;
+
+    // Set ARIA attributes
+    if (btn) {
+        btn.setAttribute('aria-haspopup', 'true');
+        btn.setAttribute('aria-expanded', 'false');
+    }
+    menu.setAttribute('role', 'menu');
+    menu.querySelectorAll('a').forEach(a => a.setAttribute('role', 'menuitem'));
+
+    let timeout;
+    group.addEventListener('mouseenter', () => {
+      clearTimeout(timeout);
+      menu.classList.remove('invisible', 'opacity-0');
+      menu.classList.add('visible', 'opacity-100');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+    });
+    group.addEventListener('mouseleave', () => {
+      timeout = setTimeout(() => {
+        menu.classList.remove('visible', 'opacity-100');
+        menu.classList.add('invisible', 'opacity-0');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }, 150);
+    });
+    menu.addEventListener('mouseenter', () => clearTimeout(timeout));
+    menu.addEventListener('mouseleave', () => {
+      timeout = setTimeout(() => {
+        menu.classList.remove('visible', 'opacity-100');
+        menu.classList.add('invisible', 'opacity-0');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }, 150);
+    });
+
+    // Keyboard: Enter/Space opens, Escape closes
+    if (btn) {
+        btn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const isOpen = !menu.classList.contains('invisible');
+                if (isOpen) {
+                    menu.classList.remove('visible', 'opacity-100');
+                    menu.classList.add('invisible', 'opacity-0');
+                    btn.setAttribute('aria-expanded', 'false');
+                } else {
+                    menu.classList.remove('invisible', 'opacity-0');
+                    menu.classList.add('visible', 'opacity-100');
+                    btn.setAttribute('aria-expanded', 'true');
+                    menu.querySelector('a')?.focus();
+                }
+            }
+            if (e.key === 'Escape') {
+                menu.classList.remove('visible', 'opacity-100');
+                menu.classList.add('invisible', 'opacity-0');
+                btn.setAttribute('aria-expanded', 'false');
+                btn.focus();
+            }
+        });
+    }
+
+    // Escape key closes from within menu
+    menu.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            menu.classList.remove('visible', 'opacity-100');
+            menu.classList.add('invisible', 'opacity-0');
+            if (btn) {
+                btn.setAttribute('aria-expanded', 'false');
+                btn.focus();
+            }
+        }
+    });
+  });
+})();
+</script>

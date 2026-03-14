@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Quotation Settings - Saral ERP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Quotation Settings</h1>
+        <p class="mt-1 text-sm text-gray-600">Configure Google Docs template, OAuth credentials, default values, and email templates</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Google OAuth Configuration Section -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Google OAuth 2.0 Configuration</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.client_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Client ID
+                    </label>
+                    {{ form.client_id }}
+                    {% if form.client_id.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client_id.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.client_id.help_text }}</p>
+                </div>
+
+                <div>
+                    <label for="{{ form.client_secret_plaintext.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Client Secret
+                    </label>
+                    {{ form.client_secret_plaintext }}
+                    {% if form.client_secret_plaintext.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client_secret_plaintext.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.client_secret_plaintext.help_text }}</p>
+                </div>
+
+                <div>
+                    <label for="{{ form.redirect_uri.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Redirect URI
+                    </label>
+                    {{ form.redirect_uri }}
+                    {% if form.redirect_uri.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.redirect_uri.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.redirect_uri.help_text }}</p>
+                </div>
+            </div>
+
+            <!-- OAuth Setup Instructions -->
+            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">OAuth Setup Instructions</h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <ol class="list-decimal list-inside space-y-1">
+                                <li>Go to <a href="https://console.cloud.google.com/" target="_blank" class="underline">Google Cloud Console</a></li>
+                                <li>Create or select a project</li>
+                                <li>Enable Google Docs API and Google Drive API</li>
+                                <li>Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"</li>
+                                <li>Select "Web application" as application type</li>
+                                <li>Add authorized redirect URI: <code class="bg-white px-1 py-0.5 rounded">{{ request.scheme }}://{{ request.get_host }}{% url 'projects:quotation_oauth_callback' %}</code></li>
+                                <li>Copy Client ID and Client Secret and paste above</li>
+                                <li>Save settings and authorize your Google account below</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected Google Accounts -->
+        {% if quotation_tokens %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Connected Google Accounts</h2>
+
+            <div class="space-y-3">
+                {% for token in quotation_tokens %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ token.email_account }}</p>
+                            <p class="text-xs text-gray-500">
+                                Connected by {{ token.user.get_full_name }}
+                                {% if token.last_used_at %}
+                                • Last used {{ token.last_used_at|timesince }} ago
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{% url 'projects:quotation_oauth_disconnect' token.id %}"
+                       onclick="return confirm('Disconnect this Google account?')"
+                       class="text-sm text-red-600 hover:text-red-800 font-medium">
+                        Disconnect
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Authorize Google Account Button -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Authorize Google Account</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Each user who creates quotations needs to authorize their Google account to allow the system to access Google Docs/Drive API.
+            </p>
+
+            <a href="{% url 'projects:quotation_oauth_authorize' %}"
+               class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Authorize My Google Account
+            </a>
+        </div>
+
+        <!-- Google Docs Template Section -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Google Docs Template</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.google_docs_template_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Template URL
+                    </label>
+                    {{ form.google_docs_template_url }}
+                    {% if form.google_docs_template_url.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.google_docs_template_url.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.google_docs_template_url.help_text }}</p>
+                    {% if settings.google_docs_template_id %}
+                        <p class="mt-2 text-xs text-green-600 flex items-center gap-1"><svg class="w-3 h-3" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Document ID: {{ settings.google_docs_template_id }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Template Setup Instructions -->
+            <div class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">Template Setup Instructions</h3>
+                        <div class="mt-2 text-sm text-green-700">
+                            <ol class="list-decimal list-inside space-y-1">
+                                <li>Create a quotation template in Google Docs using your authorized Google account</li>
+                                <li>Copy the full URL and paste above</li>
+                                <li>Use placeholders like {% verbatim %}{{QUOTATION_NUMBER}}{% endverbatim %}, {% verbatim %}{{CLIENT_COMPANY}}{% endverbatim %}, {% verbatim %}{{CLIENT_NAME}}{% endverbatim %}, etc.</li>
+                                <li>Make sure the document is accessible by your authorized account</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Default Values Section -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Default Values</h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.default_gst_rate.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Default GST Rate (%)
+                    </label>
+                    {{ form.default_gst_rate }}
+                    {% if form.default_gst_rate.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.default_gst_rate.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.default_gst_rate.help_text }}</p>
+                </div>
+
+                <div>
+                    <label for="{{ form.default_validity_days.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Default Validity Period (Days)
+                    </label>
+                    {{ form.default_validity_days }}
+                    {% if form.default_validity_days.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.default_validity_days.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.default_validity_days.help_text }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Templates Section -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Email Templates</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.email_subject_template.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Subject Template
+                    </label>
+                    {{ form.email_subject_template }}
+                    {% if form.email_subject_template.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.email_subject_template.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.email_subject_template.help_text }}</p>
+                </div>
+
+                <div>
+                    <label for="{{ form.email_body_template.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Body Template
+                    </label>
+                    {{ form.email_body_template }}
+                    {% if form.email_body_template.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.email_body_template.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.email_body_template.help_text }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-end gap-3">
+            <a href="{% url 'projects:quotation_list' %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition">
+                Cancel
+            </a>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition shadow-sm">
+                Save Settings
+            </button>
+        </div>
+    </form>
+
+    <!-- Last Updated Info -->
+    {% if settings.updated_at %}
+    <div class="mt-6 text-sm text-gray-500 text-right">
+        Last updated: {{ settings.updated_at|date:"d M Y, h:i A" }}
+        {% if settings.updated_by %}by {{ settings.updated_by.get_full_name }}{% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

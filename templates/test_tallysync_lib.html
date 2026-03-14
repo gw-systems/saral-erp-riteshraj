@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TallySync Library Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="{% static 'js/tallysync-common.js' %}"></script>
+</head>
+<body>
+    <h1>TallySync Library Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = [];
+        
+        // Test 1: Library exists
+        results.push('TallySyncCommon exists: ' + (typeof TallySyncCommon === 'object' ? '✅ YES' : '❌ NO'));
+        
+        // Test 2: Chart.js exists
+        results.push('Chart.js exists: ' + (typeof Chart === 'function' ? '✅ YES' : '❌ NO'));
+        
+        // Test 3: Currency formatting
+        try {
+            const formatted = TallySyncCommon.formatCurrency(2239005);
+            results.push('Currency format: ' + formatted + ' ✅');
+        } catch(e) {
+            results.push('Currency format: ❌ ERROR - ' + e.message);
+        }
+        
+        // Test 4: Month formatting
+        try {
+            const month = TallySyncCommon.formatMonth('2025-11-01');
+            results.push('Month format: ' + month + ' ✅');
+        } catch(e) {
+            results.push('Month format: ❌ ERROR - ' + e.message);
+        }
+        
+        // Test 5: API call
+        TallySyncCommon.apiCall('executive-summary')
+            .then(data => {
+                results.push('API call: ✅ SUCCESS - Got ' + Object.keys(data).length + ' fields');
+                document.getElementById('results').innerHTML = results.map(r => '<p>' + r + '</p>').join('');
+            })
+            .catch(err => {
+                results.push('API call: ❌ ERROR - ' + err.message);
+                document.getElementById('results').innerHTML = results.map(r => '<p>' + r + '</p>').join('');
+            });
+        
+        // Display initial results
+        document.getElementById('results').innerHTML = results.map(r => '<p>' + r + '</p>').join('');
+    </script>
+</body>
+</html>

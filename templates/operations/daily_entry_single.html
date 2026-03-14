@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}Single Entry - Daily Space{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Single Project Entry</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Enter space and inventory data for one project (including backup projects)
+            </p>
+        </div>
+        <a href="{% url 'operations:daily_entry_bulk' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+            Switch to Bulk Entry
+        </a>
+    </div>
+
+    <!-- Entry Form -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Entry Details</h2>
+        </div>
+        <form method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- Date Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="entry_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Entry Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date"
+                           id="entry_date"
+                           name="entry_date"
+                           value="{{ today|date:'Y-m-d' }}"
+                           max="{{ today|date:'Y-m-d' }}"
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="mt-1 text-xs text-gray-500">You can enter data for up to 5 days back</p>
+                </div>
+
+                <div>
+                    <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Select Project <span class="text-red-500">*</span>
+                    </label>
+                    <select id="project_id"
+                            name="project_id"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">-- Select a Project --</option>
+                        {% for project in projects %}
+                        <option value="{{ project.project_id }}"
+                                data-billing-unit="{{ project.billing_unit }}"
+                                data-min-sqft="{{ project.minimum_billable_sqft }}"
+                                data-min-pallets="{{ project.minimum_billable_pallets }}">
+                            {{ project }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">All projects including backup assignments</p>
+                </div>
+            </div>
+
+            <!-- Project Info Display (shown after selection) -->
+            <div id="project-info" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="h-5 w-5 text-blue-600 mt-0.5 mr-3" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-blue-900">Project Information</p>
+                        <p class="text-sm text-blue-700 mt-1">
+                            <span class="font-semibold">Billing Unit:</span> <span id="display-unit">—</span>
+                        </p>
+                        <p class="text-sm text-blue-700" id="min-billable-info">
+                            <span class="font-semibold">Minimum Billable:</span> <span id="display-min">—</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Space & Inventory -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="space_utilized" class="block text-sm font-medium text-gray-700 mb-2">
+                        Space Utilized <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex rounded-md shadow-sm">
+                        <input type="number"
+                            id="space_utilized"
+                            name="space_utilized"
+                            step="0.01"
+                            min="0"
+                            required
+                            placeholder="0.00"
+                            class="flex-1 min-w-0 block w-full px-4 py-2 rounded-none rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                        <select id="unit"
+                                name="unit"
+                                required
+                                class="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            {% for code, label in dropdowns.storage_units %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Enter the space used by this project</p>
+                </div>
+
+                <div>
+                    <label for="inventory_value" class="block text-sm font-medium text-gray-700 mb-2">
+                        Inventory Value (₹) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-500 text-sm">₹</span>
+                        <input type="number"
+                            id="inventory_value"
+                            name="inventory_value"
+                            step="0.01"
+                            min="0"
+                            required
+                            placeholder="0.00"
+                            class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Total value of inventory in rupees</p>
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            <div>
+                <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2">
+                    Remarks (Optional)
+                </label>
+                <textarea id="remarks"
+                          name="remarks"
+                          rows="3"
+                          placeholder="Add any notes or comments..."
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+
+            <!-- Warning for below minimum -->
+            <div id="below-min-warning" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="h-5 w-5 text-yellow-600 mt-0.5 mr-3" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-yellow-900">Below Minimum Billable</p>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            The space utilized is below the minimum billable amount for this project.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <a href="{% url 'operations:daily_entry_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                    Save Entry
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const projectSelect = document.getElementById('project_id');
+    const projectInfo = document.getElementById('project-info');
+    const displayUnit = document.getElementById('display-unit');
+    const displayMin = document.getElementById('display-min');
+    const unitLabel = document.getElementById('unit-label');
+    const spaceInput = document.getElementById('space_utilized');
+    const belowMinWarning = document.getElementById('below-min-warning');
+
+    let currentProject = null;
+
+
+    // Handle project selection
+    projectSelect.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+
+        if (this.value) {
+            const billingUnit = selected.dataset.billingUnit;
+            const minSqft = selected.dataset.minSqft;
+            const minPallets = selected.dataset.minPallets;
+
+            currentProject = {
+                billingUnit: billingUnit,
+                minSqft: parseFloat(minSqft) || null,
+                minPallets: parseInt(minPallets) || null
+            };
+
+            // Show project info
+            projectInfo.classList.remove('hidden');
+
+            // Auto-select unit dropdown based on billing unit
+            const unitSelect = document.getElementById('unit');
+
+            // Update unit display with proper minimum billable format
+            if (billingUnit === 'sqft') {
+                displayUnit.textContent = 'Square Feet';
+                unitSelect.value = 'Sq. Ft.';
+                // Show minimum with unit, or blank if not set
+                if (minSqft && parseFloat(minSqft) > 0) {
+                    displayMin.textContent = `${minSqft} Sq. Ft.`;
+                } else {
+                    displayMin.textContent = '—';
+                }
+            } else if (billingUnit === 'pallet') {
+                displayUnit.textContent = 'Pallets';
+                unitSelect.value = 'Pallet';
+                // Show minimum with unit, or blank if not set
+                if (minPallets && parseInt(minPallets) > 0) {
+                    displayMin.textContent = `${minPallets} Pallets`;
+                } else {
+                    displayMin.textContent = '—';
+                }
+            } else {
+                // Lumpsum or empty - show blank
+                displayUnit.textContent = 'Lumpsum';
+                unitSelect.value = 'Lumpsum';
+                displayMin.textContent = '—';
+            }
+
+            // Check minimum on load if value exists
+            checkMinimum();
+        } else {
+            projectInfo.classList.add('hidden');
+            currentProject = null;
+            belowMinWarning.classList.add('hidden');
+        }
+    });
+
+    // Check minimum when space value changes
+    spaceInput.addEventListener('input', checkMinimum);
+
+    function checkMinimum() {
+        if (!currentProject || !spaceInput.value) {
+            belowMinWarning.classList.add('hidden');
+            return;
+        }
+
+        const spaceValue = parseFloat(spaceInput.value);
+        let isBelowMin = false;
+
+        if (currentProject.billingUnit === 'sqft' && currentProject.minSqft) {
+            isBelowMin = spaceValue < currentProject.minSqft;
+        } else if (currentProject.billingUnit === 'pallet' && currentProject.minPallets) {
+            isBelowMin = spaceValue < currentProject.minPallets;
+        }
+
+        if (isBelowMin) {
+            belowMinWarning.classList.remove('hidden');
+        } else {
+            belowMinWarning.classList.add('hidden');
+        }
+    }
+});
+</script>
+{% endblock %}

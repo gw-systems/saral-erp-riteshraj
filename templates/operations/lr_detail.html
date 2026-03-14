@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lr.lr_number }} - LR Detail - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6 flex justify-between items-end">
+            <div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'operations:lr_list' %}" class="text-gray-500 hover:text-gray-600 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg aria-hidden="true" width="24" height="24" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ lr.lr_number }}</h1>
+                </div>
+                <p class="text-gray-600 mt-1 ml-9">
+                    {{ lr.from_location }} &rarr; {{ lr.to_location }} &middot; {{ lr.lr_date|date:"d M Y" }}
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'operations:lr_edit' lr.id %}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit
+                </a>
+                <a href="{% url 'operations:lr_download_docx' lr.id %}"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    DOCX
+                </a>
+                <a href="{% url 'operations:lr_download_pdf' lr.id %}"
+                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 shadow-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    PDF
+                </a>
+                <a href="{% url 'operations:lr_download_image' lr.id %}"
+                    class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Image
+                </a>
+                {% if can_delete %}
+                <a href="{% url 'operations:lr_delete' lr.id %}"
+                    class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Delete
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- LR Metadata Card -->
+        <div class="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">LR Number</p>
+                    <p class="text-gray-900 font-bold mt-1">{{ lr.lr_number }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">LR Date</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.lr_date|date:"d M Y" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Project</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.project.project_code }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created By</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.created_by.get_full_name|default:lr.created_by.username }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transport & Location Details -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Transport Details</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">From</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.from_location }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">To</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.to_location }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Vehicle No.</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.vehicle_no|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Vehicle Type</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.vehicle_type|default:"-" }}</p>
+                </div>
+                {% if lr.delivery_office_address %}
+                <div class="col-span-2 md:col-span-4">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Address of Delivery Office</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.delivery_office_address }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Consignment Parties -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Consignment Parties</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Consignor Name</p>
+                    <p class="text-gray-900 font-bold mt-1">{{ lr.consignor_name|default:"-" }}</p>
+                    {% if lr.consignor_address %}
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-3">Consignor Address</p>
+                    <p class="text-gray-900 font-medium mt-1 whitespace-pre-line">{{ lr.consignor_address }}</p>
+                    {% endif %}
+                    {% if lr.consignor_gst_no %}
+                    <p class="text-xs text-gray-500 mt-2">GST: {{ lr.consignor_gst_no }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Consignee Name</p>
+                    <p class="text-gray-900 font-bold mt-1">{{ lr.consignee_name|default:"-" }}</p>
+                    {% if lr.consignee_address %}
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-3">Consignee Address</p>
+                    <p class="text-gray-900 font-medium mt-1 whitespace-pre-line">{{ lr.consignee_address }}</p>
+                    {% endif %}
+                    {% if lr.consignee_gst_no %}
+                    <p class="text-xs text-gray-500 mt-2">GST: {{ lr.consignee_gst_no }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment Details -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Shipment Details</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice No.</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.invoice_no|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">GST Paid By</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.get_gst_paid_by_display }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mode of Packing</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.mode_of_packing|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Value</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.value|default:"-" }}</p>
+                </div>
+                {% if lr.remarks %}
+                <div class="col-span-2 md:col-span-4">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Remarks</p>
+                    <p class="text-gray-900 font-medium mt-1 whitespace-pre-line">{{ lr.remarks }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Insurance -->
+        {% if lr.insurance_company or lr.insurance_policy_no %}
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Insurance</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.insurance_company|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Policy No.</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.insurance_policy_no|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.insurance_date|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.insurance_amount|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Risk</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ lr.insurance_risk|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Items Table -->
+        {% if line_items %}
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Items / Consignment Details</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">#</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Packages</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actual Weight</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Charged Weight</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in line_items %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 text-sm text-gray-500">{{ forloop.counter }}</td>
+                            <td class="px-6 py-3 text-sm text-gray-900">{{ item.packages|default:"-" }}</td>
+                            <td class="px-6 py-3 text-sm text-gray-900">{{ item.description|default:"-" }}</td>
+                            <td class="px-6 py-3 text-sm text-gray-900">{{ item.actual_weight|default:"-" }}</td>
+                            <td class="px-6 py-3 text-sm text-gray-900">{{ item.charged_weight|default:"-" }}</td>
+                            <td class="px-6 py-3 text-sm text-gray-900 font-medium">{{ item.amount|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Audit History Timeline -->
+        {% if audit_logs %}
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Audit History</h3>
+            <div class="flow-root">
+                <ul class="-mb-8">
+                    {% for log in audit_logs %}
+                    <li>
+                        <div class="relative pb-8">
+                            {% if not forloop.last %}
+                            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
+                            {% endif %}
+                            <div class="relative flex space-x-3">
+                                <div>
+                                    {% if log.action == 'CREATED' %}
+                                    <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                    </span>
+                                    {% elif log.action == 'UPDATED' %}
+                                    <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center ring-8 ring-white">
+                                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </span>
+                                    {% elif log.action == 'DELETED' %}
+                                    <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center ring-8 ring-white">
+                                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                    <div>
+                                        <p class="text-sm text-gray-700">
+                                            <span class="font-semibold">{{ log.get_action_display }}</span>
+                                            by <span class="font-medium">{{ log.changed_by.get_full_name|default:log.changed_by.username }}</span>
+                                        </p>
+                                        {% if log.change_reason %}
+                                        <p class="text-xs text-gray-500 mt-1">Reason: {{ log.change_reason }}</p>
+                                        {% endif %}
+                                        {% if log.action == 'UPDATED' and log.old_values and log.new_values %}
+                                        <div class="mt-2">
+                                            <button onclick="this.nextElementSibling.classList.toggle('hidden')"
+                                                class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                                Show changes
+                                            </button>
+                                            <div class="hidden mt-2 text-xs bg-gray-50 rounded p-3 border max-w-lg">
+                                                {% for key, new_val in log.new_values.items %}
+                                                    {% if key != 'line_items' %}
+                                                        {% with old_val=log.old_values|default_if_none:"{}"|dictsort:key %}
+                                                        {% endwith %}
+                                                        <div class="flex gap-2 mb-1">
+                                                            <span class="font-medium text-gray-600 w-32 flex-shrink-0">{{ key }}:</span>
+                                                            <span class="text-gray-500">{{ new_val }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-right text-xs whitespace-nowrap text-gray-500">
+                                        {{ log.changed_at|date:"d M Y" }}<br>
+                                        {{ log.changed_at|time:"h:i A" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

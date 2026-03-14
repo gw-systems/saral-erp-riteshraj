@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Documents - {{ warehouse.warehouse_code }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <nav class="flex mb-3" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                            <li class="inline-flex items-center">
+                                <a href="{% url 'supply:warehouse_list' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                                    Warehouses
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg aria-hidden="true" width="24" height="24" class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                    <a href="{% url 'supply:warehouse_detail' warehouse.warehouse_code %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">{{ warehouse.warehouse_code }}</a>
+                                </div>
+                            </li>
+                            <li aria-current="page">
+                                <div class="flex items-center">
+                                    <svg aria-hidden="true" width="24" height="24" class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Upload Documents</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h1 class="text-4xl font-extrabold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                        Upload Documents
+                    </h1>
+                    <p class="mt-2 text-gray-600">Upload legal and compliance documents for {{ warehouse.warehouse_name }}</p>
+                </div>
+                <a href="{% url 'supply:warehouse_detail' warehouse.warehouse_code %}"
+                   class="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Details
+                </a>
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Error Messages -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                <div class="flex">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Please correct the errors below</h3>
+                        {{ form.non_field_errors }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Documents Section -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 border-b border-teal-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                            <svg aria-hidden="true" width="24" height="24" class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Legal &amp; Compliance Documents</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-6 flex items-start">
+                        <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        Accepted formats: PDF, JPG, PNG, DOCX | Maximum file size: 5MB per file
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <!-- Electricity Bill -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Electricity Bill
+                            </label>
+                            {{ form.warehouse_electricity_bill }}
+                            {% if form.warehouse_electricity_bill.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_electricity_bill.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_electricity_bill %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded: {{ documents.warehouse_electricity_bill.name }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Property Tax Receipt -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Property Tax Receipt
+                            </label>
+                            {{ form.warehouse_property_tax_receipt }}
+                            {% if form.warehouse_property_tax_receipt.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_property_tax_receipt.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_property_tax_receipt %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- POC Aadhar -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                POC Aadhar Card
+                            </label>
+                            {{ form.warehouse_poc_aadhar }}
+                            {% if form.warehouse_poc_aadhar.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_poc_aadhar.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_poc_aadhar %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- POC PAN -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                POC PAN Card
+                            </label>
+                            {{ form.warehouse_poc_pan }}
+                            {% if form.warehouse_poc_pan.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_poc_pan.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_poc_pan %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- NOC from Owner -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                NOC from Owner
+                            </label>
+                            {{ form.warehouse_noc_owner }}
+                            {% if form.warehouse_noc_owner.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_noc_owner.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_noc_owner %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Owner PAN -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Owner PAN Card
+                            </label>
+                            {{ form.warehouse_owner_pan }}
+                            {% if form.warehouse_owner_pan.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_owner_pan.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_owner_pan %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Owner Aadhar -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Owner Aadhar Card
+                            </label>
+                            {{ form.warehouse_owner_aadhar }}
+                            {% if form.warehouse_owner_aadhar.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_owner_aadhar.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_owner_aadhar %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- NOC from Vendor -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                NOC from Vendor
+                            </label>
+                            {{ form.warehouse_noc_vendor }}
+                            {% if form.warehouse_noc_vendor.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.warehouse_noc_vendor.errors.0 }}</p>
+                            {% endif %}
+                            {% if documents and documents.warehouse_noc_vendor %}
+                                <p class="mt-2 text-xs text-green-600 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    File uploaded
+                                </p>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <!-- Legal & Compliance Documents Separator -->
+                    <div class="mt-8 pt-6 border-t-2 border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center">
+                            <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                            </svg>
+                            Legal &amp; Compliance Documents
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-6">Upload multiple files for rent agreements, SLA documents, and other legal documents</p>
+
+                        <div class="space-y-6">
+                            <!-- Rent Agreements (Multiple) -->
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Rent Agreement(s) between Owner &amp; Vendor
+                                    <span class="ml-2 text-xs font-normal text-purple-600">(Multiple files allowed)</span>
+                                </label>
+                                <input type="file" name="rent_agreements" id="rent_agreements" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                       class="block w-full text-sm text-gray-900 border border-purple-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-purple-500 p-3">
+                                <p class="mt-2 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple files</p>
+                                {% if documents and documents.warehouse_owner_agreements %}
+                                    <div class="mt-3 space-y-1">
+                                        <p class="text-xs font-medium text-gray-700">Currently uploaded:</p>
+                                        {% for file_id, file_data in documents.warehouse_owner_agreements.items %}
+                                        <p class="text-xs text-green-600 flex items-center">
+                                            <svg aria-hidden="true" width="12" height="12" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                            {{ file_data.filename }}
+                                        </p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- SLA Documents (Multiple) -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    SLA between Vendor &amp; Godamwale
+                                    <span class="ml-2 text-xs font-normal text-blue-600">(Multiple files allowed)</span>
+                                </label>
+                                <input type="file" name="sla_documents" id="sla_documents" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                       class="block w-full text-sm text-gray-900 border border-blue-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-blue-500 p-3">
+                                <p class="mt-2 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple files</p>
+                                {% if documents and documents.warehouse_sla_documents %}
+                                    <div class="mt-3 space-y-1">
+                                        <p class="text-xs font-medium text-gray-700">Currently uploaded:</p>
+                                        {% for file_id, file_data in documents.warehouse_sla_documents.items %}
+                                        <p class="text-xs text-green-600 flex items-center">
+                                            <svg aria-hidden="true" width="12" height="12" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                            {{ file_data.filename }}
+                                        </p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Other Legal Documents (Multiple) -->
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                    <svg aria-hidden="true" width="16" height="16" class="mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Other Legal &amp; Compliance Documents
+                                    <span class="ml-2 text-xs font-normal text-green-600">(Multiple files allowed)</span>
+                                </label>
+                                <input type="file" name="other_legal_docs" id="other_legal_docs" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                       class="block w-full text-sm text-gray-900 border border-green-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-green-500 p-3">
+                                <p class="mt-2 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple files</p>
+                                {% if documents and documents.warehouse_other_legal_docs %}
+                                    <div class="mt-3 space-y-1">
+                                        <p class="text-xs font-medium text-gray-700">Currently uploaded:</p>
+                                        {% for file_id, file_data in documents.warehouse_other_legal_docs.items %}
+                                        <p class="text-xs text-green-600 flex items-center">
+                                            <svg aria-hidden="true" width="12" height="12" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                            {{ file_data.filename }}
+                                        </p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <a href="{% url 'supply:warehouse_detail' warehouse.warehouse_code %}"
+                   class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center px-8 py-3 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-200">
+                    <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    Upload Documents
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+{% endblock %}

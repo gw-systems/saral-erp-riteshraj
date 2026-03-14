@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Operations Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🎯 Operations Analytics Dashboard</h1>
+                <p class="text-gray-600">Salesperson & vendor analytics</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="refreshDashboard()" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700">
+                    🔄 Refresh
+                </button>
+                <a href="{% url 'accounts:finance_manager_dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    ← Back to Hub
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
+                    <input type="date" id="fromDate" value="{{ default_from_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
+                    <input type="date" id="toDate" value="{{ default_to_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-semibold">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl shadow-lg mb-6">
+            <div class="flex border-b">
+                <button onclick="switchTab('salesperson')" id="tab-salesperson" class="tab-button active px-6 py-4 font-semibold text-gray-700 border-b-2 border-pink-600">
+                    👨‍💼 Salesperson Performance
+                </button>
+                <button onclick="switchTab('vendor')" id="tab-vendor" class="tab-button px-6 py-4 font-semibold text-gray-500 hover:text-gray-700">
+                    🏭 Vendor Analytics
+                </button>
+            </div>
+        </div>
+
+        <!-- Salesperson Tab -->
+        <div id="content-salesperson" class="tab-content">
+            <!-- Summary Cards -->
+            <div id="salespersonSummary" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="col-span-4 text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
+                    <p class="text-gray-600 mt-4">Loading salesperson data...</p>
+                </div>
+            </div>
+
+            <!-- Salesperson Table -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Salesperson Performance</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gradient-to-r from-pink-50 to-purple-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Salesperson</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Projects</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Revenue</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Expenses</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Profit</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Margin %</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Avg/Project</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salespersonBody" class="divide-y divide-gray-200">
+                            <!-- Data loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Analytics Tab -->
+        <div id="content-vendor" class="tab-content hidden">
+            <!-- Vendor Summary Cards -->
+            <div id="vendorSummary" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <!-- Loaded via JS -->
+            </div>
+
+            <!-- Vendor Table with drill-down -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-600">
+                    <h3 class="text-lg font-bold text-white">🏭 Vendor Analytics</h3>
+                </div>
+                <!-- Column headers -->
+                <div class="flex items-center px-6 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase">
+                    <span class="flex-1">Vendor Name</span>
+                    <span class="w-32 text-right">Total Purchases</span>
+                    <span class="w-32 text-right ml-4">Total Sales</span>
+                    <span class="w-24 text-right ml-4">Transactions</span>
+                    <span class="w-32 text-right ml-4">Avg Transaction</span>
+                    <span class="w-8"></span>
+                </div>
+                <div id="vendorBody" class="divide-y divide-gray-100">
+                    <div class="text-center py-10 text-gray-400">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Voucher Detail Modal -->
+<div id="voucherModalBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998"></div>
+<div id="voucherModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:42rem;display:flex;flex-direction:column;height:90vh">
+        <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;background:linear-gradient(to right,#6366f1,#9333ea);border-radius:1rem 1rem 0 0">
+            <div>
+                <p style="color:#fff;font-weight:700;font-size:1.125rem" id="voucherModalTitle">Voucher Details</p>
+                <p style="color:#c7d2fe;font-size:0.875rem" id="voucherModalSubtitle"></p>
+            </div>
+            <button onclick="closeVoucherModal()" style="color:#fff;font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer">&times;</button>
+        </div>
+        <div id="voucherModalContent" style="flex:1;min-height:0;overflow-y:auto;padding:1.5rem;font-size:0.875rem"></div>
+    </div>
+</div>
+
+<script>
+let currentTab = 'salesperson';
+
+function initDashboard() {
+    if (typeof TallySyncCommon !== 'undefined' && TallySyncCommon.setDefaultPreviousMonth) {
+        TallySyncCommon.setDefaultPreviousMonth();
+    }
+    loadDashboard();
+}
+initDashboard();
+window.addEventListener('pageshow', function(e) { if (e.persisted) initDashboard(); });
+
+function refreshDashboard() { loadDashboard(); }
+function applyFilters() { loadDashboard(); }
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'text-gray-700', 'border-pink-600');
+        btn.classList.add('text-gray-500');
+    });
+    document.getElementById(`tab-${tab}`).classList.add('active', 'text-gray-700', 'border-pink-600');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(`content-${tab}`).classList.remove('hidden');
+    if (tab === 'salesperson') loadSalespersonData();
+    else if (tab === 'vendor') loadVendorData();
+}
+
+async function loadDashboard() {
+    if (currentTab === 'salesperson') await loadSalespersonData();
+    else if (currentTab === 'vendor') await loadVendorData();
+}
+
+// ─── Salesperson ────────────────────────────────────────────────────────────
+async function loadSalespersonData() {
+    TallySyncCommon.setLoading('salespersonSummary', true);
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('salesperson-performance', filters);
+
+        if (!data.salespeople || data.salespeople.length === 0) {
+            document.getElementById('salespersonSummary').innerHTML = '<div class="col-span-4 text-center py-12"><p class="text-gray-500">No salesperson data available</p></div>';
+            return;
+        }
+
+        const totalRevenue = data.salespeople.reduce((sum, sp) => sum + (parseFloat(sp.total_revenue) || 0), 0);
+        const totalProjects = data.salespeople.reduce((sum, sp) => sum + (parseInt(sp.project_count) || 0), 0);
+        const marginSalespeople = data.salespeople.filter(sp => !['Aparajita Thakur', 'Nikhil Patil'].includes(sp.salesperson_name));
+        const avgMargin = marginSalespeople.length > 0
+            ? marginSalespeople.reduce((sum, sp) => sum + (parseFloat(sp.profit_margin) || 0), 0) / marginSalespeople.length
+            : 0;
+
+        document.getElementById('salespersonSummary').innerHTML = `
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <p class="text-sm font-semibold text-blue-700 mb-1">Total Salespeople</p>
+                <p class="text-3xl font-bold text-blue-800">${data.salespeople.length}</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <p class="text-sm font-semibold text-green-700 mb-1">Total Revenue</p>
+                <p class="text-3xl font-bold text-green-800">${TallySyncCommon.formatCurrency(totalRevenue)}</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <p class="text-sm font-semibold text-purple-700 mb-1">Total Projects</p>
+                <p class="text-3xl font-bold text-purple-800">${totalProjects}</p>
+            </div>
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <p class="text-sm font-semibold text-orange-700 mb-1">Avg Margin</p>
+                <p class="text-3xl font-bold text-orange-800">${TallySyncCommon.formatPercentage(avgMargin)}</p>
+            </div>
+        `;
+
+        let tableHTML = '';
+        data.salespeople.forEach(sp => {
+            const profitMargin = parseFloat(sp.profit_margin) || 0;
+            const marginClass = profitMargin >= 0 ? 'text-green-700' : 'text-red-700';
+            const fromDate = document.getElementById('fromDate')?.value || '';
+            const toDate = document.getElementById('toDate')?.value || '';
+            const detailUrl = `/tallysync/salesperson/${encodeURIComponent(sp.salesperson_name)}/?from_date=${fromDate}&to_date=${toDate}`;
+            tableHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                        <a href="${detailUrl}" class="font-bold text-blue-700 hover:underline">${sp.salesperson_name || 'Unknown'}</a>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-right text-gray-700 font-semibold">${sp.project_count}</td>
+                    <td class="px-4 py-3 text-sm text-right text-green-700 font-semibold">${TallySyncCommon.formatCurrency(sp.total_revenue)}</td>
+                    <td class="px-4 py-3 text-sm text-right text-red-700 font-semibold">${TallySyncCommon.formatCurrency(Math.abs(parseFloat(sp.total_expenses) || 0))}</td>
+                    <td class="px-4 py-3 text-sm text-right ${marginClass} font-bold">${TallySyncCommon.formatCurrency(sp.total_profit)}</td>
+                    <td class="px-4 py-3 text-sm text-right ${marginClass} font-semibold">${TallySyncCommon.formatPercentage(profitMargin)}</td>
+                    <td class="px-4 py-3 text-sm text-right text-gray-600">${TallySyncCommon.formatCurrency(sp.avg_revenue_per_project)}</td>
+                </tr>
+            `;
+        });
+        document.getElementById('salespersonBody').innerHTML = tableHTML;
+
+    } catch (error) {
+        console.error('Error loading salesperson data:', error);
+        TallySyncCommon.showError('Failed to load salesperson data', 'salespersonSummary');
+    }
+}
+
+// ─── Vendor ──────────────────────────────────────────────────────────────────
+async function loadVendorData() {
+    document.getElementById('vendorBody').innerHTML = '<div class="text-center py-10 text-gray-400"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-2"></div>Loading...</div>';
+    document.getElementById('vendorSummary').innerHTML = '';
+
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || '',
+            company_id: ''
+        };
+        const data = await TallySyncCommon.apiCall('vendor-expenses', filters);
+
+        // Summary cards (4 cards)
+        document.getElementById('vendorSummary').innerHTML = `
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <p class="text-sm font-semibold text-blue-700 mb-1">Total Vendors</p>
+                <p class="text-3xl font-bold text-blue-800">${data.summary.total_vendors}</p>
+            </div>
+            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                <p class="text-sm font-semibold text-red-700 mb-1">Total Purchases</p>
+                <p class="text-3xl font-bold text-red-800">${TallySyncCommon.formatCurrency(data.summary.total_purchases)}</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <p class="text-sm font-semibold text-green-700 mb-1">Total Sales</p>
+                <p class="text-3xl font-bold text-green-800">${TallySyncCommon.formatCurrency(data.summary.total_revenue || 0)}</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <p class="text-sm font-semibold text-purple-700 mb-1">Avg Per Vendor</p>
+                <p class="text-3xl font-bold text-purple-800">${TallySyncCommon.formatCurrency(data.summary.avg_per_vendor)}</p>
+            </div>
+        `;
+
+        if (!data.all_vendors || data.all_vendors.length === 0) {
+            document.getElementById('vendorBody').innerHTML = '<div class="text-center py-10 text-gray-400">No vendor data available</div>';
+            return;
+        }
+
+        renderVendorRows(data.all_vendors);
+
+    } catch (error) {
+        console.error('Error loading vendor data:', error);
+        document.getElementById('vendorBody').innerHTML = '<div class="text-center py-10 text-red-500">Failed to load vendor data</div>';
+    }
+}
+
+function renderVendorRows(vendors) {
+    let html = '';
+    vendors.forEach((vendor, vi) => {
+        const vendorId = `vnd-${vi}`;
+        html += `
+            <div class="border-b border-gray-100 last:border-0">
+                <div class="flex items-center px-6 py-4 hover:bg-pink-50/40 cursor-pointer transition bg-white"
+                     onclick="toggleVendorPanel('${vendorId}', ${JSON.stringify(vendor.vendor_name)})">
+                    <div class="flex-1 min-w-0 pr-4 font-bold text-gray-900">${vendor.vendor_name}</div>
+                    <span class="w-32 text-right font-semibold text-red-700">${TallySyncCommon.formatCurrency(vendor.total_purchases)}</span>
+                    <span class="w-32 text-right font-semibold text-green-700 ml-4">${TallySyncCommon.formatCurrency(vendor.total_revenue || 0)}</span>
+                    <span class="w-24 text-right text-gray-600 ml-4">${vendor.transaction_count || 0}</span>
+                    <span class="w-32 text-right text-gray-700 ml-4">${TallySyncCommon.formatCurrency(vendor.avg_transaction_value)}</span>
+                    <span class="w-8 text-center text-gray-400 ml-2" id="arrow-${vendorId}">▶</span>
+                </div>
+                <div id="${vendorId}" class="hidden bg-blue-50/20 border-t border-gray-100"></div>
+            </div>`;
+    });
+    document.getElementById('vendorBody').innerHTML = html;
+}
+
+async function toggleVendorPanel(vendorId, vendorName) {
+    const panel = document.getElementById(vendorId);
+    const arrow = document.getElementById(`arrow-${vendorId}`);
+    if (!panel.classList.contains('hidden')) {
+        panel.classList.add('hidden');
+        arrow.textContent = '▶';
+        return;
+    }
+    panel.classList.remove('hidden');
+    arrow.textContent = '▼';
+    if (panel.dataset.loaded === 'true') return;
+
+    panel.innerHTML = '<div class="text-center py-6"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mx-auto"></div></div>';
+
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || '',
+        };
+        const data = await TallySyncCommon.apiCall('vendor/' + encodeURIComponent(vendorName) + '/', filters);
+        panel.dataset.loaded = 'true';
+
+        const projects = data.projects || [];
+        if (!projects.length) {
+            panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-6">No projects found for this vendor in the selected period</p>';
+            return;
+        }
+
+        // Project sub-header
+        let html = `
+            <div class="flex items-center pl-10 pr-4 py-1.5 bg-gray-100 text-xs font-semibold text-gray-500 uppercase">
+                <span class="flex-1">Project</span>
+                <span class="w-36 text-right">Client</span>
+                <span class="w-28 text-right ml-4">Purchase</span>
+                <span class="w-28 text-right ml-4">Revenue</span>
+                <span class="w-28 text-right ml-4">Profit</span>
+                <span class="w-8"></span>
+            </div>`;
+
+        projects.forEach((p, pi) => {
+            const projRowId = `${vendorId}-p${pi}`;
+            const pc = parseFloat(p.profit) >= 0 ? 'text-green-700' : 'text-red-700';
+            const pm = parseFloat(p.revenue) > 0 ? (parseFloat(p.profit) / parseFloat(p.revenue) * 100).toFixed(1) : '0.0';
+            html += `
+                <div class="border-b border-gray-100 last:border-0">
+                    <div class="flex items-center pl-10 pr-4 py-3 hover:bg-blue-50/40 cursor-pointer transition"
+                         onclick="toggleVendorProjectVouchers('${projRowId}', '${p.project_id}')">
+                        <span class="flex-1 text-sm font-medium text-gray-700 truncate pr-4">${p.code || ''} — ${p.project_code || ''}</span>
+                        <span class="w-36 text-right text-sm text-gray-500 truncate">${(p.client_name || '').slice(0, 20)}</span>
+                        <span class="w-28 text-right text-sm font-semibold text-red-700 ml-4">${TallySyncCommon.formatCurrency(p.purchase)}</span>
+                        <span class="w-28 text-right text-sm font-semibold text-green-700 ml-4">${TallySyncCommon.formatCurrency(p.revenue)}</span>
+                        <span class="w-28 text-right text-sm font-bold ml-4 ${pc}">${TallySyncCommon.formatCurrency(p.profit)} <span class="text-xs text-gray-400">${pm}%</span></span>
+                        <span class="w-8 text-center text-gray-400 ml-2 text-xs" id="arrow-${projRowId}">▶</span>
+                    </div>
+                    <div id="${projRowId}" class="hidden bg-gray-50 border-t border-gray-100 px-6 py-4">
+                        <div class="text-center py-3"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mx-auto"></div></div>
+                    </div>
+                </div>`;
+        });
+        panel.innerHTML = html;
+    } catch (err) {
+        panel.innerHTML = '<p class="text-red-500 text-sm text-center py-4">Failed to load vendor projects</p>';
+    }
+}
+
+async function toggleVendorProjectVouchers(rowId, projectId) {
+    const panel = document.getElementById(rowId);
+    const arrow = document.getElementById(`arrow-${rowId}`);
+    if (!panel.classList.contains('hidden')) {
+        panel.classList.add('hidden');
+        arrow.textContent = '▶';
+        return;
+    }
+    panel.classList.remove('hidden');
+    arrow.textContent = '▼';
+    if (panel.dataset.loaded === 'true') return;
+
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || '',
+        };
+        const data = await TallySyncCommon.apiCall('project/' + projectId + '/', filters);
+        panel.dataset.loaded = 'true';
+        const txns = data.transactions || [];
+        if (!txns.length) {
+            panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No transactions in this period</p>';
+            return;
+        }
+        panel.innerHTML = buildVoucherTable(txns);
+    } catch (err) {
+        panel.innerHTML = '<p class="text-red-500 text-sm text-center py-4">Failed to load transactions</p>';
+    }
+}
+
+function buildVoucherTable(txns) {
+    let html = `<div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="w-full text-sm">
+            <thead><tr class="bg-gray-100 border-b">
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Billing Month</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Type</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Voucher #</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Party</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Narration</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th>
+                <th class="px-3 py-2"></th>
+            </tr></thead>
+            <tbody class="divide-y divide-gray-100">`;
+    txns.forEach(t => {
+        const vtype = t.voucher_type || '';
+        const typeColor = vtype === 'Sales' ? 'bg-green-100 text-green-800' :
+                          vtype === 'Credit Note' ? 'bg-yellow-100 text-yellow-800' :
+                          vtype.startsWith('Purchase') ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-700';
+        const amtColor = vtype === 'Sales' ? 'text-green-700' : 'text-red-700';
+        const narr = (t.narration || '').length > 40 ? t.narration.substring(0, 40) + '…' : (t.narration || '-');
+        html += `<tr class="hover:bg-white transition">
+            <td class="px-3 py-2 text-gray-600">${TallySyncCommon.formatDate(t.date)}</td>
+            <td class="px-3 py-2 text-gray-600 font-medium">${t.billing_month || '-'}</td>
+            <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor}">${vtype}</span></td>
+            <td class="px-3 py-2 text-blue-600 font-medium">${t.voucher_number || '-'}</td>
+            <td class="px-3 py-2 text-gray-700">${t.party_name || '-'}</td>
+            <td class="px-3 py-2 text-gray-500 max-w-xs truncate" title="${(t.narration||'').replace(/"/g,'&quot;')}">${narr}</td>
+            <td class="px-3 py-2 text-right font-semibold ${amtColor}">${TallySyncCommon.formatCurrency(t.amount)}</td>
+            <td class="px-3 py-2 text-center">
+                ${t.id ? `<button onclick="openVoucherModal(${t.id})" class="text-indigo-400 hover:text-indigo-600">
+                    <svg class="inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </button>` : ''}
+            </td>
+        </tr>`;
+    });
+    html += `</tbody></table></div>`;
+    return html;
+}
+
+// ── Voucher Modal ─────────────────────────────────────────────────────────────
+async function openVoucherModal(voucherId) {
+    document.getElementById('voucherModalBackdrop').style.display = 'block';
+    document.getElementById('voucherModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.getElementById('voucherModalTitle').textContent = 'Loading...';
+    document.getElementById('voucherModalSubtitle').textContent = '';
+    document.getElementById('voucherModalContent').innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div></div>';
+    try {
+        const data = await TallySyncCommon.apiCall('voucher/' + voucherId + '/');
+        document.getElementById('voucherModalTitle').textContent = `${data.voucher_type} — ${data.voucher_number || 'No Number'}`;
+        document.getElementById('voucherModalSubtitle').textContent = `${data.company} · ${TallySyncCommon.formatDate(data.date)}`;
+        let html = `<div class="space-y-4"><div class="text-sm space-y-1">
+            <div class="flex justify-between"><span class="text-gray-500">Party</span><span class="font-semibold text-gray-800 text-right max-w-xs">${data.party_name || 'N/A'}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Amount</span><span class="font-bold text-gray-900">${TallySyncCommon.formatCurrency(data.amount)}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Company</span><span class="text-gray-700">${data.company || ''}</span></div>
+            ${data.billing_month ? `<div class="flex justify-between"><span class="text-gray-500">Billing Month</span><span class="text-gray-700">${data.billing_month}</span></div>` : ''}
+            ${data.reference ? `<div class="flex justify-between"><span class="text-gray-500">Reference</span><span class="text-gray-700">${data.reference}</span></div>` : ''}
+        </div></div>`;
+        if (data.narration) html += `<div class="mt-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Narration</h4><p class="text-sm text-gray-700 bg-gray-50 rounded p-2">${data.narration}</p></div>`;
+        if (data.inventory_items && data.inventory_items.length) {
+            html += `<div class="mt-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Services / Items</h4><div class="space-y-2">${
+                data.inventory_items.map(item => `<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex justify-between"><span class="font-semibold text-blue-800 text-sm">${item.service||item.name||'-'}</span>${item.amount?`<span class="font-bold text-blue-900 text-sm">${TallySyncCommon.formatCurrency(parseFloat(item.amount)||0)}</span>`:''}</div>
+                    ${(item.descriptions&&item.descriptions.length)?`<ul class="mt-1.5 space-y-0.5">${item.descriptions.map(d=>`<li class="text-xs text-blue-700">• ${d}</li>`).join('')}</ul>`:''}
+                </div>`).join('')
+            }</div></div>`;
+        }
+        if (data.ledger_entries && data.ledger_entries.length) {
+            html += `<div class="mt-4"><h4 class="text-sm font-bold text-gray-700 mb-2">Ledger Entries</h4><div class="overflow-x-auto rounded-lg border border-gray-200"><table class="w-full text-sm"><thead><tr class="bg-gray-50 border-b"><th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ledger</th><th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th><th class="px-3 py-2 text-center text-xs font-semibold text-gray-600 uppercase">Dr/Cr</th></tr></thead><tbody class="divide-y divide-gray-100">`;
+            data.ledger_entries.forEach(e => {
+                html += `<tr><td class="px-3 py-2 text-gray-800">${e.ledger_name||'-'}</td><td class="px-3 py-2 text-right font-semibold ${e.is_debit?'text-rose-700':'text-emerald-700'}">${TallySyncCommon.formatCurrency(e.amount)}</td><td class="px-3 py-2 text-center"><span class="px-2 py-0.5 text-xs font-bold rounded ${e.is_debit?'bg-rose-100 text-rose-700':'bg-emerald-100 text-emerald-700'}">${e.is_debit?'Dr':'Cr'}</span></td></tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        }
+        document.getElementById('voucherModalContent').innerHTML = html;
+    } catch (err) {
+        document.getElementById('voucherModalContent').innerHTML = `<p class="text-red-500 text-center py-8">Failed to load voucher</p>`;
+    }
+}
+function closeVoucherModal() {
+    document.getElementById('voucherModalBackdrop').style.display = 'none';
+    document.getElementById('voucherModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVoucherModal(); });
+
+</script>
+
+<style>
+.tab-button.active {
+    border-bottom: 2px solid #ec4899;
+}
+</style>
+
+{% endblock %}

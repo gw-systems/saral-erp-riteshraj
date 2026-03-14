@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header with Stats -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <!-- Heroicons: inbox (replaces 📬 emoji) -->
+                <svg class="w-8 h-8 text-blue-600 flex-shrink-0" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Notifications</h1>
+                    <p class="mt-1 text-sm text-gray-600">Stay updated with all your notifications</p>
+                </div>
+            </div>
+
+            <!-- Mark All as Read Button -->
+            <form method="POST" action="{% url 'accounts:notifications_mark_all_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition">
+                    <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Mark All as Read
+                </button>
+            </form>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <p class="text-sm text-blue-600 font-medium">Total</p>
+                <p class="text-2xl font-bold text-blue-900 mt-1">{{ stats.total }}</p>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                <p class="text-sm text-red-600 font-medium">Unread</p>
+                <p class="text-2xl font-bold text-red-900 mt-1">{{ stats.unread }}</p>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                <p class="text-sm text-green-600 font-medium">Read</p>
+                <p class="text-2xl font-bold text-green-900 mt-1">{{ stats.total|add:"-"|add:stats.unread }}</p>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <p class="text-sm text-purple-600 font-medium">This Week</p>
+                <p class="text-2xl font-bold text-purple-900 mt-1">{{ notifications|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Batch Actions -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <!-- Filters -->
+            <form method="GET" class="flex flex-wrap gap-2">
+                <!-- Category Filter -->
+                <select name="category" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Categories</option>
+                    <option value="operations" {% if category_filter == 'operations' %}selected{% endif %}>Operations</option>
+                    <option value="billing" {% if category_filter == 'billing' %}selected{% endif %}>Billing</option>
+                    <option value="finance" {% if category_filter == 'finance' %}selected{% endif %}>Finance</option>
+                    <option value="projects" {% if category_filter == 'projects' %}selected{% endif %}>Projects</option>
+                    <option value="system" {% if category_filter == 'system' %}selected{% endif %}>System</option>
+                    <option value="reminder" {% if category_filter == 'reminder' %}selected{% endif %}>Reminders</option>
+                    <option value="alert" {% if category_filter == 'alert' %}selected{% endif %}>Alerts</option>
+                </select>
+
+                <!-- Priority Filter -->
+                <select name="priority" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Priorities</option>
+                    <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>Urgent</option>
+                    <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                    <option value="normal" {% if priority_filter == 'normal' %}selected{% endif %}>Normal</option>
+                    <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                </select>
+
+                <!-- Unread Only -->
+                <label class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" name="unread" value="true" {% if unread_only %}checked{% endif %} onchange="this.form.submit()" class="mr-2">
+                    Unread Only
+                </label>
+
+                <!-- Clear Filters -->
+                {% if category_filter or priority_filter or unread_only %}
+                <a href="{% url 'accounts:notifications_list' %}"
+                   class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                    Clear Filters
+                </a>
+                {% endif %}
+            </form>
+
+            <!-- Batch Actions -->
+            <div class="flex gap-2">
+                <button onclick="batchAction('mark_read')" class="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
+                    Mark Selected as Read
+                </button>
+                <button onclick="batchAction('delete')" class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                    Delete Selected
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        {% if notifications %}
+        <div class="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
+            <label class="inline-flex items-center">
+                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" class="mr-2 rounded">
+                <span class="text-sm font-medium text-gray-700">Select All</span>
+            </label>
+            <span class="text-sm text-gray-500"><span id="selectedCount">0</span> selected</span>
+        </div>
+
+        <ul class="divide-y divide-gray-200">
+            {% for notification in notifications %}
+            <li class="{% if not notification.is_read %}bg-blue-50{% else %}bg-white{% endif %} hover:bg-gray-50 transition">
+                <div class="px-6 py-4">
+                    <div class="flex items-start">
+                        <!-- Checkbox -->
+                        <input type="checkbox" class="notif-checkbox mr-4 mt-1 rounded" data-notif-id="{{ notification.id }}" onchange="updateSelectedCount()">
+
+                        <!-- Icon based on severity (rendered from model field) -->
+                        <div class="flex-shrink-0 text-2xl mr-3" aria-hidden="true">
+                            {{ notification.icon }}
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <!-- Header with badges -->
+                            <div class="flex items-center gap-2 mb-2">
+                                {% if notification.is_pinned %}
+                                <!-- Heroicons: map-pin (replaces 📌 emoji) -->
+                                <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                {% endif %}
+
+                                {% if notification.priority == 'urgent' %}
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">URGENT</span>
+                                {% elif notification.priority == 'high' %}
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">High</span>
+                                {% endif %}
+
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700 capitalize">{{ notification.category }}</span>
+
+                                <span class="text-xs text-gray-500">{{ notification.notification_type }}</span>
+                            </div>
+
+                            <!-- Title and Message -->
+                            <a href="{% if notification.action_url %}{{ notification.action_url }}{% else %}#{% endif %}"
+                               class="block outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                                <p class="text-sm font-semibold text-gray-900 {% if not notification.is_read %}font-bold{% endif %}">
+                                    {{ notification.title }}
+                                </p>
+                                <p class="mt-1 text-sm text-gray-600">
+                                    {{ notification.message }}
+                                </p>
+                            </a>
+
+                            <!-- Metadata -->
+                            <div class="mt-3 flex items-center justify-between">
+                                <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                    <span class="flex items-center">
+                                        <svg class="h-4 w-4 mr-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        {{ notification.created_at|timesince }} ago
+                                    </span>
+
+                                    {% if notification.project %}
+                                    <span class="flex items-center">
+                                        <svg class="h-4 w-4 mr-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                        </svg>
+                                        {{ notification.project.project_code }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Action Button -->
+                                {% if notification.action_url %}
+                                <a href="{{ notification.action_url }}"
+                                   class="text-xs text-blue-600 hover:text-blue-800 font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                                    {{ notification.action_label|default:"View" }}
+                                    <svg class="w-3 h-3 inline ml-0.5" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                    </svg>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Unread Indicator -->
+                        {% if not notification.is_read %}
+                        <div class="ml-4 flex-shrink-0">
+                            <div class="h-3 w-3 bg-blue-600 rounded-full"></div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Delete Button -->
+                        <div class="ml-4 flex-shrink-0">
+                            <form method="POST" action="{% url 'accounts:notification_delete' notification.id %}" onclick="return confirm('Delete this notification?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-gray-500 hover:text-red-600 transition">
+                                    <svg class="h-5 w-5" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <svg class="mx-auto h-16 w-16 text-gray-500" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No notifications</h3>
+            <p class="mt-2 text-sm text-gray-500">You're all caught up! Check back later for updates.</p>
+            <div class="mt-6">
+                <a href="{% url 'accounts:dashboard' %}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.notif-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.notif-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = checked;
+}
+
+function batchAction(action) {
+    const selected = Array.from(document.querySelectorAll('.notif-checkbox:checked')).map(cb => cb.dataset.notifId);
+
+    if (selected.length === 0) {
+        alert('Please select at least one notification');
+        return;
+    }
+
+    if (action === 'delete' && !confirm(`Delete ${selected.length} notification(s)?`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('action', action);
+    selected.forEach(id => formData.append('notification_ids[]', id));
+
+    fetch('{% url "accounts:notification_batch_action" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Batch action failed:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

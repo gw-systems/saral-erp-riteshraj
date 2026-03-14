@@ -1,0 +1,859 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gmail Inbox{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Layout ─────────────────────────────────────────── */
+    .inbox-wrapper {
+        height: calc(100vh - 130px);
+        min-height: 560px;
+    }
+
+    /* ── Left panel ─────────────────────────────────────── */
+    .thread-panel {
+        width: 400px;
+        min-width: 340px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #e5e7eb;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .thread-list-scroll {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    /* ── Thread items ────────────────────────────────────── */
+    .thread-item {
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: background 0.12s ease, border-color 0.12s ease;
+        position: relative;
+    }
+    .thread-item:hover { background: #f9fafb; }
+    .thread-item.active {
+        background: #eff6ff;
+        border-left-color: #3b82f6;
+    }
+    .thread-item.unread { background: #eff6ff; }
+    .thread-item.unread .thread-sender { font-weight: 700; color: #111827; }
+    .thread-item.unread .thread-subject { font-weight: 600; color: #1e40af; }
+
+    .unread-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #3b82f6;
+        flex-shrink: 0;
+    }
+
+    /* ── View tabs ───────────────────────────────────────── */
+    .view-tab {
+        flex: 1; padding: 5px 8px;
+        font-size: 0.75rem; font-weight: 500;
+        border-radius: 6px;
+        color: #6b7280;
+        background: transparent;
+        transition: all 0.15s;
+        white-space: nowrap;
+        border: none; cursor: pointer;
+    }
+    .view-tab:hover { background: #f3f4f6; color: #374151; }
+    .view-tab.active { background: #3b82f6; color: #fff; }
+
+    /* ── Avatar ──────────────────────────────────────────── */
+    .avatar {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.875rem;
+        color: #fff; flex-shrink: 0;
+    }
+    .avatar-sm {
+        width: 32px; height: 32px;
+        font-size: 0.75rem;
+    }
+
+    /* ── Star icon ───────────────────────────────────────── */
+    .star-icon { cursor: pointer; transition: color 0.15s, transform 0.15s; }
+    .star-icon:hover { color: #fbbf24; transform: scale(1.15); }
+    .star-icon.starred { color: #fbbf24; }
+    .star-icon.starred svg { fill: #fbbf24; }
+
+    /* ── Right panel ─────────────────────────────────────── */
+    .conversation-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    .empty-state-panel {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+    }
+
+    /* ── Messages area ───────────────────────────────────── */
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #f5f7fa;
+    }
+
+    /* ── Email card (replaces WhatsApp bubbles) ──────────── */
+    .email-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .email-card.from-me {
+        border-left: 3px solid #3b82f6;
+        background: #fafbff;
+    }
+
+    .email-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 12px 16px 10px;
+        border-bottom: 1px solid #f3f4f6;
+        background: #fafafa;
+    }
+    .email-card.from-me .email-card-header {
+        background: #eff6ff;
+    }
+
+    .email-card-body {
+        padding: 14px 16px;
+    }
+
+    /* Collapse button between messages */
+    .email-collapse-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: #f3f4f6;
+        border: 1px dashed #d1d5db;
+        border-radius: 8px;
+        color: #6b7280;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+        margin: 4px 0;
+    }
+    .email-collapse-btn:hover { background: #e5e7eb; color: #374151; }
+
+    .message-body {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #1f2937;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+    .message-body a { color: #2563eb; text-decoration: underline; }
+    .message-body img { max-width: 100%; border-radius: 6px; margin-top: 6px; }
+    .message-body table { max-width: 100%; overflow-x: auto; display: block; }
+    .message-body blockquote {
+        border-left: 3px solid #d1d5db;
+        padding-left: 12px;
+        color: #6b7280;
+        margin: 8px 0;
+        font-size: 0.8125rem;
+    }
+
+    /* ── Quick reply ─────────────────────────────────────── */
+    .reply-bar {
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        flex-shrink: 0;
+    }
+
+    #quick-reply-input {
+        flex: 1;
+        resize: none;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 10px 16px;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        line-height: 1.4;
+        max-height: 120px;
+        overflow-y: auto;
+        background: #f9fafb;
+    }
+    #quick-reply-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        background: #fff;
+    }
+
+    /* ── Attachment chip ─────────────────────────────────── */
+    .att-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: #374151;
+        text-decoration: none;
+        transition: background 0.12s;
+    }
+    .att-chip:hover { background: #e5e7eb; }
+
+    /* ── Compose modal ───────────────────────────────────── */
+    .modal-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45);
+        backdrop-filter: blur(2px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    .modal-box {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        width: 100%;
+        max-width: 680px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .modal-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+    }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-footer {
+        padding: 14px 20px;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f9fafb;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────── */
+    .thread-list-scroll::-webkit-scrollbar,
+    .messages-area::-webkit-scrollbar { width: 5px; }
+    .thread-list-scroll::-webkit-scrollbar-thumb,
+    .messages-area::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 8px;
+    }
+    .thread-list-scroll::-webkit-scrollbar-thumb:hover,
+    .messages-area::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+    /* ── Compose input styles ────────────────────────────── */
+    .compose-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        background: #fafafa;
+    }
+    .compose-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        background: #fff;
+    }
+
+    /* ── Thread header action btn ────────────────────────── */
+    .action-btn {
+        width: 34px; height: 34px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        color: #6b7280;
+        background: transparent;
+        border: none; cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+    }
+    .action-btn:hover { background: #f3f4f6; color: #111827; }
+    .action-btn.danger:hover { background: #fee2e2; color: #dc2626; }
+    .action-btn.star:hover { color: #fbbf24; background: #fefce8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+<div class="max-w-full px-4 sm:px-6 lg:px-8 py-5">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-sm">
+                <svg class="w-5 h-5 text-white" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900 leading-tight">Gmail Inbox</h1>
+                <p class="text-xs text-gray-500" id="inbox-sync-subtitle">{{ accounts|length }} account{{ accounts|length|pluralize }} connected</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Incremental Sync button -->
+            <button id="sync-btn" onclick="triggerSync(false)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg shadow-sm transition">
+                <svg id="sync-icon" class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Sync
+            </button>
+            <!-- Full Sync button (admin only) -->
+            {% if request.user.role in 'admin,director,operation_controller' %}
+            <button id="full-sync-btn" onclick="triggerSync(true)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg shadow-sm transition">
+                <svg id="full-sync-icon" class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Full Sync
+            </button>
+            {% endif %}
+            {% if request.user.role in 'admin,director,operation_controller' %}
+            <a href="{% url 'gmail:sync_logs' %}"
+               class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="w-3.5 h-3.5 mr-1.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                Sync Logs
+            </a>
+            <a href="{% url 'accounts:admin_dashboard_integrations' %}"
+               class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="w-3.5 h-3.5 mr-1.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Settings
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sync Status Bar -->
+    <div id="sync-status-bar" class="hidden mb-4 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div id="sync-status-dot" class="w-2 h-2 rounded-full bg-gray-300"></div>
+                <span id="sync-status-text" class="text-xs font-medium text-gray-600">Checking sync status…</span>
+            </div>
+            <button onclick="document.getElementById('sync-status-bar').classList.add('hidden')"
+                    class="text-gray-500 hover:text-gray-600 transition">
+                <svg class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <!-- Account rows -->
+        <div id="sync-accounts-detail" class="border-t border-gray-100 divide-y divide-gray-50 hidden"></div>
+    </div>
+
+    <!-- Django Messages -->
+    {% for message in messages %}
+    <div class="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl text-sm font-medium shadow-sm
+        {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200
+        {% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200
+        {% elif message.tags == 'info' %}bg-blue-50 text-blue-800 border border-blue-200
+        {% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+        <svg class="w-4 h-4 mt-0.5 flex-shrink-0" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    <!-- Main Inbox Card -->
+    <div class="inbox-wrapper bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex">
+
+        <!-- ─── LEFT: Thread List ──────────────────────────────── -->
+        <div class="thread-panel">
+
+            <!-- Sticky Top Bar -->
+            <div class="px-3 pt-3 pb-2 border-b border-gray-100 space-y-2 flex-shrink-0 bg-white">
+                <!-- Search -->
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search emails, contacts…"
+                           class="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition">
+                </div>
+
+                <!-- View Tabs -->
+                <div class="flex gap-1 p-1 bg-gray-100 rounded-lg">
+                    <button class="view-tab active" data-view="inbox">Inbox</button>
+                    <button class="view-tab" data-view="sent">Sent</button>
+                    <button class="view-tab" data-view="starred">&#9733; Starred</button>
+                    <button class="view-tab" data-view="drafts">Drafts</button>
+                </div>
+
+                <!-- Account filter + Compose row -->
+                <div class="flex gap-2">
+                    <select id="account-filter"
+                            class="flex-1 min-w-0 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Accounts</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.email_account }}" {% if selected_account == account.email_account %}selected{% endif %}>
+                            {{ account.email_account }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button onclick="openComposeModal()"
+                            class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+                        <svg class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Compose
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thread items -->
+            <div id="thread-list-items" class="thread-list-scroll">
+                <div class="flex items-center justify-center p-10">
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        <p class="text-xs text-gray-500">Loading conversations…</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="px-3 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0 flex items-center justify-between">
+                <button id="prev-page" disabled
+                        class="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition">
+                    <svg class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Prev
+                </button>
+                <span id="page-info" class="text-xs text-gray-500 font-medium">Page 1</span>
+                <button id="next-page"
+                        class="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition">
+                    Next
+                    <svg class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ─── RIGHT: Conversation Panel ──────────────────────── -->
+        <div class="conversation-panel">
+
+            <!-- Empty state (shown when no thread selected) -->
+            <div id="empty-state" class="empty-state-panel">
+                <div class="text-center px-8">
+                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-gray-300" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-500 mb-1">No conversation selected</h3>
+                    <p class="text-sm text-gray-500">Pick a thread from the left to start reading</p>
+                </div>
+            </div>
+
+            <!-- Conversation view (hidden by default) -->
+            <div id="conversation-view" class="hidden h-full flex flex-col overflow-hidden">
+
+                <!-- Thread Header -->
+                <div class="flex-shrink-0 px-5 py-3 bg-white border-b border-gray-200 shadow-sm">
+                    <div class="flex items-start justify-between gap-4">
+                        <!-- Subject + participants -->
+                        <div class="min-w-0 flex-1">
+                            <h2 id="thread-subject" class="text-base font-bold text-gray-900 leading-snug truncate"></h2>
+                            <p id="thread-participants" class="text-xs text-gray-500 mt-0.5 truncate"></p>
+                        </div>
+                        <!-- Action buttons -->
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            <button onclick="archiveCurrentThread()" class="action-btn" title="Archive">
+                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                </svg>
+                            </button>
+                            <button onclick="toggleStarCurrentThread()" id="star-button" class="action-btn star" title="Star / Unstar">
+                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                </svg>
+                            </button>
+                            <button onclick="markCurrentThreadUnread()" class="action-btn" title="Mark as unread">
+                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                            <div class="w-px h-5 bg-gray-200 mx-1"></div>
+                            <button onclick="deleteCurrentThread()" class="action-btn danger" title="Delete conversation">
+                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div id="messages-container" class="messages-area"></div>
+
+                <!-- Quick Reply Bar -->
+                <div class="reply-bar">
+                    <div class="flex items-end gap-3">
+                        <textarea id="quick-reply-input" rows="1"
+                                  placeholder="Write a reply… (Enter to send, Shift+Enter for new line)"></textarea>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <button onclick="openFullComposer()" title="Open full composer"
+                                    class="action-btn" style="color:#6b7280;">
+                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                </svg>
+                            </button>
+                            <button onclick="sendQuickReply()"
+                                    class="w-9 h-9 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm transition flex-shrink-0">
+                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end inbox-wrapper -->
+</div>
+</div>
+
+<!-- ─── COMPOSE MODAL ──────────────────────────────────────── -->
+<div id="compose-modal" class="hidden">
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-white">New Message</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="draft-status" class="text-xs text-blue-200"></span>
+                    <button onclick="closeComposeModal()" class="text-white/70 hover:text-white transition">
+                        <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body space-y-3">
+                <form id="compose-form" onsubmit="event.preventDefault(); sendEmail();">
+                    <!-- From -->
+                    <div class="flex items-center gap-3 py-2 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">From</span>
+                        <select id="compose-from" class="flex-1 text-sm bg-transparent border-none outline-none text-gray-800 cursor-pointer"></select>
+                    </div>
+                    <!-- To -->
+                    <div class="flex items-center gap-3 py-2 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">To</span>
+                        <input type="text" id="compose-to" placeholder="recipients@example.com"
+                               class="flex-1 text-sm bg-transparent border-none outline-none text-gray-800 placeholder-gray-400" required>
+                        <button type="button" id="toggle-cc-bcc" onclick="toggleCcBcc()"
+                                class="text-xs text-blue-500 hover:text-blue-700 flex-shrink-0 transition">Cc/Bcc</button>
+                    </div>
+                    <!-- Cc -->
+                    <div id="cc-field" class="hidden flex items-center gap-3 py-2 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Cc</span>
+                        <input type="text" id="compose-cc" placeholder="cc@example.com"
+                               class="flex-1 text-sm bg-transparent border-none outline-none text-gray-800 placeholder-gray-400">
+                    </div>
+                    <!-- Bcc -->
+                    <div id="bcc-field" class="hidden flex items-center gap-3 py-2 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Bcc</span>
+                        <input type="text" id="compose-bcc" placeholder="bcc@example.com"
+                               class="flex-1 text-sm bg-transparent border-none outline-none text-gray-800 placeholder-gray-400">
+                    </div>
+                    <!-- Subject -->
+                    <div class="flex items-center gap-3 py-2 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Subject</span>
+                        <input type="text" id="compose-subject" placeholder="Email subject"
+                               class="flex-1 text-sm bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 font-medium" required>
+                    </div>
+                    <!-- Body -->
+                    <div class="pt-2">
+                        <textarea id="compose-body" rows="8"
+                                  placeholder="Write your message here…"
+                                  class="w-full text-sm text-gray-800 placeholder-gray-400 border-none outline-none resize-none leading-relaxed"></textarea>
+                        <!-- Signature divider + content -->
+                        <div id="compose-signature-wrap" class="hidden">
+                            <div class="border-t border-gray-100 my-2"></div>
+                            <div id="compose-signature"
+                                 class="text-sm text-gray-500 leading-relaxed signature-content"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <div class="flex items-center gap-3">
+                    <!-- Attachment -->
+                    <label title="Attach files" class="cursor-pointer text-gray-500 hover:text-gray-600 transition">
+                        <input type="file" id="compose-attachments" multiple class="hidden">
+                        <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                    </label>
+                    <div id="attachment-list" class="flex flex-wrap gap-1"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="saveDraft()"
+                            class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                        Save Draft
+                    </button>
+                    <button type="button" onclick="sendEmail()"
+                            class="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition">
+                        <svg class="w-3.5 h-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="inbox-toast-container" class="fixed bottom-5 right-5 space-y-2 z-50"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.GMAIL_CONFIG = {
+        settingsUrl: "{% url 'accounts:admin_dashboard_integrations' %}",
+        syncUrl: "{% url 'gmail:sync_all_accounts' %}",
+        syncStatusUrl: "{% url 'gmail:sync_status_api' %}",
+        signatureUrl: "{% url 'gmail:get_signature_api' %}",
+        isAdmin: {% if request.user.role in 'admin,director,operation_controller' %}true{% else %}false{% endif %},
+    };
+</script>
+<script src="{% static 'js/gmail/inbox.js' %}"></script>
+<script src="{% static 'js/gmail/compose.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    initInbox();
+
+    // Active tab styling managed by JS in inbox.js setupEventListeners;
+    // apply initial state here:
+    document.querySelectorAll('.view-tab').forEach(t => {
+        t.classList.remove('active');
+        t.dataset.view && t.dataset.view === 'all' && t.classList.add('active');
+    });
+
+    // Auto-resize quick reply textarea
+    const qr = document.getElementById('quick-reply-input');
+    if (qr) {
+        qr.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    }
+});
+
+function toggleCcBcc() {
+    const cc = document.getElementById('cc-field');
+    const bcc = document.getElementById('bcc-field');
+    const btn = document.getElementById('toggle-cc-bcc');
+    const show = cc.classList.contains('hidden');
+    cc.classList.toggle('hidden', !show);
+    bcc.classList.toggle('hidden', !show);
+    btn.textContent = show ? 'Hide Cc/Bcc' : 'Cc/Bcc';
+}
+
+// ─── Sync Functions ────────────────────────────────────────────────────────
+
+// getCsrfToken() is loaded globally from csrf-utils.js
+
+function triggerSync(fullSync) {
+    const btn = fullSync ? document.getElementById('full-sync-btn') : document.getElementById('sync-btn');
+    const icon = fullSync ? document.getElementById('full-sync-icon') : document.getElementById('sync-icon');
+
+    if (!btn) return;
+    btn.disabled = true;
+    icon.classList.add('animate-spin');
+
+    const url = fullSync ? window.GMAIL_CONFIG.syncUrl : window.GMAIL_CONFIG.syncUrl;
+    const label = fullSync ? 'Full Sync' : 'Sync';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ full_sync: fullSync })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'started') {
+            showInboxToast(`${label} started for all accounts`, 'success');
+            showSyncStatusBar();
+        } else {
+            showInboxToast(data.error || `${label} failed`, 'error');
+        }
+    })
+    .catch(() => showInboxToast('Network error. Please try again.', 'error'))
+    .finally(() => {
+        btn.disabled = false;
+        icon.classList.remove('animate-spin');
+    });
+}
+
+function showSyncStatusBar() {
+    const bar = document.getElementById('sync-status-bar');
+    bar.classList.remove('hidden');
+    updateSyncStatus();
+}
+
+function updateSyncStatus() {
+    fetch(window.GMAIL_CONFIG.syncStatusUrl)
+    .then(r => r.json())
+    .then(data => {
+        if (!data.accounts || data.accounts.length === 0) return;
+
+        const bar = document.getElementById('sync-status-bar');
+        const dot = document.getElementById('sync-status-dot');
+        const text = document.getElementById('sync-status-text');
+        const detail = document.getElementById('sync-accounts-detail');
+
+        bar.classList.remove('hidden');
+
+        // Determine overall status
+        const hasError = data.accounts.some(a => a.sync_status === 'error');
+        const hasInProgress = data.accounts.some(a => a.sync_status === 'in_progress');
+        const lastSync = data.accounts.reduce((latest, a) => {
+            if (!a.last_sync_at) return latest;
+            return !latest || a.last_sync_at > latest ? a.last_sync_at : latest;
+        }, null);
+
+        if (hasError) {
+            dot.className = 'w-2 h-2 rounded-full bg-red-500';
+            text.textContent = 'Sync error — check account details';
+        } else if (hasInProgress) {
+            dot.className = 'w-2 h-2 rounded-full bg-blue-500 animate-pulse';
+            text.textContent = 'Sync in progress…';
+        } else if (lastSync) {
+            const d = new Date(lastSync);
+            const ago = formatTimeAgo(d);
+            const totalThreads = data.accounts.reduce((s, a) => s + a.thread_count, 0);
+            const totalUnread = data.accounts.reduce((s, a) => s + a.unread_count, 0);
+            dot.className = 'w-2 h-2 rounded-full bg-green-500';
+            text.textContent = `Last synced ${ago} · ${totalThreads} threads · ${totalUnread} unread`;
+        } else {
+            dot.className = 'w-2 h-2 rounded-full bg-gray-400';
+            text.textContent = 'Never synced';
+        }
+
+        // Update account rows if multiple accounts
+        if (data.accounts.length > 1) {
+            detail.classList.remove('hidden');
+            detail.innerHTML = data.accounts.map(a => {
+                const statusColor = {
+                    success: 'text-green-600', error: 'text-red-600',
+                    in_progress: 'text-blue-600', unknown: 'text-gray-500'
+                }[a.sync_status] || 'text-gray-500';
+                const statusLabel = {
+                    success: 'Synced', error: 'Error', in_progress: 'Syncing…', unknown: 'Never'
+                }[a.sync_status] || 'Unknown';
+                const syncInfo = a.sync_status === 'success'
+                    ? `${a.emails_synced} emails · ${a.thread_count} threads`
+                    : a.error_message || '';
+
+                return `<div class="px-4 py-2 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                            ${a.email[0].toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${a.email}</p>
+                            <p class="text-gray-500">${a.last_sync_display}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="${statusColor} font-semibold">${statusLabel}</p>
+                        <p class="text-gray-500">${syncInfo}</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    })
+    .catch(err => console.error('Failed to fetch sync status:', err));
+}
+
+function formatTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + ' min ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + ' hr ago';
+    return Math.floor(seconds / 86400) + ' day(s) ago';
+}
+
+function showInboxToast(message, type) {
+    const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600' };
+    const container = document.getElementById('inbox-toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `flex items-center gap-3 ${colors[type] || colors.info} text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg transition duration-300 transform translate-y-2 opacity-0`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// Auto-load sync status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSyncStatus();
+});
+</script>
+{% endblock %}

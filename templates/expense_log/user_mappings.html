@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Name Mappings - Expense Log{% endblock %}
+
+{% block extra_css %}
+<!-- Choices.js CSS for searchable multi-select -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<style>
+    /* Choices.js custom styling */
+    .choices__list--multiple .choices__item {
+        background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+        border-color: #0d9488;
+        border-radius: 3px;
+        padding: 1px 6px;
+        font-size: 14px;
+        font-weight: 500;
+        margin: 2px;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: #14b8a6;
+    }
+
+    .choices__inner {
+        background-color: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        min-height: 32px;
+        padding: 2px 6px;
+        font-size: 14px;
+    }
+
+    .choices__inner:focus,
+    .choices.is-focused .choices__inner {
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.1);
+    }
+
+    .choices__list--dropdown {
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-top: 4px;
+        font-size: 14px;
+    }
+
+    .choices__input {
+        background-color: transparent;
+        font-size: 14px;
+        padding: 0;
+        margin: 0;
+    }
+
+    .choices__placeholder {
+        color: #9ca3af;
+        opacity: 0.7;
+        font-size: 14px;
+    }
+
+    .choices__button {
+        padding: 0 4px;
+    }
+
+    .choices {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">User Name Mappings</h1>
+            <p class="text-gray-600 mt-1">Map ERP users to their Google Sheets "Submitted By" names</p>
+        </div>
+        <a href="{% url 'expense_log:dashboard' %}" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">
+            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Info Card -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 mb-6 shadow-sm">
+        <div class="flex items-start">
+            <div class="bg-blue-100 rounded-lg p-2 mr-4">
+                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="font-bold text-blue-900 mb-3 text-base">📋 How User Mappings Work</p>
+                <div class="grid md:grid-cols-2 gap-3 text-sm text-blue-800">
+                    <div class="flex items-start">
+                        <span class="text-green-600 mr-2">✓</span>
+                        <span><strong>Admin/Director/Accounts:</strong> See all expenses</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-green-600 mr-2">✓</span>
+                        <span><strong>Regular users:</strong> See only mapped expenses</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-yellow-600 mr-2">⚠</span>
+                        <span><strong>No mapping:</strong> User sees zero expenses</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-purple-600 mr-2">★</span>
+                        <span><strong>"ALL NAMES" option:</strong> User sees all expenses</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Users</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">{{ total_users }}</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <svg width="32" height="32" aria-hidden="true" class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Mapped Users</p>
+                    <p class="text-3xl font-bold text-green-600 mt-1">{{ mapped_users }}</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <svg width="32" height="32" aria-hidden="true" class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Unmapped Users</p>
+                    <p class="text-3xl font-bold text-orange-600 mt-1">{{ unmapped_users }}</p>
+                </div>
+                <div class="bg-orange-100 rounded-full p-3">
+                    <svg width="32" height="32" aria-hidden="true" class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">User Mappings</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ERP User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 12%;">Sheet Names</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for user_data in users %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                    {{ user_data.user.get_full_name|slice:":1"|upper|default:user_data.user.username|slice:":1"|upper }}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ user_data.user.get_full_name|default:user_data.user.username }}</div>
+                                    <div class="text-sm text-gray-500">@{{ user_data.user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ user_data.user.email|default:"-" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                {% if user_data.user.role == 'admin' %}bg-purple-100 text-purple-700
+                                {% elif user_data.user.role == 'director' %}bg-blue-100 text-blue-700
+                                {% elif user_data.user.role == 'accounts_executive' %}bg-green-100 text-green-700
+                                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                {{ user_data.user.get_role_display|default:user_data.user.role|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <form method="post" action="{% url 'expense_log:update_mapping' user_data.user.id %}" class="flex items-start gap-3">
+                                {% csrf_token %}
+                                <div class="flex-1 min-w-0">
+                                    <select
+                                        name="sheet_name"
+                                        multiple
+                                        class="sheet-name-select w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm"
+                                        data-user-id="{{ user_data.user.id }}"
+                                    >
+                                        {% for name in distinct_sheet_names %}
+                                        <option value="{{ name }}" {% if user_data.mapping and name in user_data.mapping.sheet_name %}selected{% endif %}>
+                                            {% if name == 'ALL_NAMES' %}★ All Names (Show All Expenses){% else %}{{ name }}{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="flex-shrink-0 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg text-sm font-medium hover:from-teal-600 hover:to-teal-700 transition shadow-sm hover:shadow">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if user_data.mapping %}
+                                {% if user_data.mapping.sheet_name %}
+                                    {% if 'ALL_NAMES' in user_data.mapping.sheet_name %}
+                                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-700 flex items-center w-fit gap-1">
+                                            <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            </svg>
+                                            All Expenses
+                                        </span>
+                                    {% else %}
+                                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 flex items-center w-fit gap-1">
+                                            <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Mapped
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700 flex items-center w-fit gap-1">
+                                        <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        No Access
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-700 flex items-center w-fit gap-1">
+                                    <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Not Mapped
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if user_data.mapping %}
+                            <form method="post" action="{% url 'expense_log:delete_mapping' user_data.user.id %}" class="inline" onsubmit="return confirm('⚠️ Remove mapping for {{ user_data.user.get_full_name|default:user_data.user.username }}?\n\nThis user will no longer see any expenses.');">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Remove
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-gray-500 text-sm italic">No mapping</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            No users found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const choicesConfig = {
+        removeItemButton: true,
+        searchEnabled: true,
+        searchPlaceholderValue: '🔍 Type to search...',
+        placeholder: true,
+        placeholderValue: 'Select names or "★ All Names" for all expenses',
+        noResultsText: 'No matching sheet names found',
+        noChoicesText: 'No sheet names available',
+        itemSelectText: '',
+        searchResultLimit: 20,
+        shouldSort: true,
+        renderChoiceLimit: -1,
+        maxItemCount: -1,
+        searchFields: ['label'],
+        fuseOptions: {
+            threshold: 0.3,
+        },
+        classNames: {
+            containerOuter: 'choices',
+            containerInner: 'choices__inner',
+            input: 'choices__input',
+            inputCloned: 'choices__input--cloned',
+            list: 'choices__list',
+            listItems: 'choices__list--multiple',
+            listSingle: 'choices__list--single',
+            listDropdown: 'choices__list--dropdown',
+            item: 'choices__item',
+            itemSelectable: 'choices__item--selectable',
+            itemDisabled: 'choices__item--disabled',
+            itemChoice: 'choices__item--choice',
+            placeholder: 'choices__placeholder',
+            group: 'choices__group',
+            groupHeading: 'choices__heading',
+            button: 'choices__button',
+            activeState: 'is-active',
+            focusState: 'is-focused',
+            openState: 'is-open',
+            disabledState: 'is-disabled',
+            highlightedState: 'is-highlighted',
+            selectedState: 'is-selected',
+            flippedState: 'is-flipped',
+            loadingState: 'is-loading',
+        },
+    };
+
+    // Initialize Choices.js for all individual sheet name selects
+    const individualSelects = document.querySelectorAll('.sheet-name-select');
+    individualSelects.forEach(function(select) {
+        new Choices(select, choicesConfig);
+    });
+});
+</script>
+{% endblock %}

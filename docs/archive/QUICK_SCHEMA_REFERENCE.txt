@@ -1,0 +1,217 @@
+================================================================================
+DATABASE SCHEMA - QUICK REFERENCE CARD
+================================================================================
+
+DATABASE: erp (PostgreSQL)
+TOTAL TABLES: 120
+TOTAL COLUMNS: 1,312
+TOTAL FOREIGN KEYS: 211
+
+================================================================================
+TOP 10 MOST IMPORTANT TABLES
+================================================================================
+
+1. monthly_billings (92 columns, 20 FKs)
+   - Primary billing table
+   - Links: project_id -> project_codes
+   - Links: project_card_used_id -> operations_projectcard
+   - Key fields: service_month, status, client/vendor amounts
+
+2. operations_projectcard (25 columns, 6 FKs)
+   - Rate cards and contract terms
+   - Links: project_id -> project_codes
+   - Links: client_card_code -> client_cards
+   - Links: vendor_warehouse_code -> vendor_warehouses
+   - Versioned with valid_from/valid_to dates
+
+3. project_codes (26 columns, 2 FKs)
+   - Project master table
+   - PK: project_id (varchar 20)
+   - Links to: client_cards, vendor_warehouses
+
+4. operations_adhocbillingentry (11 columns, 3 FKs)
+   - Ad-hoc billing entries
+   - Has child tables: lineitem, attachment
+
+5. operations_dailyspaceutilization (12 columns, 4 FKs)
+   - Daily operations tracking
+   - Space used, inventory value
+
+6. client_cards (13 columns, 0 FKs)
+   - Client master
+   - PK: client_code (varchar 20)
+   - Referenced by: project_codes, operations_projectcard
+
+7. vendor_warehouses (14 columns, 2 FKs)
+   - Warehouse master
+   - PK: warehouse_code (varchar 30)
+   - Referenced by: project_codes, operations_projectcard
+
+8. operations_disputelog (27 columns, 10 FKs)
+   - Dispute tracking
+
+9. tallysync_voucher (33 columns, 3 FKs)
+   - Tally integration
+   - Links to: monthly_billings, operations_adhocbillingentry
+
+10. tallysync_variance_alert (18 columns, 5 FKs)
+    - ERP vs Tally reconciliation alerts
+
+================================================================================
+MODULE BREAKDOWN
+================================================================================
+
+master_*           44 tables  - Reference/dropdown data
+operations_*       22 tables  - Core operations
+tallysync_*        14 tables  - Tally integration
+warehouse_*         5 tables  - Warehouse management
+client_*            4 tables  - Client management
+vendor_*            4 tables  - Vendor management
+project_*           4 tables  - Project management
+dropdown_*          4 tables  - App-specific dropdowns
+Other              19 tables  - Users, billing, CRM, etc.
+
+================================================================================
+CRITICAL FOREIGN KEY CHAINS
+================================================================================
+
+BILLING FLOW:
+  project_codes.project_id
+    -> operations_projectcard.project_id
+      -> monthly_billings.project_card_used_id
+        -> tallysync_voucher.erp_monthly_billing_id
+
+CLIENT RELATIONSHIP:
+  client_cards.client_code
+    -> project_codes.client_card_code
+    -> operations_projectcard.client_card_code
+
+VENDOR RELATIONSHIP:
+  vendor_cards.vendor_code
+    -> vendor_warehouses.vendor_code
+      -> project_codes.vendor_warehouse_code
+      -> operations_projectcard.vendor_warehouse_code
+
+USER TRACKING:
+  users.id
+    -> ALL *_by_id fields across ~100+ relationships
+
+================================================================================
+MASTER DATA CODE TABLES (44 tables)
+================================================================================
+
+Key master tables (all have: code, label, description, is_active):
+- master_monthly_billing_statuses
+- master_approval_actions
+- master_storage_units
+- master_handling_units
+- master_handling_base_types
+- master_vehicle_types
+- master_vas_service_types
+- master_dispute_statuses
+- master_escalation_statuses
+- master_priorities
+- master_severity_levels
+- Plus 33 more...
+
+================================================================================
+KEY COLUMN PATTERNS
+================================================================================
+
+TIMESTAMPS:
+  created_at, updated_at (timestamp with time zone)
+  
+USER TRACKING:
+  created_by_id, updated_by_id, submitted_by_id, etc. (bigint FK -> users.id)
+
+STATUS FIELDS:
+  status (varchar 50, FK to master_*_statuses tables)
+
+AMOUNTS:
+  Most amounts: numeric(15,2)
+  Percentages: numeric(5,2)
+  Quantities: numeric(10,2)
+
+CODES:
+  project_id: varchar(20)
+  client_code: varchar(20)
+  warehouse_code: varchar(30)
+  master codes: varchar(50)
+
+================================================================================
+NULLABLE ANALYSIS
+================================================================================
+
+CRITICAL NOT NULL FIELDS:
+- project_codes.project_id, project_name
+- monthly_billings.project_id, service_month, status
+- operations_projectcard.project_id, version, valid_from
+
+KEY NULLABLE FIELDS (may be empty):
+- monthly_billings.project_card_used_id
+- monthly_billings: all client_*/vendor_* amounts
+- operations_projectcard: date fields, payment terms
+- project_codes: agreement dates, manager assignments
+
+================================================================================
+AUDIT PRIORITY AREAS
+================================================================================
+
+1. BILLING INTEGRITY
+   - monthly_billings completeness
+   - Link to valid project_card_used_id
+   - Amount calculations correct
+   - Status workflow followed
+
+2. RATE CARD VALIDITY
+   - operations_projectcard versions
+   - Active cards within valid date ranges
+   - Superseded chains correct
+   - Rates defined in child tables
+
+3. TALLY RECONCILIATION
+   - tallysync_voucher links to billing
+   - tallysync_variance_alert resolution
+   - Amount matching
+
+4. FOREIGN KEY INTEGRITY
+   - No orphaned records
+   - All FKs resolve correctly
+   - CASCADE rules understood
+
+5. MASTER DATA CONSISTENCY
+   - All referenced codes exist
+   - No inactive codes in use
+   - Code standardization
+
+================================================================================
+COMMON QUERIES
+================================================================================
+
+# Find all tables referencing a specific table:
+grep "-> TABLE_NAME" schema_fk_relationships.txt
+
+# Get full table structure:
+grep -A 50 "TABLE: table_name" schema_audit_reference.txt
+
+# List all columns for a table:
+grep "^    -" schema_audit_reference.txt | head -n 50
+
+# Find tables by module:
+grep "^MODULE:" schema_quick_lookup.txt
+
+================================================================================
+FILES REFERENCE
+================================================================================
+
+SCHEMA_AUDIT_SUMMARY.md       - Executive summary (18KB)
+SCHEMA_FILES_INDEX.md         - This index (6.4KB)
+schema_audit_reference.txt    - Complete table details (143KB)
+schema_fk_relationships.txt   - FK map (41KB)
+schema_quick_lookup.txt       - Quick index (8.6KB)
+schema_clean_export.json      - JSON export (327KB)
+schema_stats.json             - Statistics (476B)
+
+================================================================================
+END OF QUICK REFERENCE
+================================================================================

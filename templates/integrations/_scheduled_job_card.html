@@ -1,0 +1,194 @@
+{# Partial: single scheduled job card
+   Context vars: job, badge_cls, dot_cls (passed from parent template)
+#}
+{% load humanize %}
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-visible"
+     x-data="scheduledJob(
+         {{ job.pk }},
+         '{{ job.name|escapejs }}',
+         '{{ job.cron_schedule|escapejs }}',
+         '{{ job.cron_human|escapejs }}',
+         '{{ job.endpoint|escapejs }}',
+         {{ job.payload|default:'{}'|safe }},
+         '{{ job.payload_human|escapejs }}',
+         {{ job.is_enabled|yesno:'true,false' }}
+     )">
+
+    {# ── Card Body ─────────────────────────────────────────── #}
+    <div class="flex items-center gap-4 px-6 py-5">
+
+        {# Active dot / toggle #}
+        <button @click="toggleEnabled()" class="shrink-0 focus:outline-none" :title="enabled ? 'Click to pause' : 'Click to activate'">
+            <span class="block w-2.5 h-2.5 rounded-full transition duration-200 ring-4 ring-white shadow-sm"
+                  :class="enabled ? '{{ dot_cls }}' : 'bg-gray-300 hover:bg-gray-400'"></span>
+        </button>
+
+        {# Main info #}
+        <div class="flex-1 min-w-0">
+
+            {# Row 1: name + badge + paused tag #}
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-semibold text-gray-900 text-sm leading-tight" data-field="name">{{ job.name }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium {{ badge_cls }}">
+                    {{ job.get_integration_display }}
+                </span>
+                <span x-show="!enabled" x-cloak
+                      class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                    Paused
+                </span>
+            </div>
+
+            {# Row 2: schedule + payload + endpoint #}
+            <div class="flex items-center gap-5 mt-1.5 flex-wrap">
+                {# Schedule #}
+                <span class="flex items-center gap-1.5 text-xs text-gray-600">
+                    <svg width="14" height="14" aria-hidden="true" class="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <strong class="text-gray-800 font-medium" data-field="human">{{ job.cron_human }}</strong>
+                    <code class="text-gray-500 font-mono text-[11px]" data-field="cron">{{ job.cron_schedule }}</code>
+                </span>
+                {# Payload #}
+                {% if job.payload_human %}
+                <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                    <svg width="14" height="14" aria-hidden="true" class="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
+                    </svg>
+                    <span data-field="payload">{{ job.payload_human }}</span>
+                </span>
+                {% endif %}
+                {# Endpoint #}
+                <span class="flex items-center gap-1.5 text-xs text-gray-500 font-mono truncate max-w-xs" :title="endpoint">
+                    <svg width="14" height="14" aria-hidden="true" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <span class="truncate" data-field="endpoint">{{ job.endpoint }}</span>
+                </span>
+            </div>
+        </div>
+
+        {# Last run + result #}
+        <div class="shrink-0 text-right text-xs hidden md:block w-36">
+            {% if job.last_fired_at %}
+                <p class="text-gray-700 font-medium">{{ job.last_fired_at|naturaltime }}</p>
+                <p class="text-gray-500 mt-0.5">{{ job.last_fired_at|date:"d M, H:i" }}</p>
+            {% else %}
+                <p class="text-gray-500 italic">Never run</p>
+                {% if job.is_enabled and job.cron_schedule %}
+                    <p class="text-sky-500 mt-0.5">Pending first tick</p>
+                {% elif not job.cron_schedule %}
+                    <p class="text-amber-500 mt-0.5">No schedule</p>
+                {% endif %}
+            {% endif %}
+            {# Result badge #}
+            <div class="mt-1.5">
+                {% if job.last_fired_result == 'ok' %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        Success
+                    </span>
+                {% elif job.last_fired_result == 'error' %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                        <svg width="12" height="12" aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        Error
+                    </span>
+                {% elif job.last_fired_result == 'skipped' %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Skipped</span>
+                {% else %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-gray-50 text-gray-500 border border-gray-200">Not run yet</span>
+                {% endif %}
+            </div>
+            {# Updated by #}
+            {% if job.updated_by and job.updated_by != 'migration' %}
+            <p class="text-gray-300 mt-1 text-[11px]">by {{ job.updated_by }}</p>
+            {% endif %}
+        </div>
+
+        {# Action buttons #}
+        <div class="shrink-0 flex items-center gap-2">
+            <template x-if="!editing">
+                <button @click="editing = true; msg = ''"
+                    class="text-xs px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition font-medium">
+                    Edit
+                </button>
+            </template>
+            <template x-if="!editing">
+                <button @click="runNow()" :disabled="running"
+                    :class="running ? 'opacity-60 cursor-not-allowed' : 'hover:bg-emerald-700'"
+                    class="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white transition font-semibold flex items-center gap-1.5">
+                    <svg width="12" height="12" aria-hidden="true" x-show="!running" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                    </svg>
+                    <span x-text="running ? 'Running…' : 'Run Now'"></span>
+                </button>
+            </template>
+        </div>
+    </div>
+
+    {# ── Inline result toast (outside edit panel) ──────────── #}
+    <div x-show="msg && !editing" x-cloak
+         class="px-6 pb-3 -mt-1">
+        <p class="text-xs font-medium px-3 py-1.5 rounded-lg inline-block"
+           :class="msgOk ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'"
+           x-text="msg"></p>
+    </div>
+
+    {# ── Edit Panel ────────────────────────────────────────── #}
+    <div x-show="editing" x-cloak
+         class="border-t border-gray-100 bg-gray-50/80 px-6 py-5">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Edit Job — <span class="text-gray-600 normal-case font-medium" x-text="name"></span></p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Job Name</label>
+                <input x-model="name" type="text" placeholder="Friendly name"
+                    class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cron Schedule</label>
+                <input x-model="cron" type="text" placeholder="*/15 * * * *"
+                    class="w-full text-sm font-mono border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none">
+                <p class="text-xs text-blue-600 font-medium mt-1.5" x-show="cron" x-text="'→ ' + cronLabel(cron)"></p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Worker Endpoint</label>
+                <input x-model="endpoint" type="text" placeholder="/integrations/..."
+                    class="w-full text-xs font-mono border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Parameters (JSON)</label>
+                <textarea x-model="payloadStr" rows="3" spellcheck="false"
+                    class="w-full text-xs font-mono border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none resize-none"></textarea>
+                <p class="text-xs text-blue-600 font-medium mt-1" x-show="payloadLabel(payloadStr)" x-text="payloadLabel(payloadStr)"></p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 mt-5 flex-wrap">
+            <button @click="save()" :disabled="saving"
+                :class="saving ? 'opacity-60 cursor-not-allowed' : 'hover:bg-blue-700'"
+                class="text-sm px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold transition"
+                x-text="saving ? 'Saving…' : 'Save changes'">
+            </button>
+            <button @click="editing = false; msg = ''"
+                class="text-sm px-5 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 font-medium transition">
+                Cancel
+            </button>
+            <div class="ml-auto flex items-center gap-3">
+                <span class="text-sm text-gray-500">Job status:</span>
+                <button @click="toggleEnabled()"
+                    :class="enabled ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-gray-200 hover:bg-gray-300'"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-1">
+                    <span :class="enabled ? 'translate-x-6' : 'translate-x-1'"
+                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow"></span>
+                </button>
+                <span class="text-sm font-medium" :class="enabled ? 'text-emerald-600' : 'text-gray-500'"
+                      x-text="enabled ? 'Active' : 'Paused'"></span>
+            </div>
+        </div>
+        <div x-show="msg" x-cloak class="mt-4">
+            <p class="text-sm px-3 py-2 rounded-lg font-medium border inline-block"
+               :class="msgOk ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'"
+               x-text="msg"></p>
+        </div>
+    </div>
+
+</div>

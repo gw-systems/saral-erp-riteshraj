@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Executive Financial Dashboard - Tally Analytics{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Executive Financial Dashboard</h1>
+                <p class="text-gray-600">Real-time financial analytics from Tally</p>
+            </div>
+            <div class="flex gap-3 items-center flex-wrap">
+                <!-- Sync status indicator -->
+                <div id="syncStatusBadge" class="hidden items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"></div>
+
+                <button onclick="refreshDashboard()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    🔄 Refresh
+                </button>
+                <button id="btnSyncNow" onclick="triggerSync()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                    ⚡ Sync Now
+                </button>
+                {% if request.user.role in 'admin,super_user,director' %}
+                <button id="btnFullSync" onclick="triggerFullSync()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold">
+                    🔁 Full Sync
+                </button>
+                {% endif %}
+                <a href="{% url 'accounts:finance_manager_dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    ← Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
+                    <input type="date" id="fromDate" value="{{ default_from_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
+                    <input type="date" id="toDate" value="{{ default_to_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Company</label>
+                    <select id="companyFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Companies</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            <!-- Loading state -->
+            <div class="col-span-2 md:col-span-6 text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="text-gray-600 mt-4">Loading financial data...</p>
+            </div>
+        </div>
+
+        <!-- Data Tables Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Monthly Trend Table -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📈 Monthly Trend (Last 6 Months)</h3>
+                <div id="monthlyTrendTable" class="overflow-x-auto">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Revenue Breakdown Table -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">💰 Revenue Breakdown</h3>
+                <div id="revenueBreakdownTable">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Company-wise Summary Table -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">🏢 Company-wise Performance</h3>
+            <div class="overflow-x-auto">
+                <table id="companySummaryTable" class="min-w-full">
+                    <thead class="bg-gradient-to-r from-blue-50 to-green-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Company</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase">Revenue</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase">Purchase</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase">Profit</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase">Margin %</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase">Transactions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companySummaryBody" class="divide-y divide-gray-200">
+                        <!-- Data loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+<script>
+
+// Initialize on page load
+function initDashboard() {
+    if (typeof TallySyncCommon !== 'undefined' && TallySyncCommon.setDefaultPreviousMonth) {
+        TallySyncCommon.setDefaultPreviousMonth();
+    }
+    loadDashboard();
+}
+initDashboard();
+window.addEventListener('pageshow', function(e) { if (e.persisted) initDashboard(); });
+
+function applyFilters() {
+    loadDashboard();
+}
+
+function refreshDashboard() {
+    loadDashboard();
+}
+
+async function loadDashboard() {
+    await Promise.all([
+        loadSummaryCards(),
+        loadMonthlyTrend(),
+        loadRevenueBreakdown(),
+        loadCompanySummary(),
+    ]);
+}
+
+async function loadSummaryCards() {
+    TallySyncCommon.setLoading('summaryCards', true);
+    
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || '',
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('executive-summary', filters);
+        
+        const cardsHTML = `
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-4 border-l-4 border-green-500">
+                <p class="text-xs font-semibold text-green-700 mb-1">Revenue</p>
+                <p class="text-xl font-bold text-green-800">${TallySyncCommon.formatCurrency(data.revenue)}</p>
+                <p class="text-xs text-green-600 mt-1">${data.sales_count} sales</p>
+            </div>
+            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-lg p-4 border-l-4 border-red-500">
+                <p class="text-xs font-semibold text-red-700 mb-1">Purchase</p>
+                <p class="text-xl font-bold text-red-800">${TallySyncCommon.formatCurrency(data.purchase)}</p>
+                <p class="text-xs text-red-600 mt-1">${data.purchase_count} vouchers</p>
+            </div>
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-4 border-l-4 border-orange-400">
+                <p class="text-xs font-semibold text-orange-700 mb-1">Expenses (Journals)</p>
+                <p class="text-xl font-bold text-orange-800">${TallySyncCommon.formatCurrency(data.expenses)}</p>
+            </div>
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-lg p-4 border-l-4 border-yellow-500">
+                <p class="text-xs font-semibold text-yellow-700 mb-1">Payments</p>
+                <p class="text-xl font-bold text-yellow-800">${TallySyncCommon.formatCurrency(data.payments)}</p>
+            </div>
+            <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl shadow-lg p-4 border-l-4 border-cyan-500">
+                <p class="text-xs font-semibold text-cyan-700 mb-1">Collections</p>
+                <p class="text-xl font-bold text-cyan-800">${TallySyncCommon.formatCurrency(data.collections)}</p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
+                <p class="text-xs font-semibold text-blue-700 mb-1">Profit (Rev-Purchase)</p>
+                <p class="text-xl font-bold text-blue-800">${TallySyncCommon.formatCurrency(data.net_profit)}</p>
+                <p class="text-xs text-blue-600 mt-1">${TallySyncCommon.formatPercentage(data.margin_percentage || 0)} margin</p>
+            </div>
+        `;
+        
+        document.getElementById('summaryCards').innerHTML = cardsHTML;
+    } catch (error) {
+        console.error('Error loading summary:', error);
+        TallySyncCommon.showError('Failed to load summary data', 'summaryCards');
+    }
+}
+
+async function loadMonthlyTrend() {
+    TallySyncCommon.setLoading('monthlyTrendTable', true);
+    
+    try {
+        const filters = {
+            months: '6',
+            company_id: document.getElementById('companyFilter')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('monthly-trend', filters);
+        
+        if (!data.trend || data.trend.length === 0) {
+            document.getElementById('monthlyTrendTable').innerHTML = 
+                '<p class="text-center text-gray-500 py-8">No data available</p>';
+            return;
+        }
+        
+        // Calculate totals
+        let totalRevenue = 0;
+        let totalExpenses = 0;
+        let totalProfit = 0;
+        
+        data.trend.forEach(item => {
+            totalRevenue += parseFloat(item.revenue) || 0;
+            totalExpenses += parseFloat(item.expenses) || 0;
+            totalProfit += parseFloat(item.profit) || 0;
+        });
+        
+        // Build table
+        let html = `
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Month</th>
+                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Revenue</th>
+                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Expenses</th>
+                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Profit</th>
+                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Margin</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+        `;
+        
+        data.trend.forEach(item => {
+            const revenue = parseFloat(item.revenue) || 0;
+            const expenses = parseFloat(item.expenses) || 0;
+            const profit = parseFloat(item.profit) || 0;
+            const margin = revenue > 0 ? (profit / revenue * 100) : 0;
+            const profitClass = profit >= 0 ? 'text-green-700' : 'text-red-700';
+            
+            html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 font-medium text-gray-800">${TallySyncCommon.formatMonth(item.month)}</td>
+                    <td class="px-3 py-2 text-right text-green-700">${TallySyncCommon.formatCurrency(revenue)}</td>
+                    <td class="px-3 py-2 text-right text-red-700">${TallySyncCommon.formatCurrency(expenses)}</td>
+                    <td class="px-3 py-2 text-right font-bold ${profitClass}">${TallySyncCommon.formatCurrency(profit)}</td>
+                    <td class="px-3 py-2 text-right ${profitClass}">${TallySyncCommon.formatPercentage(margin)}</td>
+                </tr>
+            `;
+        });
+        
+        // Add total row
+        const avgMargin = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+        html += `
+                    <tr class="bg-gray-100 font-bold">
+                        <td class="px-3 py-2 text-gray-900">TOTAL</td>
+                        <td class="px-3 py-2 text-right text-green-700">${TallySyncCommon.formatCurrency(totalRevenue)}</td>
+                        <td class="px-3 py-2 text-right text-red-700">${TallySyncCommon.formatCurrency(totalExpenses)}</td>
+                        <td class="px-3 py-2 text-right text-blue-700">${TallySyncCommon.formatCurrency(totalProfit)}</td>
+                        <td class="px-3 py-2 text-right text-blue-700">${TallySyncCommon.formatPercentage(avgMargin)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        
+        document.getElementById('monthlyTrendTable').innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading monthly trend:', error);
+        TallySyncCommon.showError('Failed to load monthly trend', 'monthlyTrendTable');
+    }
+}
+
+async function loadRevenueBreakdown() {
+    TallySyncCommon.setLoading('revenueBreakdownTable', true);
+    
+    try {
+        const filters = TallySyncCommon.getFilters();
+        const data = await TallySyncCommon.apiCall('revenue-breakdown', filters);
+        
+        if (!data.breakdown || data.breakdown.length === 0) {
+            document.getElementById('revenueBreakdownTable').innerHTML = 
+                '<p class="text-center text-gray-500 py-8">No data available</p>';
+            return;
+        }
+        
+        // Calculate total
+        const total = data.breakdown.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+        
+        // Build cards with progress bars
+        let html = '<div class="space-y-3">';
+        
+        data.breakdown.forEach(item => {
+            const amount = parseFloat(item.total) || 0;
+            const percentage = total > 0 ? (amount / total * 100) : 0;
+            
+            html += `
+                <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold text-gray-800">${item.voucher_type}</span>
+                        <span class="text-sm text-gray-600">${percentage.toFixed(1)}%</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full transition" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="font-bold text-blue-700 text-sm">${TallySyncCommon.formatCurrency(amount)}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        
+        document.getElementById('revenueBreakdownTable').innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading revenue breakdown:', error);
+        TallySyncCommon.showError('Failed to load revenue breakdown', 'revenueBreakdownTable');
+    }
+}
+
+async function loadCompanySummary() {
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('company-summary', filters);
+
+        if (!data.breakdown || data.breakdown.length === 0) {
+            document.getElementById('revenueBreakdownChart').innerHTML = 
+                '<p class="text-center text-gray-500 py-8">No data available</p>';
+            return;
+        }
+        
+        let html = '';
+        data.companies.forEach(company => {
+            const profitClass = company.profit >= 0 ? 'text-green-700' : 'text-red-700';
+            html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm font-semibold text-gray-800">${company.company_name}</td>
+                    <td class="px-6 py-4 text-sm text-right text-green-700 font-semibold">${TallySyncCommon.formatCurrency(company.revenue)}</td>
+                    <td class="px-6 py-4 text-sm text-right text-red-700 font-semibold">${TallySyncCommon.formatCurrency(company.purchase)}</td>
+                    <td class="px-6 py-4 text-sm text-right ${profitClass} font-bold">${TallySyncCommon.formatCurrency(company.profit)}</td>
+                    <td class="px-6 py-4 text-sm text-right ${profitClass} font-semibold">${TallySyncCommon.formatPercentage(company.margin_percentage || 0)}</td>
+                    <td class="px-6 py-4 text-sm text-right text-gray-600">${company.transaction_count}</td>
+                </tr>
+            `;
+        });
+        
+        document.getElementById('companySummaryBody').innerHTML = html || '<tr><td colspan="6" class="text-center py-8 text-gray-500">No data available</td></tr>';
+    } catch (error) {
+        console.error('Error loading company summary:', error);
+        document.getElementById('companySummaryBody').innerHTML =
+            '<tr><td colspan="6" class="text-center py-8 text-red-500">Failed to load company data</td></tr>';
+    }
+}
+
+function _setSyncStatus(msg, type) {
+    // type: 'loading' | 'success' | 'error' | 'warning'
+    const badge = document.getElementById('syncStatusBadge');
+    const colors = {
+        loading: 'bg-blue-100 text-blue-700',
+        success: 'bg-green-100 text-green-700',
+        error:   'bg-red-100 text-red-700',
+        warning: 'bg-yellow-100 text-yellow-700',
+    };
+    badge.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${colors[type] || colors.loading}`;
+    badge.textContent = msg;
+    badge.classList.remove('hidden');
+    if (type === 'success' || type === 'warning') {
+        setTimeout(() => badge.classList.add('hidden'), 8000);
+    }
+}
+
+async function triggerSync() {
+    const btn = document.getElementById('btnSyncNow');
+    btn.disabled = true;
+    btn.textContent = '⏳ Syncing...';
+    _setSyncStatus('Starting incremental sync...', 'loading');
+    try {
+        const resp = await fetch("{% url 'tallysync:api_trigger_sync' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': TallySyncCommon.getCsrfToken(), 'Content-Type': 'application/json'},
+        });
+        const data = await resp.json();
+        if (resp.ok && (data.status === 'queued' || data.status === 'ok')) {
+            _setSyncStatus('✅ ' + data.message, 'success');
+        } else {
+            _setSyncStatus('⚠️ ' + (data.message || data.error || 'Sync failed'), 'error');
+        }
+    } catch (e) {
+        _setSyncStatus('⚠️ Could not reach server', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ Sync Now';
+    }
+}
+
+async function triggerFullSync() {
+    if (!confirm('Full sync will re-fetch all Tally data from the beginning. This may take several minutes. Continue?')) return;
+    const btn = document.getElementById('btnFullSync');
+    btn.disabled = true;
+    btn.textContent = '⏳ Starting...';
+    _setSyncStatus('Starting full sync...', 'loading');
+    try {
+        const resp = await fetch("{% url 'tallysync:api_trigger_full_sync' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': TallySyncCommon.getCsrfToken(), 'Content-Type': 'application/json'},
+        });
+        const data = await resp.json();
+        if (resp.ok && (data.status === 'queued' || data.status === 'ok')) {
+            _setSyncStatus('✅ ' + data.message, 'success');
+        } else {
+            _setSyncStatus('⚠️ ' + (data.message || data.error || 'Sync failed'), 'error');
+        }
+    } catch (e) {
+        _setSyncStatus('⚠️ Could not reach server', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🔁 Full Sync';
+    }
+}
+
+</script>
+
+{% endblock %}

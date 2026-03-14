@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+    <div class="max-w-3xl mx-auto">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Upload Project Documents</h1>
+            <p class="text-gray-600">{{ project.project_code }}</p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-red-100 border border-red-400 text-red-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <p class="text-sm text-gray-600 mb-4">
+                    📎 Upload PDF, JPG, or PNG files (max 10MB per file). All fields are optional.
+                </p>
+
+                <!-- Main Agreement -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.project_agreement.label }}
+                    </label>
+                    {{ form.project_agreement }}
+                    {% if form.project_agreement.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.project_agreement.errors.0 }}</p>
+                    {% endif %}
+                    {% if document.project_agreement %}
+                        <p class="mt-2 text-sm text-green-600">
+                            ✓ Current: {{ document.project_agreement.name|slice:"17:"|truncatechars:50 }}
+                            <a href="{% url 'projects:project_document_download' project.project_id 'project_agreement' %}" class="text-blue-600 hover:underline ml-2">Download</a>
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Addendum (Vendor Commercial) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.project_addendum_vendor.label }}
+                    </label>
+                    {{ form.project_addendum_vendor }}
+                    {% if form.project_addendum_vendor.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.project_addendum_vendor.errors.0 }}</p>
+                    {% endif %}
+                    {% if document.project_addendum_vendor %}
+                        <p class="mt-2 text-sm text-green-600">
+                            ✓ Current: {{ document.project_addendum_vendor.name|slice:"17:"|truncatechars:50 }}
+                            <a href="{% url 'projects:project_document_download' project.project_id 'project_addendum_vendor' %}" class="text-blue-600 hover:underline ml-2">Download</a>
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Addendum (Client) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.project_addendum_client.label }}
+                    </label>
+                    {{ form.project_addendum_client }}
+                    {% if form.project_addendum_client.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.project_addendum_client.errors.0 }}</p>
+                    {% endif %}
+                    {% if document.project_addendum_client %}
+                        <p class="mt-2 text-sm text-green-600">
+                            ✓ Current: {{ document.project_addendum_client.name|slice:"17:"|truncatechars:50 }}
+                            <a href="{% url 'projects:project_document_download' project.project_id 'project_addendum_client' %}" class="text-blue-600 hover:underline ml-2">Download</a>
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Handover Document -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.project_handover.label }}
+                    </label>
+                    {{ form.project_handover }}
+                    {% if form.project_handover.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.project_handover.errors.0 }}</p>
+                    {% endif %}
+                    {% if document.project_handover %}
+                        <p class="mt-2 text-sm text-green-600">
+                            ✓ Current: {{ document.project_handover.name|slice:"17:"|truncatechars:50 }}
+                            <a href="{% url 'projects:project_document_download' project.project_id 'project_handover' %}" class="text-blue-600 hover:underline ml-2">Download</a>
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 pt-6 border-t">
+                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition shadow-md hover:shadow-lg">
+                        📤 Upload Documents
+                    </button>
+                    <a href="{% url 'projects:project_detail' project.project_id %}" class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Existing Documents Preview -->
+        {% if document %}
+            {% with documents=document.get_all_documents %}
+            {% if documents %}
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Uploaded Documents</h2>
+                
+                <div class="space-y-4">
+                    {% for doc in documents %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition">
+                        <div class="flex items-center gap-3">
+                            <svg width="32" height="32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">{{ doc.name }}</h3>
+                                <p class="text-sm text-gray-500">{{ doc.file.name|slice:"17:"|truncatechars:40 }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <a href="{% url 'projects:project_document_preview' project.project_id doc.field %}" 
+                               target="_blank"
+                               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                                👁️ Preview
+                            </a>
+                            <a href="{% url 'projects:project_document_download' project.project_id doc.field %}" 
+                               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm">
+                                ⬇️ Download
+                            </a>
+                            {% if request.user.role == 'admin' or request.user.role == 'super_user' %}
+                            <a href="{% url 'projects:project_document_delete' project.project_id doc.field %}" 
+                               onclick="return confirm('Delete this document?')"
+                               class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm">
+                                🗑️ Delete
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

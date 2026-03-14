@@ -1,0 +1,617 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Operations Coordinator Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Stats Cards - Updated with gradient style like backoffice -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+
+        <!-- My Projects -->
+        <a href="{% url 'projects:my_projects' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+            <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1 cursor-pointer p-5">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-blue-50 uppercase">My Projects</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ total_projects }}</p>
+                    <p class="text-xs text-blue-50 mt-1">As Main Coordinator</p>
+                </div>
+            </div>
+        </a>
+
+        <!-- Entries Today -->
+        <a href="{% url 'operations:daily_entry_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+            <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1 cursor-pointer p-5">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-emerald-50 uppercase">Entries Today</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ entries_today_count }}<span class="text-lg text-emerald-100">/{{ total_projects }}</span></p>
+                    <p class="text-xs text-emerald-50 mt-1">
+                        {% if total_projects > 0 %}
+                            {% widthratio entries_today_count total_projects 100 %}% Complete
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </a>
+
+        <!-- MIS Pending -->
+        <a href="{% url 'operations:mis_dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+            <div class="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1 cursor-pointer p-5">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-amber-50 uppercase">MIS Pending</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ mis_pending_count }}</p>
+                    <p class="text-xs text-amber-50 mt-1">Need to send today</p>
+                </div>
+            </div>
+        </a>
+
+        <!-- Open Disputes -->
+        <a href="{% url 'operations:dispute_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+            <div class="bg-gradient-to-br from-rose-400 to-rose-500 rounded-xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1 cursor-pointer p-5">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-rose-50 uppercase">Open Disputes</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ my_open_disputes }}</p>
+                    <p class="text-xs text-rose-50 mt-1">Need Attention</p>
+                </div>
+            </div>
+        </a>
+
+        <!-- Monthly Billing -->
+        <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+            <div class="bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1 cursor-pointer p-5">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-indigo-50 uppercase">Monthly Billing</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ billing_pending_count|default:0 }}<span class="text-lg text-indigo-100">/{{ total_projects }}</span></p>
+                    <p class="text-xs text-indigo-50 mt-1">Pending This Month</p>
+                </div>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- Weekly Calendar Widget -->
+    {% include 'activity_logs/components/week_widget.html' %}
+
+    <!-- Section: Three Column Layout - Disputes, Adhoc & Monthly Billing -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- My Disputes -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-5 py-3 bg-gradient-to-r from-rose-500 to-rose-600 flex items-center justify-between">
+                <h3 class="text-base font-bold text-white flex items-center">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    My Disputes
+                </h3>
+                <a href="{% url 'operations:dispute_create' %}" class="text-xs bg-white bg-opacity-20 text-white px-3 py-1 rounded-full hover:bg-opacity-30 font-medium transition">
+                    + Raise
+                </a>
+            </div>
+
+            <div class="p-5">
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="text-center p-3 bg-rose-50 rounded-lg">
+                        <p class="text-xl font-bold text-rose-600">{{ my_open_disputes }}</p>
+                        <p class="text-xs text-gray-600">Open</p>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <p class="text-xl font-bold text-green-600">{{ my_resolved_disputes }}</p>
+                        <p class="text-xs text-gray-600">Resolved</p>
+                    </div>
+                </div>
+
+                <!-- Recent Disputes List -->
+                {% if recent_disputes %}
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    {% for dispute in recent_disputes %}
+                    <a href="{% url 'operations:dispute_detail' dispute.dispute_id %}" class="block p-3 rounded-lg hover:bg-gray-50 transition border border-gray-200">
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    {% if dispute.days_open >= 7 %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 whitespace-nowrap">
+                                            <svg aria-hidden="true" width="12" height="12" class="h-3 w-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                                            </svg>
+                                            {{ dispute.days_open }}d
+                                        </span>
+                                    {% elif dispute.days_open >= 5 %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                                            <svg aria-hidden="true" width="12" height="12" class="h-3 w-3 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                            </svg>
+                                            {{ dispute.days_open }}d
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
+                                            {{ dispute.days_open }}d
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ dispute.title|truncatewords:5 }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ dispute.project.project_code }}</p>
+                            </div>
+                            {% if dispute.status %}
+                            <div class="flex-shrink-0">
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap
+                                    {% if dispute.status.code == 'open' %}bg-red-100 text-red-800
+                                    {% elif dispute.status.code == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                    {% elif dispute.status.code == 'resolved' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ dispute.status.label }}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 text-center py-4">No disputes raised</p>
+                {% endif %}
+
+                <div class="mt-4 text-center">
+                    <a href="{% url 'operations:dispute_list' %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        View All Disputes &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Adhoc Billings -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-between">
+                <h3 class="text-base font-bold text-white flex items-center">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    My Adhoc Billings
+                </h3>
+                <a href="{% url 'operations:adhoc_billing_create' %}" class="text-xs bg-white bg-opacity-20 text-white px-3 py-1 rounded-full hover:bg-opacity-30 font-medium transition">
+                    + Create
+                </a>
+            </div>
+
+            <div class="p-5">
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                        <p class="text-xl font-bold text-yellow-600">&#8377;{{ my_pending_adhoc_amount|floatformat:0 }}</p>
+                        <p class="text-xs text-gray-600">Pending ({{ my_pending_adhoc_count }})</p>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <p class="text-xl font-bold text-green-600">&#8377;{{ my_billed_adhoc_amount|floatformat:0 }}</p>
+                        <p class="text-xs text-gray-600">Billed ({{ my_billed_adhoc_count }})</p>
+                    </div>
+                </div>
+
+                <!-- Recent Adhoc List -->
+                {% if recent_adhoc %}
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    {% for adhoc in recent_adhoc %}
+                    <a href="{% url 'operations:adhoc_billing_detail' adhoc.id %}" class="block p-3 rounded-lg hover:bg-gray-50 transition border border-gray-200">
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900">{{ adhoc.project.project_code }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ adhoc.event_date|date:"d M Y" }}</p>
+                            </div>
+                            <div class="flex-shrink-0 text-right">
+                                <p class="text-xs font-bold text-gray-900 whitespace-nowrap">&#8377;{{ adhoc.total_client_amount|floatformat:0 }}</p>
+                                {% if adhoc.status %}
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap mt-1
+                                    {% if adhoc.status.code == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif adhoc.status.code == 'billed' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ adhoc.status.label }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 text-center py-4">No adhoc billings created</p>
+                {% endif %}
+
+                <div class="mt-4 text-center">
+                    <a href="{% url 'operations:adhoc_billing_list' %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        View All Adhoc &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Monthly Billing -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-5 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 flex items-center justify-between">
+                <h3 class="text-base font-bold text-white flex items-center">
+                    <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    Monthly Billing
+                </h3>
+                <span class="text-xs bg-white bg-opacity-20 text-white px-3 py-1 rounded-full font-medium">
+                    {{ current_billing_month|date:"M Y" }}
+                </span>
+            </div>
+
+            <div class="p-5">
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <div class="text-center p-2 bg-gray-50 rounded-lg">
+                        <p class="text-lg font-bold text-gray-700">{{ billing_draft_count|default:0 }}</p>
+                        <p class="text-xs text-gray-600">Draft</p>
+                    </div>
+                    <div class="text-center p-2 bg-blue-50 rounded-lg">
+                        <p class="text-lg font-bold text-blue-600">{{ billing_submitted_count|default:0 }}</p>
+                        <p class="text-xs text-gray-600">Submitted</p>
+                    </div>
+                    <div class="text-center p-2 bg-green-50 rounded-lg">
+                        <p class="text-lg font-bold text-green-600">{{ billing_approved_count|default:0 }}</p>
+                        <p class="text-xs text-gray-600">Approved</p>
+                    </div>
+                </div>
+
+                <!-- Projects Without Billing Alert -->
+                {% if billing_missing_projects %}
+                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-start">
+                        <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div>
+                            <p class="text-xs font-semibold text-red-800">{{ billing_missing_projects|length }} Project{{ billing_missing_projects|length|pluralize }} Missing Billing</p>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                {% for project in billing_missing_projects|slice:":3" %}
+                                <a href="{% url 'operations:monthly_billing_create' project.project_id %}?month={{ current_billing_month|date:'Y-m' }}"
+                                   class="inline-flex items-center px-2 py-0.5 bg-white border border-red-300 text-red-700 rounded text-xs font-medium hover:bg-red-50 transition">
+                                    {{ project.project_code }}
+                                    <svg aria-hidden="true" width="12" height="12" class="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </a>
+                                {% endfor %}
+                                {% if billing_missing_projects|length > 3 %}
+                                <span class="text-xs text-red-600">+{{ billing_missing_projects|length|add:"-3" }} more</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Recent Billing Entries -->
+                {% if recent_billings %}
+                <div class="space-y-2 max-h-32 overflow-y-auto">
+                    {% for billing in recent_billings %}
+                    <a href="{% url 'operations:monthly_billing_detail' billing.id %}" class="block p-2 rounded-lg hover:bg-gray-50 transition border border-gray-200">
+                        <div class="flex justify-between items-center gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ billing.project.project_code }}</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap
+                                    {% if billing.status.code == 'approved' %}bg-green-100 text-green-800
+                                    {% elif billing.status.code == 'draft' %}bg-gray-100 text-gray-800
+                                    {% elif billing.status.code == 'pending_controller' or billing.status.code == 'pending_finance' %}bg-blue-100 text-blue-800
+                                    {% elif billing.status.code == 'controller_rejected' or billing.status.code == 'finance_rejected' %}bg-red-100 text-red-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ billing.status.label }}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 text-center py-2">No billing entries yet</p>
+                {% endif %}
+
+                <div class="mt-4 text-center">
+                    <a href="{% url 'operations:monthly_billing_dashboard' %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        View Billing Dashboard &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-5 py-3 bg-gradient-to-r from-gray-700 to-gray-800">
+            <h2 class="text-base font-bold text-white flex items-center">
+                <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Quick Actions
+            </h2>
+        </div>
+        <div class="p-5">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-3">
+
+                <!-- Gmail Setup -->
+                <a href="/gmail/" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-red-300 rounded-lg hover:border-red-500 hover:bg-gradient-to-br hover:from-red-50 hover:to-red-100 hover:shadow-lg transition duration-200 cursor-pointer h-24">
+                        <div class="bg-red-100 rounded-full p-3 group-hover:bg-red-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-red-600 text-center">Gmail Setup</span>
+                    </div>
+                </a>
+
+                <!-- View Projects -->
+                <a href="{% url 'projects:my_projects' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-blue-100 rounded-full p-2.5 group-hover:bg-blue-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-blue-600 text-center">My Projects</span>
+                    </div>
+                </a>
+
+                <!-- Single Entry -->
+                <a href="{% url 'operations:daily_entry_single' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-gradient-to-br hover:from-green-50 hover:to-green-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-green-100 rounded-full p-2.5 group-hover:bg-green-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-green-600 text-center">Single Entry</span>
+                    </div>
+                </a>
+
+                <!-- Bulk Entry -->
+                <a href="{% url 'operations:daily_entry_bulk' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-purple-100 rounded-full p-2.5 group-hover:bg-purple-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-purple-600 text-center">Bulk Entry</span>
+                    </div>
+                </a>
+
+                <!-- Raise Dispute -->
+                <a href="{% url 'operations:dispute_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-rose-500 hover:bg-gradient-to-br hover:from-rose-50 hover:to-rose-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-rose-100 rounded-full p-2.5 group-hover:bg-rose-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-rose-600 text-center">Raise Dispute</span>
+                    </div>
+                </a>
+
+                <!-- Create Adhoc -->
+                <a href="{% url 'operations:adhoc_billing_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-emerald-500 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-emerald-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-emerald-100 rounded-full p-2.5 group-hover:bg-emerald-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-emerald-600 text-center">Create Adhoc</span>
+                    </div>
+                </a>
+
+                <!-- Monthly Billing -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-indigo-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-indigo-100 rounded-full p-2.5 group-hover:bg-indigo-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-indigo-600 text-center">Billing</span>
+                    </div>
+                </a>
+
+                <!-- MIS Status -->
+                <a href="{% url 'operations:mis_dashboard' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-amber-500 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-amber-100 rounded-full p-2.5 group-hover:bg-amber-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-amber-600 text-center">MIS Status</span>
+                    </div>
+                </a>
+
+                <!-- Calendar -->
+                <a href="{% url 'activity_logs:calendar' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-teal-500 hover:bg-gradient-to-br hover:from-teal-50 hover:to-teal-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-teal-100 rounded-full p-2.5 group-hover:bg-teal-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-teal-600 text-center">Calendar</span>
+                    </div>
+                </a>
+
+                <!-- All Entries -->
+                <a href="{% url 'operations:daily_entry_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-gray-500 hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-gray-200 rounded-full p-2.5 group-hover:bg-gray-300 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-gray-900 text-center">All Entries</span>
+                    </div>
+                </a>
+
+                <!-- My Expenses -->
+                <a href="{% url 'expense_log:dashboard' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                    <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 hover:shadow-md transition duration-200 cursor-pointer h-24">
+                        <div class="bg-orange-100 rounded-full p-2.5 group-hover:bg-orange-200 group-hover:scale-110 transition">
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-orange-600 text-center">My Expenses</span>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: My Project Health Overview -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-between">
+            <h3 class="text-base font-bold text-white flex items-center">
+                <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                My Project Health Overview
+            </h3>
+            <a href="{% url 'projects:my_projects' %}" class="text-xs bg-white bg-opacity-20 text-white px-3 py-1 rounded-full hover:bg-opacity-30 font-medium transition">
+                View All &rarr;
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Last Entry</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Open Disputes</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Adhoc</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Billing Status</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in projects_by_health %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ project.project_code }}</p>
+                                <p class="text-xs text-gray-500">{{ project.client_name|truncatewords:3 }}</p>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if project.last_entry_date %}
+                            <p class="text-sm text-gray-900">{{ project.last_entry_date|date:"d M" }}</p>
+                            {% if project.days_since_entry > 1 %}
+                            <p class="text-xs text-red-600">{{ project.days_since_entry }}d ago</p>
+                            {% elif project.days_since_entry == 1 %}
+                            <p class="text-xs text-yellow-600">Yesterday</p>
+                            {% else %}
+                            <p class="text-xs text-green-600">Today &#10003;</p>
+                            {% endif %}
+                            {% else %}
+                            <p class="text-xs text-red-600">No entries</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if project.open_disputes > 0 %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 font-semibold">
+                                {{ project.open_disputes }}
+                            </span>
+                            {% else %}
+                            <span class="text-xs text-green-600">0 &#10003;</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if project.pending_adhoc > 0 %}
+                            <span class="text-sm font-medium text-yellow-600">&#8377;{{ project.pending_adhoc|floatformat:0 }}</span>
+                            {% else %}
+                            <span class="text-xs text-green-600">&#8377;0 &#10003;</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if project.billing_status %}
+                            <span class="px-2 py-1 text-xs rounded-full
+                                {% if project.billing_status == 'approved' %}bg-green-100 text-green-800
+                                {% elif project.billing_status == 'draft' %}bg-gray-100 text-gray-800
+                                {% elif project.billing_status == 'pending_controller' or project.billing_status == 'pending_finance' %}bg-blue-100 text-blue-800
+                                {% elif project.billing_status == 'controller_rejected' or project.billing_status == 'finance_rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ project.billing_status_display|default:project.billing_status }}
+                            </span>
+                            {% else %}
+                            <a href="{% url 'operations:monthly_billing_create' project.project_id %}?month={{ current_billing_month|date:'Y-m' }}"
+                               class="text-xs text-red-600 hover:text-red-800 font-medium">
+                                + Create
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center">
+                                <span class="text-sm font-bold
+                                    {% if project.health_score >= 80 %}text-green-600
+                                    {% elif project.health_score >= 50 %}text-yellow-600
+                                    {% else %}text-red-600{% endif %}">
+                                    {{ project.health_score }}
+                                </span>
+                                <span class="text-xs text-gray-500 ml-1">/100</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            No projects assigned
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

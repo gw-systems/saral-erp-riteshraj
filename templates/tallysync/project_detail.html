@@ -1,0 +1,534 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Project Detail - {{ project_id }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2" id="pageTitle">{{ project_id }}</h1>
+                <p class="text-gray-600" id="pageSubtitle">Loading project details...</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="exportTransactions()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                    Export Transactions
+                </button>
+                <a id="backLink" href="{% url 'tallysync:project_profitability_dashboard' %}"
+                   class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Project Info Card -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6" id="projectInfoCard">
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+            </div>
+        </div>
+
+        <!-- Tally vs ERP Comparison -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="comparisonCards">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="animate-pulse"><div class="h-20 bg-gray-200 rounded"></div></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="animate-pulse"><div class="h-20 bg-gray-200 rounded"></div></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="animate-pulse"><div class="h-20 bg-gray-200 rounded"></div></div>
+            </div>
+        </div>
+
+        <!-- Monthly Trend Chart -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Monthly Financial Trend</h3>
+            <div style="height: 350px;">
+                <canvas id="monthlyTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">All Transactions</h3>
+                <span id="txnCount" class="text-sm text-gray-500"></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gradient-to-r from-green-50 to-blue-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Voucher Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Voucher No.</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Party Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Narration</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase">Amount</th>
+                            <th class="px-4 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody" class="divide-y divide-gray-200">
+                        <tr><td colspan="7" class="text-center py-8 text-gray-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="{% static 'js/tallysync-common.js' %}"></script>
+<script>
+const PROJECT_ID = '{{ project_id }}';
+let projectData = null;
+let lifecycleData = null;
+let transactionsData = [];
+
+function initDashboard() {
+    // Preserve date filters in back link
+    const urlParams = new URLSearchParams(window.location.search);
+    const startDate = urlParams.get('start_date') || '';
+    const endDate = urlParams.get('end_date') || '';
+    if (startDate || endDate) {
+        const backLink = document.getElementById('backLink');
+        backLink.href += '?start_date=' + startDate + '&end_date=' + endDate;
+    }
+    loadProjectDetail();
+}
+initDashboard();
+window.addEventListener('pageshow', function(e) { if (e.persisted) initDashboard(); });
+
+async function loadProjectDetail() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filters = {
+        start_date: urlParams.get('start_date') || '',
+        end_date: urlParams.get('end_date') || ''
+    };
+
+    try {
+        const [detailResp, lifecycleResp] = await Promise.all([
+            TallySyncCommon.apiCall('project/' + PROJECT_ID + '/', filters),
+            TallySyncCommon.apiCall('project/' + PROJECT_ID + '/lifecycle/')
+        ]);
+
+        projectData = detailResp;
+        lifecycleData = lifecycleResp;
+        transactionsData = detailResp.transactions || [];
+
+        renderProjectInfo();
+        renderComparisonCards();
+        renderTransactions();
+
+        // Chart.js might load after defer — wait for it
+        if (typeof Chart !== 'undefined') {
+            renderMonthlyChart();
+        } else {
+            const checkChart = setInterval(() => {
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(checkChart);
+                    renderMonthlyChart();
+                }
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error loading project detail:', error);
+        document.getElementById('pageSubtitle').textContent = 'Error loading project data';
+    }
+}
+
+function renderProjectInfo() {
+    const p = projectData.project;
+    document.getElementById('pageTitle').textContent = p.project_code || p.code;
+    document.getElementById('pageSubtitle').textContent = `${p.client_name || ''} ${p.vendor_name ? '| Vendor: ' + p.vendor_name : ''}`;
+
+    document.getElementById('projectInfoCard').innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Project Code</p>
+                <p class="font-bold text-gray-800">${p.project_code || p.code}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Client</p>
+                <p class="font-semibold text-gray-700">${p.client_name || 'N/A'}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Vendor</p>
+                <p class="font-semibold text-gray-700">${p.vendor_name || 'N/A'}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Location</p>
+                <p class="font-semibold text-gray-700">${p.location || 'N/A'}</p>
+            </div>
+        </div>
+    `;
+}
+
+function renderComparisonCards() {
+    const t = projectData.tally_summary;
+    const e = projectData.erp_summary;
+    const v = projectData.variances;
+
+    const profitColorT = parseFloat(t.profit) >= 0 ? 'text-green-700' : 'text-red-700';
+    const profitColorE = parseFloat(e.profit) >= 0 ? 'text-green-700' : 'text-red-700';
+
+    function varianceHtml(label, value) {
+        const val = parseFloat(value) || 0;
+        const cls = val >= 0 ? 'text-green-600' : 'text-red-600';
+        const sign = val >= 0 ? '+' : '';
+        return `<div class="flex justify-between"><span class="text-gray-600">${label}</span><span class="${cls} font-semibold">${sign}${TallySyncCommon.formatCurrency(val)}</span></div>`;
+    }
+
+    document.getElementById('comparisonCards').innerHTML = `
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
+            <h4 class="text-sm font-bold text-blue-700 uppercase mb-4">Tally Actuals</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between"><span class="text-gray-600">Revenue</span><span class="text-green-700 font-semibold">${TallySyncCommon.formatCurrency(t.revenue)}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Purchase</span><span class="text-red-700 font-semibold">${TallySyncCommon.formatCurrency(t.purchase)}</span></div>
+                <div class="flex justify-between text-xs"><span class="text-gray-400">Expenses (Journals)</span><span class="text-orange-500">${TallySyncCommon.formatCurrency(t.expenses)}</span></div>
+                <hr>
+                <div class="flex justify-between"><span class="text-gray-600 font-bold">Profit</span><span class="${profitColorT} font-bold">${TallySyncCommon.formatCurrency(t.profit)}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Margin</span><span class="font-semibold">${TallySyncCommon.formatPercentage(t.margin_pct)}</span></div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500">
+            <h4 class="text-sm font-bold text-purple-700 uppercase mb-4">ERP Estimates</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between"><span class="text-gray-600">Revenue</span><span class="text-green-700 font-semibold">${TallySyncCommon.formatCurrency(e.revenue)}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Expenses</span><span class="text-red-700 font-semibold">${TallySyncCommon.formatCurrency(e.expenses)}</span></div>
+                <hr>
+                <div class="flex justify-between"><span class="text-gray-600 font-bold">Profit</span><span class="${profitColorE} font-bold">${TallySyncCommon.formatCurrency(e.profit)}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Margin</span><span class="font-semibold">${TallySyncCommon.formatPercentage(e.margin_pct)}</span></div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-orange-500">
+            <h4 class="text-sm font-bold text-orange-700 uppercase mb-4">Variances (Tally - ERP)</h4>
+            <div class="space-y-3">
+                ${varianceHtml('Revenue', v.revenue)}
+                ${varianceHtml('Purchase vs ERP', v.expenses)}
+                <hr>
+                ${varianceHtml('Profit', v.profit)}
+            </div>
+        </div>
+    `;
+}
+
+function renderMonthlyChart() {
+    const monthly = lifecycleData.monthly_breakdown || [];
+    if (monthly.length === 0) {
+        document.getElementById('monthlyTrendChart').parentElement.innerHTML =
+            '<p class="text-center text-gray-500 py-12">No monthly data available</p>';
+        return;
+    }
+
+    const labels = monthly.map(m => TallySyncCommon.formatMonth(m.month));
+
+    TallySyncCommon.createChart('monthlyTrendChart', {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: monthly.map(m => parseFloat(m.revenue) || 0),
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1,
+                    order: 3
+                },
+                {
+                    label: 'Purchase',
+                    data: monthly.map(m => parseFloat(m.purchase) || 0),
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1,
+                    order: 3
+                },
+                {
+                    label: 'Cumulative Profit',
+                    data: monthly.map(m => parseFloat(m.cumulative_profit) || 0),
+                    type: 'line',
+                    borderColor: TallySyncCommon.CHART_COLORS.primary,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    yAxisID: 'y1',
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    ticks: {
+                        callback: function(value) { return TallySyncCommon.formatCurrency(value); }
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: { drawOnChartArea: false },
+                    ticks: {
+                        callback: function(value) { return TallySyncCommon.formatCurrency(value); }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + TallySyncCommon.formatCurrency(context.raw);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderTransactions() {
+    const txns = transactionsData;
+    document.getElementById('txnCount').textContent = `${txns.length} transactions`;
+
+    if (txns.length === 0) {
+        document.getElementById('transactionsBody').innerHTML =
+            '<tr><td colspan="7" class="text-center py-8 text-gray-500">No transactions found</td></tr>';
+        return;
+    }
+
+    let html = '';
+    txns.forEach(t => {
+        const typeColor = t.voucher_type === 'Sales' ? 'bg-green-100 text-green-800' :
+                          t.voucher_type === 'Purchase' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800';
+        const narrationShort = (t.narration || '').length > 45
+            ? t.narration.substring(0, 45) + '...'
+            : (t.narration || '-');
+        html += `
+            <tr id="txn-${t.id}" class="hover:bg-gray-50 cursor-pointer" onclick="toggleVoucherDetail(${t.id}, this)">
+                <td class="px-4 py-3 text-sm text-gray-700">${TallySyncCommon.formatDate(t.date)}</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${typeColor}">${t.voucher_type}</span></td>
+                <td class="px-4 py-3 text-sm text-blue-600 font-medium">${t.voucher_number || 'N/A'}</td>
+                <td class="px-4 py-3 text-sm text-gray-700">${t.party_name || ''}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate" title="${(t.narration || '').replace(/"/g, '&quot;')}">${narrationShort}</td>
+                <td class="px-4 py-3 text-sm text-right font-semibold">${TallySyncCommon.formatCurrency(t.amount)}</td>
+                <td class="px-4 py-3 text-center text-gray-400 text-xs" id="txn-arrow-${t.id}">▶</td>
+            </tr>
+            <tr id="txn-detail-${t.id}" class="hidden bg-blue-50">
+                <td colspan="7" class="px-6 py-4" id="txn-detail-body-${t.id}">
+                    <div class="flex justify-center py-2"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div></div>
+                </td>
+            </tr>
+        `;
+    });
+    document.getElementById('transactionsBody').innerHTML = html;
+}
+
+function exportTransactions() {
+    if (!transactionsData.length) return;
+    const headers = ['Date', 'Voucher Type', 'Voucher Number', 'Party Name', 'Narration', 'Reference', 'Amount', 'Company'];
+    const rows = transactionsData.map(t => [
+        t.date, t.voucher_type, t.voucher_number || '', t.party_name || '',
+        t.narration || '', t.reference || '',
+        parseFloat(t.amount) || 0, t.company || ''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{ wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 30 }, { wch: 50 }, { wch: 20 }, { wch: 15 }, { wch: 25 }];
+    // Format amount column (index 6 now)
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let r = 1; r <= range.e.r; r++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c: 6 })];
+        if (cell) cell.z = '#,##0.00';
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+    XLSX.writeFile(wb, `${PROJECT_ID}_transactions.xlsx`);
+}
+
+let expandedVoucherId = null;
+
+async function toggleVoucherDetail(voucherId, rowEl) {
+    const detailRow = document.getElementById(`txn-detail-${voucherId}`);
+    const arrow = document.getElementById(`txn-arrow-${voucherId}`);
+
+    // Collapse if already open
+    if (expandedVoucherId === voucherId) {
+        detailRow.classList.add('hidden');
+        rowEl.classList.remove('bg-blue-100');
+        arrow.textContent = '▶';
+        expandedVoucherId = null;
+        return;
+    }
+
+    // Collapse previously open row
+    if (expandedVoucherId !== null) {
+        document.getElementById(`txn-detail-${expandedVoucherId}`)?.classList.add('hidden');
+        document.getElementById(`txn-${expandedVoucherId}`)?.classList.remove('bg-blue-100');
+        const prevArrow = document.getElementById(`txn-arrow-${expandedVoucherId}`);
+        if (prevArrow) prevArrow.textContent = '▶';
+    }
+
+    // Open this row
+    expandedVoucherId = voucherId;
+    rowEl.classList.add('bg-blue-100');
+    arrow.textContent = '▼';
+    detailRow.classList.remove('hidden');
+
+    const body = document.getElementById(`txn-detail-body-${voucherId}`);
+    // Only fetch if not already loaded
+    if (body.dataset.loaded === 'true') return;
+    body.innerHTML = `<div class="flex justify-center py-2"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div></div>`;
+
+    try {
+        const data = await TallySyncCommon.apiCall('voucher/' + voucherId + '/');
+
+        let ledgerHtml = '';
+        if (data.ledger_entries && data.ledger_entries.length) {
+            ledgerHtml = `
+                <h4 class="text-sm font-bold text-gray-700 uppercase mt-5 mb-2">Ledger Entries</h4>
+                <table class="min-w-full text-sm border border-gray-200 rounded">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Ledger</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Debit</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        ${data.ledger_entries.map(le => {
+                            const amt = Math.abs(parseFloat(le.amount) || 0);
+                            const debit = le.is_debit ? TallySyncCommon.formatCurrency(amt) : '';
+                            const credit = !le.is_debit ? TallySyncCommon.formatCurrency(amt) : '';
+                            return `<tr><td class="px-3 py-1.5">${le.ledger_name}</td><td class="px-3 py-1.5 text-right text-green-700">${debit}</td><td class="px-3 py-1.5 text-right text-red-700">${credit}</td></tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        let billHtml = '';
+        if (data.bill_references && data.bill_references.length) {
+            billHtml = `
+                <h4 class="text-sm font-bold text-gray-700 uppercase mt-5 mb-2">Bill References</h4>
+                <table class="min-w-full text-sm border border-gray-200 rounded">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Bill Number</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Type</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        ${data.bill_references.map(b => `<tr><td class="px-3 py-1.5">${b.bill_number}</td><td class="px-3 py-1.5">${b.bill_type || ''}</td><td class="px-3 py-1.5 text-right">${TallySyncCommon.formatCurrency(b.amount)}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Service items from XML — the "what is this invoice for" section
+        let serviceHtml = '';
+        if (data.inventory_items && data.inventory_items.length) {
+            serviceHtml = data.inventory_items.map(item => `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex justify-between items-start">
+                        <span class="font-semibold text-blue-800 text-sm">${item.service}</span>
+                        ${item.amount ? `<span class="font-bold text-blue-900 text-sm">${TallySyncCommon.formatCurrency(parseFloat(item.amount) || 0)}</span>` : ''}
+                    </div>
+                    ${item.descriptions.length ? `
+                        <ul class="mt-1.5 space-y-0.5">
+                            ${item.descriptions.map(d => `<li class="text-xs text-blue-700">• ${d}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        const cancelledBadge = data.is_cancelled ? '<span class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">CANCELLED</span>' : '';
+
+        body.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <p class="text-xs text-gray-500">${data.voucher_type}${cancelledBadge}</p>
+                        <p class="font-bold text-gray-900">${data.voucher_number || 'N/A'}</p>
+                    </div>
+                    <span class="text-sm text-gray-500 whitespace-nowrap">${TallySyncCommon.formatDate(data.date)}</span>
+                </div>
+
+                <div class="text-sm space-y-1">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Party</span>
+                        <span class="font-semibold text-gray-800 text-right max-w-48">${data.party_name || 'N/A'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Amount</span>
+                        <span class="font-bold text-gray-900">${TallySyncCommon.formatCurrency(data.amount)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Company</span>
+                        <span class="text-gray-700 text-right max-w-48">${data.company}</span>
+                    </div>
+                    ${data.party_gstin ? `<div class="flex justify-between"><span class="text-gray-500">Party GSTIN</span><span class="font-mono text-gray-700 text-xs">${data.party_gstin}</span></div>` : ''}
+                    ${data.party_state ? `<div class="flex justify-between"><span class="text-gray-500">Party State</span><span class="text-gray-700">${data.party_state}</span></div>` : ''}
+                    ${data.reference ? `<div class="flex justify-between"><span class="text-gray-500">Reference</span><span class="text-gray-700">${data.reference}</span></div>` : ''}
+                    ${data.billing_month ? `<div class="flex justify-between"><span class="text-gray-500">Billing Month</span><span class="text-gray-700">${data.billing_month}</span></div>` : ''}
+                    ${data.credit_period ? `<div class="flex justify-between"><span class="text-gray-500">Credit Period</span><span class="text-gray-700">${data.credit_period}</span></div>` : ''}
+                    ${data.payment_mode ? `<div class="flex justify-between"><span class="text-gray-500">Payment Mode</span><span class="text-gray-700">${data.payment_mode}</span></div>` : ''}
+                    ${data.transaction_type ? `<div class="flex justify-between"><span class="text-gray-500">Transaction Type</span><span class="text-gray-700">${data.transaction_type}</span></div>` : ''}
+                    ${data.cheque_number ? `<div class="flex justify-between"><span class="text-gray-500">Cheque No.</span><span class="font-mono text-gray-700">${data.cheque_number}</span></div>` : ''}
+                    ${data.cheque_date ? `<div class="flex justify-between"><span class="text-gray-500">Cheque Date</span><span class="text-gray-700">${data.cheque_date}</span></div>` : ''}
+                    ${data.utr_number ? `<div class="flex justify-between"><span class="text-gray-500">UTR No.</span><span class="font-mono text-gray-700 text-xs">${data.utr_number}</span></div>` : ''}
+                    ${data.need_to_pay ? `<div class="flex justify-between"><span class="text-gray-500">Pay To</span><span class="text-gray-700">${data.need_to_pay}</span></div>` : ''}
+                    ${data.eway_bill_number ? `<div class="flex justify-between"><span class="text-gray-500">E-Way Bill</span><span class="font-mono text-gray-700 text-xs">${data.eway_bill_number}</span></div>` : ''}
+                    ${data.buyer_name ? `<div class="flex justify-between"><span class="text-gray-500">Buyer</span><span class="text-gray-700">${data.buyer_name}</span></div>` : ''}
+                    ${data.buyer_gstin ? `<div class="flex justify-between"><span class="text-gray-500">Buyer GSTIN</span><span class="font-mono text-gray-700 text-xs">${data.buyer_gstin}</span></div>` : ''}
+                    ${data.buyer_state ? `<div class="flex justify-between"><span class="text-gray-500">Buyer State</span><span class="text-gray-700">${data.buyer_state}</span></div>` : ''}
+                    ${data.consignee_name ? `<div class="flex justify-between"><span class="text-gray-500">Consignee</span><span class="text-gray-700">${data.consignee_name}</span></div>` : ''}
+                    ${data.consignee_gstin ? `<div class="flex justify-between"><span class="text-gray-500">Consignee GSTIN</span><span class="font-mono text-gray-700 text-xs">${data.consignee_gstin}</span></div>` : ''}
+                </div>
+
+                ${data.remark ? `
+                <div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Remark</h4>
+                    <p class="text-sm text-gray-700 bg-gray-50 rounded p-2">${data.remark}</p>
+                </div>
+                ` : ''}
+
+                ${data.narration ? `
+                <div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Narration</h4>
+                    <p class="text-sm text-gray-700 bg-gray-50 rounded p-2">${data.narration}</p>
+                </div>
+                ` : ''}
+
+                ${serviceHtml ? `
+                <div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Services / Items</h4>
+                    <div class="space-y-2">${serviceHtml}</div>
+                </div>
+                ` : ''}
+
+                ${ledgerHtml}
+                ${billHtml}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading voucher detail:', error);
+        body.innerHTML = '<p class="text-center text-red-500 py-6">Failed to load voucher details</p>';
+    }
+}
+
+
+</script>
+{% endblock %}

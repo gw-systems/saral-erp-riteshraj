@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Coordinator Performance{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Coordinator Performance</h1>
+        <p class="mt-1 text-sm text-gray-600">
+            Overview of all coordinators and their assigned projects
+        </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <p class="text-sm text-gray-600">Total Coordinators</p>
+                <p class="text-3xl font-bold text-blue-600">{{ total_coordinators }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coordinator List -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">All Coordinators</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Projects</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">7-Day Compliance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">30-Day Compliance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for coordinator in coordinator_data %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <!-- Name with Avatar -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                                        {{ coordinator.first_name|slice:":1" }}{{ coordinator.last_name|slice:":1" }}
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ coordinator.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Role -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-600">{{ coordinator.role }}</span>
+                        </td>
+
+                        <!-- Projects -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-semibold text-gray-900">{{ coordinator.project_count }}</span>
+                        </td>
+
+                        <!-- 7-Day Compliance -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm {% if coordinator.compliance_7d >= 90 %}text-green-600{% elif coordinator.compliance_7d >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                {{ coordinator.compliance_7d }}%
+                            </span>
+                        </td>
+
+                        <!-- 30-Day Compliance -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm {% if coordinator.compliance_30d >= 90 %}text-green-600{% elif coordinator.compliance_30d >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                {{ coordinator.compliance_30d }}%
+                            </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if coordinator.status == 'excellent' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                    <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Excellent
+                                </span>
+                            {% elif coordinator.status == 'good' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                    <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Good
+                                </span>
+                            {% elif coordinator.status == 'warning' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                                    <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    Warning
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                    <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Critical
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Action -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if coordinator.id %}
+                            <a href="{% url 'operations:coordinator_detail' coordinator.id %}"
+                            class="text-blue-600 hover:text-blue-800 font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                                View Details &rarr;
+                            </a>
+                            {% else %}
+                            <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            No coordinators found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,2590 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load operations_filters %}
+
+{% block title %}Create Monthly Billing{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ========== HEADER ========== -->
+    <div class="mb-6 flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+                ➕ Create Monthly Billing
+            </h1>
+            <p class="mt-2 text-gray-600">
+                <span class="font-semibold">{{ project.project_code }}</span> - {{ project.client_name }}
+            </p>
+        </div>
+        <a href="{% url 'operations:monthly_billing_dashboard' %}"
+           class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ========== PROJECT CARD STATUS ========== -->
+    {% if project_card %}
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-bold text-green-800">✅ Project Card Found</p>
+                <p class="text-sm text-green-700 mt-1">
+                    Rates will be shown as reference. You can edit all values as needed.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-bold text-yellow-800">⚠️ No Project Card Found</p>
+                <p class="text-sm text-yellow-700 mt-1">
+                    Manual entry required. Please enter all rates and costs manually.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ========== MAIN FORM ========== -->
+    <form id="billingForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- ========== SERVICE & BILLING MONTHS (UNCHANGED) ========== -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-6 shadow-md">
+            <h2 class="text-lg font-bold text-blue-900 mb-4 flex items-center">
+                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                📅 Billing Period
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Service Month -->
+                <div class="bg-white rounded-lg p-4 border-2 border-green-300">
+                    <label class="block text-sm font-bold text-green-900 mb-2">
+                        🛠️ Service Month <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-xs text-green-700 mb-3">When were the services actually provided?</p>
+                    <input type="month" 
+                        name="service_month" 
+                        value="{{ service_month|date:'Y-m' }}"
+                        required
+                        class="w-full px-4 py-3 border-2 border-green-300 rounded-lg text-base font-semibold focus:ring-green-500 focus:border-green-500">
+                    <p class="text-xs text-gray-500 mt-2">💡 Usually last month (e.g., December 2024)</p>
+                </div>
+
+                <!-- Billing Month -->
+                <div class="bg-white rounded-lg p-4 border-2 border-purple-300">
+                    <label class="block text-sm font-bold text-purple-900 mb-2">
+                        💰 Billing/Invoice Month
+                    </label>
+                    <p class="text-xs text-purple-700 mb-3">When is the invoice being sent?</p>
+                    <input type="month" 
+                        name="billing_month" 
+                        value="{{ billing_month|date:'Y-m' }}"
+                        class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg text-base font-semibold focus:ring-purple-500 focus:border-purple-500">
+                    <p class="text-xs text-gray-500 mt-2">💡 Usually current month (e.g., January 2025)</p>
+                </div>
+            </div>
+
+            <!-- Helper Text -->
+            <div class="mt-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
+                <p class="text-sm text-blue-900">
+                    <strong>📌 Example:</strong> Services provided in <strong>December 2024</strong> are typically billed in <strong>January 2025</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ========== ADHOC BILLING SECTION (UNCHANGED) ========== -->
+        {% if adhoc_entries %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
+            <h3 class="text-lg font-bold text-blue-900 mb-3 flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                📋 Adhoc Billing ({{ service_month|date:"F Y" }})
+            </h3>
+            <p class="text-sm text-blue-800 mb-4">
+                💡 <strong>Tip:</strong> Click on any entry to view full details. Your form data will be preserved when you return.
+            </p>
+            
+            <div class="space-y-3">
+                {% for entry in adhoc_entries %}
+                <div class="bg-white rounded-lg border-2 border-blue-200 hover:border-blue-400 transition overflow-hidden">
+                    <!-- Checkbox Header -->
+                    <label class="flex items-center p-4 cursor-pointer hover:bg-blue-50 transition">
+                        <input type="checkbox"
+                               name="include_adhoc"
+                               value="{{ entry.id }}"
+                               class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0">
+                        
+                        <div class="ml-4 flex-1 min-w-0">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-base font-bold text-gray-900">
+                                        Adhoc Entry #{{ entry.id }}
+                                    </p>
+                                    <div class="flex flex-wrap items-center gap-3 mt-1 text-sm">
+                                        <span class="text-gray-600">
+                                            📅 {{ entry.event_date|date:"d M Y" }}
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold
+                                            {% if entry.status.code == 'billed' %}bg-green-100 text-green-800
+                                            {% elif entry.status.code == 'pending' %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ entry.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-right ml-4">
+                                    <p class="text-sm font-bold text-teal-700">
+                                        💰 Client: ₹{{ entry.total_client_amount|smart_num }}
+                                    </p>
+                                    <p class="text-sm font-bold text-indigo-700">
+                                        🏭 Vendor: ₹{{ entry.total_vendor_amount|smart_num }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Line Items Preview -->
+                            {% if entry.line_items.all %}
+                            <div class="mt-3 pt-3 border-t border-blue-100">
+                                <p class="text-xs font-semibold text-gray-600 mb-2">Items:</p>
+                                <div class="space-y-1">
+                                    {% for item in entry.line_items.all|slice:":3" %}
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-700">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ item.get_charge_type_display }}
+                                            </span>
+                                            {{ item.description|truncatewords:5 }}
+                                        </span>
+                                        <span class="text-gray-900 font-medium">₹{{ item.amount|smart_num }}</span>
+                                    </div>
+                                    {% endfor %}
+                                    {% if entry.line_items.all|length > 3 %}
+                                    <p class="text-xs text-gray-500 italic">+ {{ entry.line_items.all|length|add:"-3" }} more item{{ entry.line_items.all|length|add:"-3"|pluralize }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </label>
+                    
+                    <!-- View Details Button -->
+                    <div class="px-4 py-3 bg-blue-50 border-t border-blue-200">
+                        <a href="{% url 'operations:adhoc_billing_detail' entry.id %}" 
+                           target="_blank"
+                           class="inline-flex items-center text-sm font-semibold text-blue-700 hover:text-blue-900 transition">
+                            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            View Full Details (Opens in New Tab)
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Summary -->
+            <div class="mt-4 p-3 bg-blue-100 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm font-semibold text-blue-900">
+                        Selected: <span id="adhoc-count">0</span> entr{{ "ies" }}
+                    </p>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-teal-800">Total Client: ₹<span id="adhoc-client-total">0</span></p>
+                        <p class="text-sm font-bold text-indigo-800">Total Vendor: ₹<span id="adhoc-vendor-total">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ========== TAB-BASED SECTIONS ========== -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            
+            <!-- Tab Headers -->
+            <div class="border-b border-gray-200 bg-gray-50">
+                <nav class="flex overflow-x-auto">
+                    <button type="button" onclick="switchTab('storage')" id="tab-storage"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">
+                        📦 Storage
+                    </button>
+                    <button type="button" onclick="switchTab('handling_in')" id="tab-handling_in"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                        📥 Handling IN
+                    </button>
+                    <button type="button" onclick="switchTab('handling_out')" id="tab-handling_out"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                        📤 Handling OUT
+                    </button>
+                    <button type="button" onclick="switchTab('transport')" id="tab-transport"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                        🚚 Transport
+                    </button>
+                    <button type="button" onclick="switchTab('vas')" id="tab-vas"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                        ⚙️ VAS
+                    </button>
+                    <button type="button" onclick="switchTab('infrastructure')" id="tab-infrastructure"
+                            class="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                        🏗️ Infrastructure
+                    </button>
+                </nav>
+            </div>
+
+            <!-- ========== STORAGE TAB ========== -->
+            <div id="content-storage" class="p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">📦 Storage</h2>
+                    <p class="text-sm text-gray-600">Enter storage charges for this billing period</p>
+                </div>
+
+                <!-- Storage Entries Container -->
+                <div id="storage-entries" class="space-y-6">
+                    <!-- Storage entries will be added here dynamically -->
+                </div>
+
+                <!-- Add Another Button -->
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="addStorageEntry()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                        ➕ Add Another Storage Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== HANDLING IN TAB ========== -->
+            <div id="content-handling_in" class="p-6 hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">📥 Handling IN (Inbound)</h2>
+                    <p class="text-sm text-gray-600">Enter inbound handling charges for this billing period</p>
+                </div>
+
+                <!-- Handling IN Entries Container -->
+                <div id="handling_in-entries" class="space-y-6">
+                    <!-- Handling IN entries will be added here dynamically -->
+                </div>
+
+                <!-- Add Another Button -->
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="addHandlingInEntry()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                        ➕ Add Another Handling IN Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== HANDLING OUT TAB ========== -->
+            <div id="content-handling_out" class="p-6 hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">📤 Handling OUT (Outbound)</h2>
+                    <p class="text-sm text-gray-600">Enter outbound handling charges for this billing period</p>
+                </div>
+
+                <!-- Handling OUT Entries Container -->
+                <div id="handling_out-entries" class="space-y-6">
+                    <!-- Handling OUT entries will be added here dynamically -->
+                </div>
+
+                <!-- Add Another Button -->
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="addHandlingOutEntry()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                        ➕ Add Another Handling OUT Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== TRANSPORT TAB ========== -->
+            <div id="content-transport" class="p-6 hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">🚚 Transport</h2>
+                    <p class="text-sm text-gray-600">Enter transport charges for this billing period</p>
+                </div>
+
+                <!-- Transport Entries Container -->
+                <div id="transport-entries" class="space-y-6">
+                    <!-- Transport entries will be added here dynamically -->
+                </div>
+
+                <!-- Add Another Button -->
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="addTransportEntry()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                        ➕ Add Another Transport Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== MISCELLANEOUS/VAS TAB ========== -->
+            <div id="content-vas" class="p-6 hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">⚙️ Value Added Services (VAS)</h2>
+                    <p class="text-sm text-gray-600">Enter value-added service charges for this billing period</p>
+                </div>
+
+                <!-- VAS Entries Container -->
+                <div id="vas-entries" class="space-y-6">
+                    <!-- VAS entries will be added here dynamically -->
+                </div>
+
+                <!-- Add Another Button -->
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="addVASEntry()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                        ➕ Add Another VAS Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== INFRASTRUCTURE TAB ========== -->
+            <div id="content-infrastructure" class="p-6 hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">🏗️ Infrastructure</h2>
+                    <p class="text-sm text-gray-600">Enter infrastructure costs for this billing period</p>
+                </div>
+
+                <!-- Infrastructure Entries Container -->
+                <div id="infrastructure-entries" class="space-y-6">
+                    <!-- Infrastructure entries will be added here dynamically -->
+                </div>
+
+                <!-- Add Another Button -->
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="addInfrastructureEntry()"
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                        ➕ Add Another Infrastructure Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== HIDDEN AGGREGATE FIELDS (BACKEND EXPECTS THESE) ========== -->
+
+            <!-- Storage Aggregates -->
+            <input type="hidden" name="storage_min_space" id="storage_min_space" value="0">
+            <input type="hidden" name="storage_additional_space" id="storage_additional_space" value="0">
+            <input type="hidden" name="storage_unit_type" id="storage_unit_type" value="{% if billing %}{{ billing.storage_unit_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="storage_days" id="storage_days" value="30">
+            <input type="hidden" name="storage_remarks" id="storage_remarks" value="{% if billing %}{{ billing.storage_remarks|default:'' }}{% endif %}">
+            <input type="hidden" name="storage_mode" id="storage_mode" value="manual">
+            <input type="hidden" name="vendor_storage_rate" id="vendor_storage_rate" value="0">
+            <input type="hidden" name="vendor_storage_cost" id="vendor_storage_cost" value="0">
+            <input type="hidden" name="client_storage_rate" id="client_storage_rate" value="0">
+            <input type="hidden" name="client_storage_billing" id="client_storage_billing" value="0">
+            <input type="hidden" name="storage_override_reason" id="storage_override_reason" value="{% if billing %}{{ billing.storage_override_reason|default:'' }}{% endif %}">
+
+            <!-- Handling IN Aggregates -->
+            <input type="hidden" name="handling_in_quantity" id="handling_in_quantity" value="0">
+            <input type="hidden" name="handling_in_unit_type" id="handling_in_unit_type" value="{% if billing %}{{ billing.handling_in_unit_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_in_channel" id="handling_in_channel" value="{% if billing %}{{ billing.handling_in_channel.code|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_in_base_type" id="handling_in_base_type" value="{% if billing %}{{ billing.handling_in_base_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_in_remarks" id="handling_in_remarks" value="{% if billing %}{{ billing.handling_in_remarks|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_in_mode" id="handling_in_mode" value="manual">
+            <input type="hidden" name="vendor_handling_in_rate" id="vendor_handling_in_rate" value="0">
+            <input type="hidden" name="vendor_handling_in_cost" id="vendor_handling_in_cost" value="0">
+            <input type="hidden" name="client_handling_in_rate" id="client_handling_in_rate" value="0">
+            <input type="hidden" name="client_handling_in_billing" id="client_handling_in_billing" value="0">
+            <input type="hidden" name="handling_in_override_reason" id="handling_in_override_reason" value="{% if billing %}{{ billing.handling_in_override_reason|default:'' }}{% endif %}">
+
+            <!-- Handling OUT Aggregates -->
+            <input type="hidden" name="handling_out_quantity" id="handling_out_quantity" value="0">
+            <input type="hidden" name="handling_out_unit_type" id="handling_out_unit_type" value="{% if billing %}{{ billing.handling_out_unit_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_out_channel" id="handling_out_channel" value="{% if billing %}{{ billing.handling_out_channel.code|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_out_base_type" id="handling_out_base_type" value="{% if billing %}{{ billing.handling_out_base_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_out_remarks" id="handling_out_remarks" value="{% if billing %}{{ billing.handling_out_remarks|default:'' }}{% endif %}">
+            <input type="hidden" name="handling_out_mode" id="handling_out_mode" value="manual">
+            <input type="hidden" name="vendor_handling_out_rate" id="vendor_handling_out_rate" value="0">
+            <input type="hidden" name="vendor_handling_out_cost" id="vendor_handling_out_cost" value="0">
+            <input type="hidden" name="client_handling_out_rate" id="client_handling_out_rate" value="0">
+            <input type="hidden" name="client_handling_out_billing" id="client_handling_out_billing" value="0">
+            <input type="hidden" name="handling_out_override_reason" id="handling_out_override_reason" value="{% if billing %}{{ billing.handling_out_override_reason|default:'' }}{% endif %}">
+
+            <!-- Transport Aggregates -->
+            <input type="hidden" name="vendor_transport_vehicle_type" id="vendor_transport_vehicle_type" value="{% if billing %}{{ billing.vendor_transport_vehicle_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="vendor_transport_quantity" id="vendor_transport_quantity" value="0">
+            <input type="hidden" name="vendor_transport_amount" id="vendor_transport_amount" value="0">
+            <input type="hidden" name="vendor_transport_remarks" id="vendor_transport_remarks" value="{% if billing %}{{ billing.vendor_transport_remarks|default:'' }}{% endif %}">
+            
+            <input type="hidden" name="client_transport_vehicle_type" id="client_transport_vehicle_type" value="{% if billing %}{{ billing.client_transport_vehicle_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="client_transport_quantity" id="client_transport_quantity" value="0">
+            <input type="hidden" name="client_transport_amount" id="client_transport_amount" value="0">
+            <input type="hidden" name="client_transport_remarks" id="client_transport_remarks" value="{% if billing %}{{ billing.client_transport_remarks|default:'' }}{% endif %}">
+
+            <!-- MISC Aggregates -->
+            <input type="hidden" name="client_misc_amount" id="client_misc_amount" value="0">
+            <input type="hidden" name="vendor_misc_amount" id="vendor_misc_amount" value="0">
+            <input type="hidden" name="client_misc_description" id="client_misc_description" value="{% if billing %}{{ billing.client_misc_description|default:'' }}{% endif %}">
+            <input type="hidden" name="vendor_misc_description" id="vendor_misc_description" value="{% if billing %}{{ billing.vendor_misc_description|default:'' }}{% endif %}">
+
+            <!-- VAS Aggregates -->
+            <input type="hidden" name="vas_service_type" id="vas_service_type" value="{% if billing %}{{ billing.vas_service_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="vendor_vas_service_type" id="vendor_vas_service_type" value="{% if billing %}{{ billing.vendor_vas_service_type.code|default:'' }}{% endif %}">
+            <input type="hidden" name="vas_quantity" id="vas_quantity" value="0">
+            <input type="hidden" name="vas_unit" id="vas_unit" value="{% if billing %}{{ billing.vas_unit.code|default:'' }}{% endif %}">
+            <input type="hidden" name="vendor_vas_rate" id="vendor_vas_rate" value="0">
+            <input type="hidden" name="vendor_vas_cost" id="vendor_vas_cost" value="0">
+            <input type="hidden" name="client_vas_rate" id="client_vas_rate" value="0">
+            <input type="hidden" name="client_vas_billing" id="client_vas_billing" value="0">
+            <input type="hidden" name="vas_remarks" id="vas_remarks" value="{% if billing %}{{ billing.vas_remarks|default:'' }}{% endif %}">
+
+            <!-- Infrastructure Aggregates -->
+            <input type="hidden" name="client_infrastructure_amount" id="client_infrastructure_amount" value="0">
+            <input type="hidden" name="vendor_infrastructure_cost" id="vendor_infrastructure_cost" value="0">
+            <input type="hidden" name="infrastructure_remarks" id="infrastructure_remarks" value="{% if billing %}{{ billing.infrastructure_remarks|default:'' }}{% endif %}">
+        </div>
+
+        <!-- ========== MIS REFERENCE & DOCUMENTS ========== -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-600 to-gray-700 border-b">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    📧 MIS Reference & Documents
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Email Subject & Link (Optional) -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">📧 Email Reference (Optional)</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Subject Line</label>
+                                <input type="text" name="mis_email_subject"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="e.g., MIS Report | Client Name | Location">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">MIS Link (Email/Google Sheet URL)</label>
+                                <input type="url" name="mis_link"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="https://mail.google.com/... or https://docs.google.com/spreadsheets/...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Uploads (Optional) -->
+                    <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                        <h3 class="text-sm font-semibold text-blue-900 mb-3">📎 Document Uploads (Optional - Not Mandatory)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- MIS Document -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    MIS Document
+                                    <span class="text-xs text-gray-500">(PDF, Excel)</span>
+                                </label>
+                                <input type="file" name="mis_document"
+                                       accept=".pdf,.xlsx,.xls,.doc,.docx"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
+
+                            <!-- Transport Document -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Transport Document
+                                    <span class="text-xs text-gray-500">(POD, LR, etc.)</span>
+                                </label>
+                                <input type="file" name="transport_document"
+                                       accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
+
+                            <!-- Other Document -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Other Document
+                                    <span class="text-xs text-gray-500">(Any format)</span>
+                                </label>
+                                <input type="file" name="other_document"
+                                       accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.doc,.docx"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
+                        </div>
+                        <p class="mt-3 text-xs text-gray-600">
+                            💡 All documents are optional. Upload as per availability. Max file size: 10MB per file.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ACTION BUTTONS ========== -->
+        <div class="flex justify-between items-center pt-4 border-t-2">
+            <a href="{% url 'operations:monthly_billing_dashboard' %}"
+               class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition">
+                Cancel
+            </a>
+            <div class="flex gap-3">
+                <button type="submit"
+                        name="action"
+                        value="save_draft"
+                        class="px-6 py-3 border border-gray-400 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                    📝 Save as Draft
+                </button>
+                <button type="submit"
+                        name="action"
+                        value="submit"
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition shadow-lg">
+                    ✅ Create Billing
+                </button>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+// ========== RENDER CHOICES FROM BACKEND ==========
+const CHOICES = {
+    storage: {
+        space_type: {{ storage_units_json|safe }}
+    },
+    handling: {
+        unit_type: {{ handling_units_json|safe }},
+        channel: {{ sales_channels_json|safe }},
+        base_type: {{ handling_base_types_json|safe }}
+    },
+    transport: {
+        vehicle_type: {{ vehicle_types_json|safe }}
+    },
+    vas: {
+        service_type: {{ vas_service_types_json|safe }},
+        unit: {{ vas_units_json|safe }}
+    },
+    infrastructure: {
+        cost_type: {{ infra_cost_types_json|safe }}
+    }
+};
+
+// ========== GLOBAL COUNTERS ========== 
+let storageCounter = 0;
+let handlingInCounter = 0;
+let handlingOutCounter = 0;
+let transportCounter = 0;
+let vasCounter = 0;
+let infrastructureCounter = 0;
+
+// ========== TAB SWITCHING ==========
+function switchTab(tabName) {
+    const allTabs = ['storage', 'handling_in', 'handling_out', 'transport', 'vas', 'infrastructure'];
+    allTabs.forEach(tab => {
+        const tabButton = document.getElementById('tab-' + tab);
+        const tabContent = document.getElementById('content-' + tab);
+        
+        if (tab === tabName) {
+            tabButton.classList.remove('border-transparent', 'text-gray-500');
+            tabButton.classList.add('border-blue-600', 'text-blue-600');
+            tabContent.classList.remove('hidden');
+        } else {
+            tabButton.classList.remove('border-blue-600', 'text-blue-600');
+            tabButton.classList.add('border-transparent', 'text-gray-500');
+            tabContent.classList.add('hidden');
+        }
+    });
+}
+
+// ========== HELPER: BUILD DROPDOWN OPTIONS ==========
+function buildOptions(choices, selectedValue) {
+    if (!choices || !Array.isArray(choices)) return '';
+    
+    let html = '<option value="">-- Select --</option>';
+    choices.forEach(function(item) {
+        const value = item.code || item.value || item[0];
+        const label = item.label || item.name || item[1];
+        const selected = (value === selectedValue) ? 'selected' : '';
+        html += '<option value="' + value + '" ' + selected + '>' + label + '</option>';
+    });
+    return html;
+}
+
+// ========== STORAGE: TOGGLE PRICING MODE ==========
+function toggleStoragePricingMode(entryId, mode) {
+    // Hide all pricing sections
+    const flatSection = document.getElementById(entryId + '_flat_section');
+    const slabSection = document.getElementById(entryId + '_slab_section');
+    const lumpsumSection = document.getElementById(entryId + '_lumpsum_section');
+    const qtySection = document.getElementById(entryId + '_qty_section');
+
+    if (flatSection) flatSection.classList.add('hidden');
+    if (slabSection) slabSection.classList.add('hidden');
+    if (lumpsumSection) lumpsumSection.classList.add('hidden');
+
+    // Show selected section
+    if (mode === 'flat') {
+        if (flatSection) flatSection.classList.remove('hidden');
+        if (qtySection) qtySection.classList.remove('hidden');
+    } else if (mode === 'slab') {
+        if (slabSection) slabSection.classList.remove('hidden');
+        if (qtySection) qtySection.classList.remove('hidden');
+    } else if (mode === 'lumpsum') {
+        if (lumpsumSection) lumpsumSection.classList.remove('hidden');
+        // Hide quantity section for lumpsum (not needed)
+        if (qtySection) qtySection.classList.add('hidden');
+    }
+}
+
+// ========== STORAGE: ADD SLAB ==========
+let storageSlabCounter = 0;
+
+function addStorageSlab(entryId, storageId, side) {
+    storageSlabCounter++;
+    const slabsContainer = document.getElementById(`${entryId}_${side}_slabs`);
+
+    const slabDiv = document.createElement('div');
+    slabDiv.className = side === 'client' ? 'bg-teal-100 border-2 border-teal-300 rounded-lg p-3' : 'bg-indigo-100 border-2 border-indigo-300 rounded-lg p-3';
+    slabDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold text-sm">Slab #${storageSlabCounter}</span>
+            <button type="button" onclick="this.closest('.rounded-lg').remove(); calculateTotal('${entryId}', '${side}');"
+                    class="text-red-600 hover:text-red-800 text-sm font-bold">Remove</button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Min Qty *</label>
+                <input type="number" step="0.0001"
+                       name="storage_slab_${storageId}_${side}_${storageSlabCounter}_min" required
+                       placeholder="e.g., 0"
+                       onchange="calculateTotal('${entryId}', '${side}')"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Max Qty</label>
+                <input type="number" step="0.0001"
+                       name="storage_slab_${storageId}_${side}_${storageSlabCounter}_max"
+                       placeholder="Leave blank for ∞"
+                       onchange="calculateTotal('${entryId}', '${side}')"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Rate (₹) *</label>
+                <input type="number" step="0.0001"
+                       name="storage_slab_${storageId}_${side}_${storageSlabCounter}_rate" required
+                       placeholder="e.g., 10"
+                       onchange="calculateTotal('${entryId}', '${side}')"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Remarks</label>
+            <input type="text" name="storage_slab_${storageId}_${side}_${storageSlabCounter}_remarks"
+                   placeholder="Optional notes..."
+                   class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+        </div>
+    `;
+
+    slabsContainer.appendChild(slabDiv);
+}
+
+// ========== STORAGE: CALCULATE SLAB-BASED TOTAL ==========
+function calculateSlabTotal(entryId, side) {
+    // Get quantity
+    const minSpaceInput = document.querySelector(`#${entryId} input[name*="${side}_min_space"]`);
+    const additionalSpaceInput = document.querySelector(`#${entryId} input[name*="${side}_additional_space"]`);
+
+    if (!minSpaceInput) return 0;
+
+    const minSpace = parseFloat(minSpaceInput.value) || 0;
+    const additionalSpace = parseFloat(additionalSpaceInput.value) || 0;
+    const totalQuantity = minSpace + additionalSpace;
+
+    if (totalQuantity <= 0) return 0;
+
+    // Get all slabs for this side
+    const slabsContainer = document.getElementById(`${entryId}_${side}_slabs`);
+    if (!slabsContainer) return 0;
+
+    const slabElements = slabsContainer.querySelectorAll('.rounded-lg');
+    if (slabElements.length === 0) return 0;
+
+    // Parse slabs and sort by min_quantity
+    const slabs = [];
+    slabElements.forEach(slabEl => {
+        const minInput = slabEl.querySelector('[name*="_min"]');
+        const maxInput = slabEl.querySelector('[name*="_max"]');
+        const rateInput = slabEl.querySelector('[name*="_rate"]');
+
+        if (minInput && rateInput) {
+            slabs.push({
+                min: parseFloat(minInput.value) || 0,
+                max: maxInput && maxInput.value ? parseFloat(maxInput.value) : Infinity,
+                rate: parseFloat(rateInput.value) || 0
+            });
+        }
+    });
+
+    // Sort slabs by min quantity
+    slabs.sort((a, b) => a.min - b.min);
+
+    // Calculate tiered total
+    let total = 0;
+    let remainingQty = totalQuantity;
+
+    for (const slab of slabs) {
+        if (remainingQty <= 0) break;
+
+        // Quantity applicable to this slab
+        const slabStart = slab.min;
+        const slabEnd = slab.max;
+
+        // Skip if we haven't reached this slab yet
+        if (totalQuantity < slabStart) continue;
+
+        // Calculate quantity in this slab
+        let qtyInSlab = 0;
+        if (totalQuantity <= slabEnd) {
+            // All remaining quantity fits in this slab
+            qtyInSlab = totalQuantity - slabStart;
+        } else {
+            // Only part of quantity is in this slab
+            qtyInSlab = slabEnd - slabStart;
+        }
+
+        qtyInSlab = Math.max(0, qtyInSlab);
+
+        // Add to total
+        total += qtyInSlab * slab.rate;
+        remainingQty -= qtyInSlab;
+    }
+
+    return total;
+}
+
+// ========== HELPER: CALCULATE TOTAL (WITH DEBOUNCING) ==========
+function calculateTotal(entryId, side) {
+    const totalInput = document.querySelector('#' + entryId + ' input[name*="' + side + '_total"]') ||
+                       document.querySelector('#' + entryId + ' input[name*="' + side + '_amount"]');
+
+    if (!totalInput) return;
+
+    // Check if this is a storage entry with slab pricing
+    const pricingTypeRadio = document.querySelector(`#${entryId} input[name*="_pricing_type"]:checked`);
+    const isStorage = entryId.includes('storage-entry');
+
+    if (isStorage && pricingTypeRadio && pricingTypeRadio.value === 'slab') {
+        // Use slab-based calculation
+        const slabTotal = calculateSlabTotal(entryId, side);
+        if (!totalInput.value || totalInput.dataset.autoCalculate === 'true') {
+            totalInput.value = Math.round(slabTotal * 10000) / 10000;
+        }
+        return;
+    }
+
+    // Standard flat rate calculation
+    const qtyInput = document.querySelector('#' + entryId + ' input[name*="' + side + '_quantity"]');
+    const minSpaceInput = document.querySelector('#' + entryId + ' input[name*="' + side + '_min_space"]');
+    const additionalSpaceInput = document.querySelector('#' + entryId + ' input[name*="' + side + '_additional_space"]');
+    const rateInput = document.querySelector('#' + entryId + ' input[name*="' + side + '_rate"]');
+
+    if (!rateInput) return;
+
+    let quantity = 0;
+
+    // Storage: calculate from min + additional space
+    if (minSpaceInput) {
+        const minSpace = parseFloat(minSpaceInput.value) || 0;
+        const additionalSpace = parseFloat(additionalSpaceInput ? additionalSpaceInput.value : 0) || 0;
+        quantity = minSpace + additionalSpace;
+    }
+    // Other sections: use quantity field directly
+    else if (qtyInput) {
+        quantity = parseFloat(qtyInput.value) || 0;
+    }
+
+    const rate = parseFloat(rateInput.value) || 0;
+
+    // VAS: if hours filled → qty × hours × rate, else qty × rate
+    let calculated;
+    const isVAS = entryId.includes('vas-entry');
+    if (isVAS) {
+        const hoursInput = document.querySelector('#' + entryId + ' input[name*="' + side + '_hours"]');
+        const hours = hoursInput && hoursInput.value ? parseFloat(hoursInput.value) : null;
+        if (hours !== null && hours > 0) {
+            calculated = Math.round((quantity * hours * rate) * 10000) / 10000;
+        } else {
+            calculated = Math.round((quantity * rate) * 10000) / 10000;
+        }
+    } else {
+        calculated = Math.round((quantity * rate) * 10000) / 10000;
+    }
+
+    if (!totalInput.value || totalInput.dataset.autoCalculate === 'true') {
+        // Assign as number - browser will preserve precision with step="0.0001"
+        totalInput.value = calculated;
+        totalInput.dataset.autoCalculate = 'true';
+    }
+
+    // FIXED: Check flag before aggregating to prevent race condition
+    if (!window.billingDataPopulated) {
+        return;
+    }
+
+    // FIXED: Debounced aggregation to prevent excessive re-aggregation
+    if (window.aggregationTimeout) {
+        clearTimeout(window.aggregationTimeout);
+    }
+    window.aggregationTimeout = setTimeout(function() {
+        aggregateAll();
+    }, 300); // 300ms debounce delay
+}
+
+// ========== ADD STORAGE ENTRY ==========
+function addStorageEntry() {
+    storageCounter++;
+    const entryId = 'storage-entry-' + storageCounter;
+    const container = document.getElementById('storage-entries');
+    
+    const card = document.createElement('div');
+    card.id = entryId;
+    card.className = 'border-2 border-gray-200 rounded-lg overflow-hidden';
+    
+    let projectCardRatesHTML = '';
+    {% if storage_context %}
+    projectCardRatesHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-sm font-bold text-blue-900 mb-3">📋 Reference – Project Card Storage Rates</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {% if storage_context.client %}
+                <div class="bg-teal-50 p-4 rounded-lg border-2 border-teal-200">
+                    <p class="font-bold text-teal-900 mb-3 text-sm">💰 CLIENT STORAGE</p>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Space Type:</span>
+                            <span class="font-semibold text-teal-800">{{ storage_context.client.space_type|upper }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Min Billable Area:</span>
+                            <span class="font-semibold text-teal-800">{{ storage_context.client.minimum_billable_area|smart_num }}</span>
+                        </div>
+                        {% if storage_context.client.flat_rate %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Rate per Unit:</span>
+                            <span class="font-semibold text-teal-800">₹{{ storage_context.client.flat_rate|floatformat:-4 }}/{{ storage_context.client.space_type }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.client.calculated_rate %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Calculated Rate:</span>
+                            <span class="font-semibold text-teal-800">₹{{ storage_context.client.calculated_rate|floatformat:-4 }}/{{ storage_context.client.space_type }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.client.fixed_monthly %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Fixed Monthly:</span>
+                            <span class="font-semibold text-teal-800">₹{{ storage_context.client.fixed_monthly|floatformat:-4 }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.client.calculated_cost %}
+                        <div class="flex justify-between border-t border-teal-300 pt-2 mt-2">
+                            <span class="text-gray-700">Expected Monthly:</span>
+                            <span class="font-bold text-teal-900 text-sm">₹{{ storage_context.client.calculated_cost|floatformat:-4 }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.client.saas_charge %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">SaaS Charge:</span>
+                            <span class="font-semibold text-teal-800">₹{{ storage_context.client.saas_charge|floatformat:-4 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if storage_context.vendor %}
+                <div class="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200">
+                    <p class="font-bold text-indigo-900 mb-3 text-sm">🏭 VENDOR STORAGE</p>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Space Type:</span>
+                            <span class="font-semibold text-indigo-800">{{ storage_context.vendor.space_type|upper }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Min Billable Area:</span>
+                            <span class="font-semibold text-indigo-800">{{ storage_context.vendor.minimum_billable_area|smart_num }}</span>
+                        </div>
+                        {% if storage_context.vendor.flat_rate %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Rate per Unit:</span>
+                            <span class="font-semibold text-indigo-800">₹{{ storage_context.vendor.flat_rate|floatformat:-4 }}/{{ storage_context.vendor.space_type }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.vendor.calculated_rate %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Calculated Rate:</span>
+                            <span class="font-semibold text-indigo-800">₹{{ storage_context.vendor.calculated_rate|floatformat:-4 }}/{{ storage_context.vendor.space_type }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.vendor.fixed_monthly %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Fixed Monthly:</span>
+                            <span class="font-semibold text-indigo-800">₹{{ storage_context.vendor.fixed_monthly|floatformat:-4 }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.vendor.calculated_cost %}
+                        <div class="flex justify-between border-t border-indigo-300 pt-2 mt-2">
+                            <span class="text-gray-700">Expected Monthly:</span>
+                            <span class="font-bold text-indigo-900 text-sm">₹{{ storage_context.vendor.calculated_cost|floatformat:-4 }}</span>
+                        </div>
+                        {% endif %}
+                        {% if storage_context.vendor.saas_charge %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">SaaS Charge:</span>
+                            <span class="font-semibold text-indigo-800">₹{{ storage_context.vendor.saas_charge|floatformat:-4 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    `;
+    {% else %}
+    projectCardRatesHTML = `
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p class="text-sm text-yellow-800">⚠️ No project card storage rates configured. Manual entry required.</p>
+        </div>
+    `;
+    {% endif %}
+    
+    card.innerHTML = `
+        <div class="bg-gray-700 px-4 py-3 flex justify-between items-center">
+            <h3 class="text-white font-semibold">Storage Entry #${storageCounter}</h3>
+            <button type="button" onclick="removeEntry('${entryId}')"
+                    class="text-red-300 hover:text-red-100 font-bold text-lg">
+                ✕
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+            ${projectCardRatesHTML}
+
+            <!-- 1. PRICING MODE SELECTION -->
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">💳 Pricing Model</h4>
+                <div class="flex gap-4">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="storage_${storageCounter}_pricing_type" value="flat"
+                               onchange="toggleStoragePricingMode('${entryId}', 'flat')" checked
+                               class="w-4 h-4 mr-2 text-purple-600">
+                        <span class="text-sm font-medium">Flat Rate</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="storage_${storageCounter}_pricing_type" value="slab"
+                               onchange="toggleStoragePricingMode('${entryId}', 'slab')"
+                               class="w-4 h-4 mr-2 text-purple-600">
+                        <span class="text-sm font-medium">Tiered/Slab Based</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="storage_${storageCounter}_pricing_type" value="lumpsum"
+                               onchange="toggleStoragePricingMode('${entryId}', 'lumpsum')"
+                               class="w-4 h-4 mr-2 text-purple-600">
+                        <span class="text-sm font-medium">Lumpsum</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. QUANTITY DATA ENTRY (SEPARATE CLIENT | VENDOR) -->
+            <div id="${entryId}_qty_section">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📊 Quantity Data Entry</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- CLIENT QUANTITY -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-teal-900 mb-3">💰 Client Quantity</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Min Space</label>
+                                <input type="number" step="0.0001" name="storage_${storageCounter}_client_min_space"
+                                       onchange="calculateTotal('${entryId}', 'client');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Additional Space</label>
+                                <input type="number" step="0.0001" name="storage_${storageCounter}_client_additional_space" 
+                                       onchange="calculateTotal('${entryId}', 'client');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit Type <span class="text-red-500">*</span></label>
+                                <select name="storage_${storageCounter}_client_unit_type" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.storage.space_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Days</label>
+                                <input type="number" name="storage_${storageCounter}_client_days" 
+                                       value="30"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- VENDOR QUANTITY -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-indigo-900 mb-3">🏭 Vendor Quantity</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Min Space</label>
+                                <input type="number" step="0.0001" name="storage_${storageCounter}_vendor_min_space" 
+                                       onchange="calculateTotal('${entryId}', 'vendor');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Additional Space</label>
+                                <input type="number" step="0.0001" name="storage_${storageCounter}_vendor_additional_space" 
+                                       onchange="calculateTotal('${entryId}', 'vendor');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit Type</label>
+                                <select name="storage_${storageCounter}_vendor_unit_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.storage.space_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Days</label>
+                                <input type="number" name="storage_${storageCounter}_vendor_days" 
+                                       value="30"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3A. FLAT RATE SECTION (Default visible) -->
+            <div id="${entryId}_flat_section" class="pricing-mode-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- CLIENT RATE -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Rate</h4>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Rate per Unit (₹)</label>
+                            <input type="number" step="0.0001" name="storage_${storageCounter}_client_rate"
+                                   onchange="calculateTotal('${entryId}', 'client')"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                    </div>
+
+                    <!-- VENDOR RATE -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Rate</h4>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Rate per Unit (₹)</label>
+                            <input type="number" step="0.0001" name="storage_${storageCounter}_vendor_rate"
+                                   onchange="calculateTotal('${entryId}', 'vendor')"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3B. SLAB SECTION (Hidden by default) -->
+            <div id="${entryId}_slab_section" class="pricing-mode-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- CLIENT SLABS -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-sm font-bold text-teal-900">💰 Client Slabs</h4>
+                            <button type="button" onclick="addStorageSlab('${entryId}', ${storageCounter}, 'client')"
+                                    class="px-3 py-1 bg-teal-600 text-white rounded text-xs hover:bg-teal-700">
+                                + Add Slab
+                            </button>
+                        </div>
+                        <div id="${entryId}_client_slabs" class="space-y-2">
+                            <!-- Client slabs will be added here -->
+                        </div>
+                        <div class="mt-2 bg-teal-100 border border-teal-300 rounded p-2">
+                            <p class="text-xs text-teal-800">
+                                💡 Example: 0-1000 @ ₹10 | 1001-5000 @ ₹8 | 5001+ @ ₹6
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- VENDOR SLABS -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-sm font-bold text-indigo-900">🏭 Vendor Slabs</h4>
+                            <button type="button" onclick="addStorageSlab('${entryId}', ${storageCounter}, 'vendor')"
+                                    class="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">
+                                + Add Slab
+                            </button>
+                        </div>
+                        <div id="${entryId}_vendor_slabs" class="space-y-2">
+                            <!-- Vendor slabs will be added here -->
+                        </div>
+                        <div class="mt-2 bg-indigo-100 border border-indigo-300 rounded p-2">
+                            <p class="text-xs text-indigo-800">
+                                💡 Example: 0-500 @ ₹5 | 501-2000 @ ₹4 | 2001+ @ ₹3
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3C. LUMPSUM SECTION (Hidden by default) -->
+            <div id="${entryId}_lumpsum_section" class="pricing-mode-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- CLIENT LUMPSUM -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Lumpsum</h4>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Monthly Lumpsum Amount (₹)</label>
+                            <input type="number" step="0.0001" name="storage_${storageCounter}_client_lumpsum"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                        </div>
+                    </div>
+
+                    <!-- VENDOR LUMPSUM -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Lumpsum</h4>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Monthly Lumpsum Cost (₹)</label>
+                            <input type="number" step="0.0001" name="storage_${storageCounter}_vendor_lumpsum"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. TOTALS (CLIENT | VENDOR) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- CLIENT TOTAL -->
+                <div class="bg-teal-50 border-2 border-teal-300 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💵 Client Total</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                        <input type="number" step="0.0001" name="storage_${storageCounter}_client_total"
+                               data-auto-calculate="true"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                        <p class="text-xs text-gray-500 mt-1">💡 Auto-calculated. You can edit manually.</p>
+                    </div>
+                </div>
+
+                <!-- VENDOR TOTAL -->
+                <div class="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">💵 Vendor Total</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Cost (₹)</label>
+                        <input type="number" step="0.0001" name="storage_${storageCounter}_vendor_total"
+                               data-auto-calculate="true"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                        <p class="text-xs text-gray-500 mt-1">💡 Auto-calculated. You can edit manually.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 5. REMARKS -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📝 Remarks</h4>
+                <textarea name="storage_${storageCounter}_remarks" rows="2" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Optional notes about this storage entry..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== ADD HANDLING IN ENTRY ==========
+function addHandlingInEntry() {
+    handlingInCounter++;
+    const entryId = 'handling-in-entry-' + handlingInCounter;
+    const container = document.getElementById('handling_in-entries');
+    
+    const card = document.createElement('div');
+    card.id = entryId;
+    card.className = 'border-2 border-gray-200 rounded-lg overflow-hidden';
+    
+    let projectCardRatesHTML = '';
+    {% if handling_in_context %}
+    projectCardRatesHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-sm font-bold text-blue-900 mb-3">📋 Reference – Project Card Handling IN Rates</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {% if handling_in_context.client %}
+                <div class="bg-teal-50 p-4 rounded-lg border-2 border-teal-200">
+                    <p class="font-bold text-teal-900 mb-3 text-sm">💰 CLIENT HANDLING IN</p>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Direction:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_in_context.client.direction|upper }}</span>
+                        </div>
+                        {% if handling_in_context.client.channel %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Channel:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_in_context.client.channel|upper }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_in_context.client.base_type %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Base Type:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_in_context.client.base_type|title }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_in_context.client.min_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Min Weight:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_in_context.client.min_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_in_context.client.max_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Max Weight:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_in_context.client.max_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between border-t border-teal-300 pt-2 mt-2">
+                            <span class="text-gray-700">Rate per Unit:</span>
+                            <span class="font-bold text-teal-900 text-sm">₹{{ handling_in_context.client.rate|floatformat:-4 }}</span>
+                        </div>
+                        {% if handling_in_context.client.remarks %}
+                        <div class="mt-2 pt-2 border-t border-teal-200">
+                            <p class="text-gray-700 italic text-xs">{{ handling_in_context.client.remarks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if handling_in_context.vendor %}
+                <div class="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200">
+                    <p class="font-bold text-indigo-900 mb-3 text-sm">🏭 VENDOR HANDLING IN</p>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Direction:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_in_context.vendor.direction|upper }}</span>
+                        </div>
+                        {% if handling_in_context.vendor.channel %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Channel:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_in_context.vendor.channel|upper }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_in_context.vendor.base_type %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Base Type:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_in_context.vendor.base_type|title }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_in_context.vendor.min_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Min Weight:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_in_context.vendor.min_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_in_context.vendor.max_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Max Weight:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_in_context.vendor.max_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between border-t border-indigo-300 pt-2 mt-2">
+                            <span class="text-gray-700">Rate per Unit:</span>
+                            <span class="font-bold text-indigo-900 text-sm">₹{{ handling_in_context.vendor.rate|floatformat:-4 }}</span>
+                        </div>
+                        {% if handling_in_context.vendor.remarks %}
+                        <div class="mt-2 pt-2 border-t border-indigo-200">
+                            <p class="text-gray-700 italic text-xs">{{ handling_in_context.vendor.remarks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    `;
+    {% else %}
+    projectCardRatesHTML = `
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p class="text-sm text-yellow-800">⚠️ No project card handling IN rates configured. Manual entry required.</p>
+        </div>
+    `;
+    {% endif %}
+    
+    card.innerHTML = `
+        <div class="bg-green-700 px-4 py-3 flex justify-between items-center">
+            <h3 class="text-white font-semibold">Handling IN Entry #${handlingInCounter}</h3>
+            <button type="button" onclick="removeEntry('${entryId}')" 
+                    class="text-red-300 hover:text-red-100 font-bold text-lg">
+                ✕
+            </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            ${projectCardRatesHTML}
+            
+            <!-- 2. QUANTITY DATA ENTRY (SEPARATE CLIENT | VENDOR) -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📊 Quantity Data Entry</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- CLIENT QUANTITY -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-teal-900 mb-3">💰 Client Quantity</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" step="0.0001" name="handling_in_${handlingInCounter}_client_quantity"
+                                       onchange="calculateTotal('${entryId}', 'client');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit Type</label>
+                                <select name="handling_in_${handlingInCounter}_client_unit_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.unit_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Channel</label>
+                                <select name="handling_in_${handlingInCounter}_client_channel"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.channel)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Base Type</label>
+                                <select name="handling_in_${handlingInCounter}_client_base_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.base_type)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- VENDOR QUANTITY -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-indigo-900 mb-3">🏭 Vendor Quantity</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" step="0.0001" name="handling_in_${handlingInCounter}_vendor_quantity" 
+                                       onchange="calculateTotal('${entryId}', 'vendor');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit Type</label>
+                                <select name="handling_in_${handlingInCounter}_vendor_unit_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.unit_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Channel</label>
+                                <select name="handling_in_${handlingInCounter}_vendor_channel"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.channel)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Base Type</label>
+                                <select name="handling_in_${handlingInCounter}_vendor_base_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.base_type)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. RATE DATA ENTRY -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Rates</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Rate per Unit (₹)</label>
+                        <input type="number" step="0.0001" name="handling_in_${handlingInCounter}_client_rate"
+                               onchange="calculateTotal('${entryId}', 'client')"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Rates</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Rate per Unit (₹)</label>
+                        <input type="number" step="0.0001" name="handling_in_${handlingInCounter}_vendor_rate" 
+                               onchange="calculateTotal('${entryId}', 'vendor')"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. TOTALS -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-300 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💵 Client Total</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                        <input type="number" step="0.0001" name="handling_in_${handlingInCounter}_client_total"
+                               data-auto-calculate="true"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                        <p class="text-xs text-gray-500 mt-1">💡 Auto-calculated. You can edit manually.</p>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">💵 Vendor Total</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Cost (₹)</label>
+                        <input type="number" step="0.0001" name="handling_in_${handlingInCounter}_vendor_total"
+                               data-auto-calculate="true"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                        <p class="text-xs text-gray-500 mt-1">💡 Auto-calculated. You can edit manually.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 5. REMARKS -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📝 Remarks</h4>
+                <textarea name="handling_in_${handlingInCounter}_remarks" rows="2" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Optional notes..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== ADD HANDLING OUT ENTRY ==========
+function addHandlingOutEntry() {
+    handlingOutCounter++;
+    const entryId = 'handling-out-entry-' + handlingOutCounter;
+    const container = document.getElementById('handling_out-entries');
+    
+    const card = document.createElement('div');
+    card.id = entryId;
+    card.className = 'border-2 border-gray-200 rounded-lg overflow-hidden';
+    
+    let projectCardRatesHTML = '';
+    {% if handling_out_context %}
+    projectCardRatesHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-sm font-bold text-blue-900 mb-3">📋 Reference – Project Card Handling OUT Rates</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {% if handling_out_context.client %}
+                <div class="bg-teal-50 p-4 rounded-lg border-2 border-teal-200">
+                    <p class="font-bold text-teal-900 mb-3 text-sm">💰 CLIENT HANDLING OUT</p>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Direction:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_out_context.client.direction|upper }}</span>
+                        </div>
+                        {% if handling_out_context.client.channel %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Channel:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_out_context.client.channel|upper }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_out_context.client.base_type %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Base Type:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_out_context.client.base_type|title }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_out_context.client.min_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Min Weight:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_out_context.client.min_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_out_context.client.max_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Max Weight:</span>
+                            <span class="font-semibold text-teal-800">{{ handling_out_context.client.max_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between border-t border-teal-300 pt-2 mt-2">
+                            <span class="text-gray-700">Rate per Unit:</span>
+                            <span class="font-bold text-teal-900 text-sm">₹{{ handling_out_context.client.rate|floatformat:-4 }}</span>
+                        </div>
+                        {% if handling_out_context.client.remarks %}
+                        <div class="mt-2 pt-2 border-t border-teal-200">
+                            <p class="text-gray-700 italic text-xs">{{ handling_out_context.client.remarks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if handling_out_context.vendor %}
+                <div class="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200">
+                    <p class="font-bold text-indigo-900 mb-3 text-sm">🏭 VENDOR HANDLING OUT</p>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Direction:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_out_context.vendor.direction|upper }}</span>
+                        </div>
+                        {% if handling_out_context.vendor.channel %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Channel:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_out_context.vendor.channel|upper }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_out_context.vendor.base_type %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Base Type:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_out_context.vendor.base_type|title }}</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_out_context.vendor.min_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Min Weight:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_out_context.vendor.min_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        {% if handling_out_context.vendor.max_weight_kg %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Max Weight:</span>
+                            <span class="font-semibold text-indigo-800">{{ handling_out_context.vendor.max_weight_kg }} kg</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between border-t border-indigo-300 pt-2 mt-2">
+                            <span class="text-gray-700">Rate per Unit:</span>
+                            <span class="font-bold text-indigo-900 text-sm">₹{{ handling_out_context.vendor.rate|floatformat:-4 }}</span>
+                        </div>
+                        {% if handling_out_context.vendor.remarks %}
+                        <div class="mt-2 pt-2 border-t border-indigo-200">
+                            <p class="text-gray-700 italic text-xs">{{ handling_out_context.vendor.remarks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    `;
+    {% else %}
+    projectCardRatesHTML = `
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p class="text-sm text-yellow-800">⚠️ No project card handling OUT rates configured. Manual entry required.</p>
+        </div>
+    `;
+    {% endif %}
+    
+    card.innerHTML = `
+        <div class="bg-purple-700 px-4 py-3 flex justify-between items-center">
+            <h3 class="text-white font-semibold">Handling OUT Entry #${handlingOutCounter}</h3>
+            <button type="button" onclick="removeEntry('${entryId}')" 
+                    class="text-red-300 hover:text-red-100 font-bold text-lg">
+                ✕
+            </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            ${projectCardRatesHTML}
+            
+            <!-- 2. QUANTITY DATA ENTRY (SEPARATE CLIENT | VENDOR) -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📊 Quantity Data Entry</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- CLIENT QUANTITY -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-teal-900 mb-3">💰 Client Quantity</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" step="0.0001" name="handling_out_${handlingOutCounter}_client_quantity"
+                                       onchange="calculateTotal('${entryId}', 'client');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit Type</label>
+                                <select name="handling_out_${handlingOutCounter}_client_unit_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.unit_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Channel</label>
+                                <select name="handling_out_${handlingOutCounter}_client_channel"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.channel)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Base Type</label>
+                                <select name="handling_out_${handlingOutCounter}_client_base_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.base_type)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- VENDOR QUANTITY -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-indigo-900 mb-3">🏭 Vendor Quantity</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" step="0.0001" name="handling_out_${handlingOutCounter}_vendor_quantity" 
+                                       onchange="calculateTotal('${entryId}', 'vendor');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit Type</label>
+                                <select name="handling_out_${handlingOutCounter}_vendor_unit_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.unit_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Channel</label>
+                                <select name="handling_out_${handlingOutCounter}_vendor_channel"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.channel)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Base Type</label>
+                                <select name="handling_out_${handlingOutCounter}_vendor_base_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.handling.base_type)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. RATE DATA ENTRY -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Rates</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Rate per Unit (₹)</label>
+                        <input type="number" step="0.0001" name="handling_out_${handlingOutCounter}_client_rate"
+                               onchange="calculateTotal('${entryId}', 'client')"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Rates</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Rate per Unit (₹)</label>
+                        <input type="number" step="0.0001" name="handling_out_${handlingOutCounter}_vendor_rate" 
+                               onchange="calculateTotal('${entryId}', 'vendor')"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. TOTALS -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-300 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💵 Client Total</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                        <input type="number" step="0.0001" name="handling_out_${handlingOutCounter}_client_total"
+                               data-auto-calculate="true"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                        <p class="text-xs text-gray-500 mt-1">💡 Auto-calculated. You can edit manually.</p>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">💵 Vendor Total</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Total Cost (₹)</label>
+                        <input type="number" step="0.0001" name="handling_out_${handlingOutCounter}_vendor_total"
+                               data-auto-calculate="true"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                        <p class="text-xs text-gray-500 mt-1">💡 Auto-calculated. You can edit manually.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 5. REMARKS -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📝 Remarks</h4>
+                <textarea name="handling_out_${handlingOutCounter}_remarks" rows="2" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Optional notes..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== ADD TRANSPORT ENTRY ==========
+function addTransportEntry() {
+    transportCounter++;
+    const entryId = 'transport-entry-' + transportCounter;
+    const container = document.getElementById('transport-entries');
+    
+    const card = document.createElement('div');
+    card.id = entryId;
+    card.className = 'border-2 border-gray-200 rounded-lg overflow-hidden';
+    card.innerHTML = `
+        <div class="bg-yellow-600 px-4 py-3 flex justify-between items-center">
+            <h3 class="text-white font-semibold">Transport Entry #${transportCounter}</h3>
+            <button type="button" onclick="removeEntry('${entryId}')" 
+                    class="text-red-300 hover:text-red-100 font-bold text-lg">
+                ✕
+            </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p class="text-sm text-blue-800">📋 Transport is typically lumpsum. Enter amounts manually.</p>
+            </div>
+            
+            <!-- 2. QUANTITY DATA ENTRY (SEPARATE CLIENT | VENDOR) -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-900 mb-3">🚚 Vehicle Information</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- CLIENT VEHICLE INFO -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-teal-900 mb-3">💰 Client Transport</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Vehicle Type</label>
+                                <select name="transport_${transportCounter}_client_vehicle_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.transport.vehicle_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity/Trips</label>
+                                <input type="number" step="1" name="transport_${transportCounter}_client_quantity" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- VENDOR VEHICLE INFO -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-indigo-900 mb-3">🏭 Vendor Transport</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Vehicle Type</label>
+                                <select name="transport_${transportCounter}_vendor_vehicle_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.transport.vehicle_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity/Trips</label>
+                                <input type="number" step="1" name="transport_${transportCounter}_vendor_quantity" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. AMOUNTS (CLIENT | VENDOR) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Amount</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Amount (₹)</label>
+                        <input type="number" step="0.0001" name="transport_${transportCounter}_client_amount"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h4>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Amount (₹)</label>
+                        <input type="number" step="0.0001" name="transport_${transportCounter}_vendor_amount"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. REMARKS -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📝 Remarks</h4>
+                <textarea name="transport_${transportCounter}_remarks" rows="2" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Transport details, route, etc..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== VAS HOURS TOGGLE ==========
+function toggleVASHours(entryId, side, unitValue) {
+    const hoursRow = document.getElementById(entryId + '_' + side + '_hours_row');
+    if (hoursRow) {
+        if (unitValue === 'per_hour') {
+            hoursRow.classList.remove('hidden');
+        } else {
+            hoursRow.classList.add('hidden');
+            const hoursInput = hoursRow.querySelector('input');
+            if (hoursInput) hoursInput.value = '';
+        }
+    }
+}
+
+// ========== ADD VAS ENTRY ==========
+function addVASEntry() {
+    vasCounter++;
+    const entryId = 'vas-entry-' + vasCounter;
+    const container = document.getElementById('vas-entries');
+    
+    const card = document.createElement('div');
+    card.id = entryId;
+    card.className = 'border-2 border-gray-200 rounded-lg overflow-hidden';
+    card.innerHTML = `
+        <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
+            <h3 class="text-white font-semibold">VAS/Misc Entry #${vasCounter}</h3>
+            <button type="button" onclick="removeEntry('${entryId}')" 
+                    class="text-red-300 hover:text-red-100 font-bold text-lg">
+                ✕
+            </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            
+            <!-- 2. QUANTITY DATA ENTRY (SEPARATE CLIENT | VENDOR) -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-900 mb-3">⚙️ Service Details</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- CLIENT SERVICE DETAILS -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-teal-900 mb-3">💰 Client Service</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Service Type</label>
+                                <select name="vas_${vasCounter}_client_service_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.vas.service_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit</label>
+                                <select name="vas_${vasCounter}_client_unit"
+                                        onchange="calculateTotal('${entryId}', 'client');"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.vas.unit)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" step="0.0001" name="vas_${vasCounter}_client_quantity"
+                                       onchange="calculateTotal('${entryId}', 'client');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">No. of Hours</label>
+                                <input type="number" step="0.0001" name="vas_${vasCounter}_client_hours"
+                                       onchange="calculateTotal('${entryId}', 'client');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                       placeholder="Leave blank if N/A">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VENDOR SERVICE DETAILS -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h5 class="text-xs font-bold text-indigo-900 mb-3">🏭 Vendor Service</h5>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Service Type</label>
+                                <select name="vas_${vasCounter}_vendor_service_type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.vas.service_type)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Unit</label>
+                                <select name="vas_${vasCounter}_vendor_unit"
+                                        onchange="calculateTotal('${entryId}', 'vendor');"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${buildOptions(CHOICES.vas.unit)}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" step="0.0001" name="vas_${vasCounter}_vendor_quantity"
+                                       onchange="calculateTotal('${entryId}', 'vendor');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">No. of Hours</label>
+                                <input type="number" step="0.0001" name="vas_${vasCounter}_vendor_hours"
+                                       onchange="calculateTotal('${entryId}', 'vendor');"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                       placeholder="Leave blank if N/A">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. RATES (CLIENT | VENDOR) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Rates</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Rate (₹)</label>
+                            <input type="number" step="0.0001" name="vas_${vasCounter}_client_rate"
+                                   onchange="calculateTotal('${entryId}', 'client')"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Total Billing (₹)</label>
+                            <input type="number" step="0.0001" name="vas_${vasCounter}_client_total"
+                                   data-auto-calculate="true"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Rates</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Rate (₹)</label>
+                            <input type="number" step="0.0001" name="vas_${vasCounter}_vendor_rate"
+                                   onchange="calculateTotal('${entryId}', 'vendor')"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Total Cost (₹)</label>
+                            <input type="number" step="0.0001" name="vas_${vasCounter}_vendor_total"
+                                   data-auto-calculate="true"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. REMARKS -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">📝 Remarks</h4>
+                <textarea name="vas_${vasCounter}_remarks" rows="2" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Service details..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
+
+// ========== ADD INFRASTRUCTURE ENTRY ==========
+function addInfrastructureEntry() {
+    infrastructureCounter++;
+    const entryId = 'infrastructure-entry-' + infrastructureCounter;
+    const container = document.getElementById('infrastructure-entries');
+    
+    const card = document.createElement('div');
+    card.id = entryId;
+    card.className = 'border-2 border-gray-200 rounded-lg overflow-hidden';
+    card.innerHTML = `
+        <div class="bg-orange-600 px-4 py-3 flex justify-between items-center">
+            <h3 class="text-white font-semibold">Infrastructure Entry #${infrastructureCounter}</h3>
+            <button type="button" onclick="removeEntry('${entryId}')" 
+                    class="text-red-300 hover:text-red-100 font-bold text-lg">
+                ✕
+            </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            
+            <!-- COST TYPE & DESCRIPTION (SHARED) -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-3">🏗️ Cost Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Cost Type</label>
+                        <select name="infrastructure_${infrastructureCounter}_cost_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            ${buildOptions(CHOICES.infrastructure.cost_type)}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                        <input type="text" name="infrastructure_${infrastructureCounter}_description" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                               placeholder="Brief description...">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AMOUNTS (CLIENT | VENDOR) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-teal-900 mb-3">💰 Client Amount</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Amount (₹)</label>
+                            <input type="number" step="0.0001" name="infrastructure_${infrastructureCounter}_client_amount"
+                                   onchange="aggregateInfrastructure()"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-teal-700">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="infrastructure_${infrastructureCounter}_client_at_actual"
+                                   class="w-4 h-4 mr-2">
+                            <label class="text-xs text-gray-700">At Actual</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Amount (₹)</label>
+                            <input type="number" step="0.0001" name="infrastructure_${infrastructureCounter}_vendor_amount"
+                                   onchange="aggregateInfrastructure()"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-bold text-indigo-700">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="infrastructure_${infrastructureCounter}_vendor_at_actual"
+                                   class="w-4 h-4 mr-2">
+                            <label class="text-xs text-gray-700">At Actual</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.appendChild(card);
+    // Don't auto-aggregate here - let user input trigger it via onchange events
+    // Auto-aggregation was clearing values during edit mode initialization
+}
+
+// ========== AGGREGATE INFRASTRUCTURE ENTRIES (FIXED SELECTORS) ==========
+function aggregateInfrastructure() {
+
+    const infrastructureEntries = document.querySelectorAll('[id^="infrastructure-entry-"]');
+
+    
+    if (infrastructureEntries.length === 0) {
+        return;
+    }
+
+    let totalClientAmount = 0;
+    let totalVendorAmount = 0;
+    let remarks = [];
+
+    infrastructureEntries.forEach((entry, index) => {
+        const clientAmountInput = entry.querySelector('input[name*="_client_amount"]');
+        const vendorAmountInput = entry.querySelector('input[name*="_vendor_amount"]');
+        const costTypeSelect = entry.querySelector('select[name*="_cost_type"]');
+        const descriptionInput = entry.querySelector('input[name*="_description"]');
+
+        const clientAmount = parseFloat(clientAmountInput?.value || 0);
+        const vendorAmount = parseFloat(vendorAmountInput?.value || 0);
+        const costType = costTypeSelect?.options[costTypeSelect.selectedIndex]?.text || '';
+        const description = descriptionInput?.value || '';
+
+        totalClientAmount += clientAmount;
+        totalVendorAmount += vendorAmount;
+
+        if (clientAmount > 0 || vendorAmount > 0 || costType || description) {
+            let remarkLine = `Entry ${index + 1}: `;
+            if (costType) remarkLine += `${costType}`;
+            if (description) remarkLine += ` - ${description}`;
+            if (clientAmount > 0 || vendorAmount > 0) {
+                remarkLine += ` (Client: ₹${clientAmount}, Vendor: ₹${vendorAmount})`;
+            }
+            remarks.push(remarkLine);
+        }
+    });
+
+    document.getElementById('client_infrastructure_amount').value = totalClientAmount;
+    document.getElementById('vendor_infrastructure_cost').value = totalVendorAmount;
+    document.getElementById('infrastructure_remarks').value = remarks.join('\n');
+}
+
+// ========== AGGREGATE STORAGE ENTRIES ==========
+function aggregateStorage() {
+    const entries = document.querySelectorAll('[id^="storage-entry-"]');
+    if (entries.length === 0) return;
+
+    // Get first entry for common fields (unit_type, days) - assuming all use same
+    const firstEntry = entries[0];
+    const clientUnitSelect = firstEntry.querySelector('[name$="_client_unit_type"]');
+    const clientDaysInput = firstEntry.querySelector('[name$="_client_days"]');
+
+    let totalClientMinSpace = 0;
+    let totalClientAdditionalSpace = 0;
+    let totalClientBilling = 0;
+    let totalVendorMinSpace = 0;
+    let totalVendorAdditionalSpace = 0;
+    let totalVendorCost = 0;
+    let clientRates = [];
+    let vendorRates = [];
+    let remarks = [];
+
+    entries.forEach((entry, index) => {
+        // Client side
+        const clientMinSpace = parseFloat(entry.querySelector('[name$="_client_min_space"]')?.value || 0);
+        const clientAdditionalSpace = parseFloat(entry.querySelector('[name$="_client_additional_space"]')?.value || 0);
+        const clientTotal = parseFloat(entry.querySelector('[name$="_client_total"]')?.value || 0);
+        const clientRate = parseFloat(entry.querySelector('[name$="_client_rate"]')?.value || 0);
+
+        // Vendor side
+        const vendorMinSpace = parseFloat(entry.querySelector('[name$="_vendor_min_space"]')?.value || 0);
+        const vendorAdditionalSpace = parseFloat(entry.querySelector('[name$="_vendor_additional_space"]')?.value || 0);
+        const vendorTotal = parseFloat(entry.querySelector('[name$="_vendor_total"]')?.value || 0);
+        const vendorRate = parseFloat(entry.querySelector('[name$="_vendor_rate"]')?.value || 0);
+
+        const entryRemarks = entry.querySelector('[name$="_remarks"]')?.value || '';
+
+
+        totalClientMinSpace += clientMinSpace;
+        totalClientAdditionalSpace += clientAdditionalSpace;
+        totalClientBilling += clientTotal;
+        totalVendorMinSpace += vendorMinSpace;
+        totalVendorAdditionalSpace += vendorAdditionalSpace;
+        totalVendorCost += vendorTotal;
+
+        if (clientRate > 0) clientRates.push(clientRate);
+        if (vendorRate > 0) vendorRates.push(vendorRate);
+        if (entryRemarks) remarks.push(`Entry ${index + 1}: ${entryRemarks}`);
+    });
+
+    // Calculate average rates
+    const avgClientRate = clientRates.length > 0 ? (clientRates.reduce((a, b) => a + b, 0) / clientRates.length) : 0;
+    const avgVendorRate = vendorRates.length > 0 ? (vendorRates.reduce((a, b) => a + b, 0) / vendorRates.length) : 0;
+
+    // FIXED: Validate before overwriting - warn if data drops to zero
+    const isEditMode = {% if billing %}true{% else %}false{% endif %};
+    if (isEditMode) {
+        const originalClientBilling = parseFloat(document.getElementById('client_storage_billing').value) || 0;
+        const originalVendorCost = parseFloat(document.getElementById('vendor_storage_cost').value) || 0;
+
+        if (originalClientBilling > 0 && totalClientBilling === 0) {
+            console.warn('⚠️  ALERT: Storage client billing dropped from ₹' + originalClientBilling.toFixed(0) + ' to ₹0!');
+            console.warn('   This may indicate data loss. Please verify all storage entries are correct.');
+        }
+        if (originalVendorCost > 0 && totalVendorCost === 0) {
+            console.warn('⚠️  ALERT: Storage vendor cost dropped from ₹' + originalVendorCost.toFixed(0) + ' to ₹0!');
+            console.warn('   This may indicate data loss. Please verify all storage entries are correct.');
+        }
+    }
+
+    // Update hidden fields
+    document.getElementById('storage_min_space').value = totalClientMinSpace.toFixed(2);
+    document.getElementById('storage_additional_space').value = totalClientAdditionalSpace.toFixed(2);
+    document.getElementById('storage_unit_type').value = clientUnitSelect?.value || '';
+    document.getElementById('storage_days').value = clientDaysInput?.value || 30;
+    document.getElementById('client_storage_rate').value = avgClientRate;
+    document.getElementById('client_storage_billing').value = totalClientBilling;
+    document.getElementById('vendor_storage_rate').value = avgClientRate;
+    document.getElementById('vendor_storage_cost').value = totalVendorCost;
+    document.getElementById('storage_remarks').value = remarks.join('; ');
+}
+
+// ========== AGGREGATE HANDLING IN ENTRIES ==========
+function aggregateHandlingIn() {
+    const entries = document.querySelectorAll('[id^="handling-in-entry-"]');
+
+    // FIXED: If no entries, clear all fields instead of returning early
+    if (entries.length === 0) {
+        document.getElementById('handling_in_quantity').value = '0';
+        document.getElementById('handling_in_unit_type').value = '';
+        document.getElementById('handling_in_channel').value = '';
+        document.getElementById('handling_in_base_type').value = '';
+        document.getElementById('client_handling_in_rate').value = '0';
+        document.getElementById('client_handling_in_billing').value = '0';
+        document.getElementById('vendor_handling_in_rate').value = '0';
+        document.getElementById('vendor_handling_in_cost').value = '0';
+        document.getElementById('handling_in_remarks').value = '';
+        return;
+    }
+
+    // Get first entry for metadata fields (using CLIENT fields as primary)
+    const firstEntry = entries[0];
+    const clientUnitSelect = firstEntry.querySelector('[name$="_client_unit_type"]');
+    const clientChannelSelect = firstEntry.querySelector('[name$="_client_channel"]');
+    const clientBaseTypeSelect = firstEntry.querySelector('[name$="_client_base_type"]');
+
+    let totalClientQuantity = 0;
+    let totalClientBilling = 0;
+    let totalVendorCost = 0;
+    let clientRates = [];
+    let vendorRates = [];
+    let remarks = [];
+
+    entries.forEach((entry, index) => {
+        // Client side
+        const clientQtyInput = entry.querySelector('[name$="_client_quantity"]');
+        const clientTotalInput = entry.querySelector('[name$="_client_total"]');
+        const clientRateInput = entry.querySelector('[name$="_client_rate"]');
+
+        const clientQuantity = parseFloat(clientQtyInput?.value || 0);
+        const clientTotal = parseFloat(clientTotalInput?.value || 0);
+        const clientRate = parseFloat(clientRateInput?.value || 0);
+
+        // Vendor side
+        const vendorQtyInput = entry.querySelector('[name$="_vendor_quantity"]');
+        const vendorQuantity = parseFloat(vendorQtyInput?.value || 0);
+        const vendorTotal = parseFloat(entry.querySelector('[name$="_vendor_total"]')?.value || 0);
+        const vendorRate = parseFloat(entry.querySelector('[name$="_vendor_rate"]')?.value || 0);
+
+        const entryRemarks = entry.querySelector('[name$="_remarks"]')?.value || '';
+
+
+        totalClientQuantity += clientQuantity;
+        totalClientBilling += clientTotal;
+        totalVendorCost += vendorTotal;
+
+        if (clientRate > 0) clientRates.push(clientRate);
+        if (vendorRate > 0) vendorRates.push(vendorRate);
+        if (entryRemarks) remarks.push(`Entry ${index + 1}: ${entryRemarks}`);
+    });
+
+    const avgClientRate = clientRates.length > 0 ? (clientRates.reduce((a, b) => a + b, 0) / clientRates.length) : 0;
+    const avgVendorRate = vendorRates.length > 0 ? (vendorRates.reduce((a, b) => a + b, 0) / vendorRates.length) : 0;
+
+    // FIXED: Validate before overwriting - warn if data drops to zero
+    const isEditMode = {% if billing %}true{% else %}false{% endif %};
+    if (isEditMode) {
+        const originalClientBilling = parseFloat(document.getElementById('client_handling_in_billing').value) || 0;
+        const originalVendorCost = parseFloat(document.getElementById('vendor_handling_in_cost').value) || 0;
+
+        if (originalClientBilling > 0 && totalClientBilling === 0) {
+            console.warn('⚠️  ALERT: Handling IN client billing dropped from ₹' + originalClientBilling.toFixed(0) + ' to ₹0!');
+        }
+        if (originalVendorCost > 0 && totalVendorCost === 0) {
+            console.warn('⚠️  ALERT: Handling IN vendor cost dropped from ₹' + originalVendorCost.toFixed(0) + ' to ₹0!');
+        }
+    }
+
+    // Use client quantity and metadata as primary values
+    const unitTypeValue = clientUnitSelect?.value || '';
+    const channelValue = clientChannelSelect?.value || '';
+    const baseTypeValue = clientBaseTypeSelect?.value || '';
+
+    document.getElementById('handling_in_quantity').value = totalClientQuantity.toFixed(2);
+    document.getElementById('handling_in_unit_type').value = unitTypeValue;
+    document.getElementById('handling_in_channel').value = channelValue;
+    document.getElementById('handling_in_base_type').value = baseTypeValue;
+    document.getElementById('client_handling_in_rate').value = avgClientRate;
+    document.getElementById('client_handling_in_billing').value = totalClientBilling;
+    document.getElementById('vendor_handling_in_rate').value = avgClientRate;
+    document.getElementById('vendor_handling_in_cost').value = totalVendorCost;
+    document.getElementById('handling_in_remarks').value = remarks.join('; ');
+}
+
+// ========== AGGREGATE HANDLING OUT ENTRIES ==========
+function aggregateHandlingOut() {
+    const entries = document.querySelectorAll('[id^="handling-out-entry-"]');
+    if (entries.length === 0) return;
+
+    // Get first entry for metadata fields (using CLIENT fields as primary)
+    const firstEntry = entries[0];
+    const clientUnitSelect = firstEntry.querySelector('[name$="_client_unit_type"]');
+    const clientChannelSelect = firstEntry.querySelector('[name$="_client_channel"]');
+    const clientBaseTypeSelect = firstEntry.querySelector('[name$="_client_base_type"]');
+
+    let totalClientQuantity = 0;
+    let totalClientBilling = 0;
+    let totalVendorCost = 0;
+    let clientRates = [];
+    let vendorRates = [];
+    let remarks = [];
+
+    entries.forEach((entry, index) => {
+        // Client side
+        const clientQuantity = parseFloat(entry.querySelector('[name$="_client_quantity"]')?.value || 0);
+        const clientTotal = parseFloat(entry.querySelector('[name$="_client_total"]')?.value || 0);
+        const clientRate = parseFloat(entry.querySelector('[name$="_client_rate"]')?.value || 0);
+
+        // Vendor side
+        const vendorQuantity = parseFloat(entry.querySelector('[name$="_vendor_quantity"]')?.value || 0);
+        const vendorTotal = parseFloat(entry.querySelector('[name$="_vendor_total"]')?.value || 0);
+        const vendorRate = parseFloat(entry.querySelector('[name$="_vendor_rate"]')?.value || 0);
+
+        const entryRemarks = entry.querySelector('[name$="_remarks"]')?.value || '';
+
+
+        totalClientQuantity += clientQuantity;
+        totalClientBilling += clientTotal;
+        totalVendorCost += vendorTotal;
+
+        if (clientRate > 0) clientRates.push(clientRate);
+        if (vendorRate > 0) vendorRates.push(vendorRate);
+        if (entryRemarks) remarks.push(`Entry ${index + 1}: ${entryRemarks}`);
+    });
+
+    const avgClientRate = clientRates.length > 0 ? (clientRates.reduce((a, b) => a + b, 0) / clientRates.length) : 0;
+    const avgVendorRate = vendorRates.length > 0 ? (vendorRates.reduce((a, b) => a + b, 0) / vendorRates.length) : 0;
+
+    // Use client quantity and metadata as primary values
+    document.getElementById('handling_out_quantity').value = totalClientQuantity.toFixed(2);
+    document.getElementById('handling_out_unit_type').value = clientUnitSelect?.value || '';
+    document.getElementById('handling_out_channel').value = clientChannelSelect?.value || '';
+    document.getElementById('handling_out_base_type').value = clientBaseTypeSelect?.value || '';
+    document.getElementById('client_handling_out_rate').value = avgClientRate;
+    document.getElementById('client_handling_out_billing').value = totalClientBilling;
+    document.getElementById('vendor_handling_out_rate').value = avgClientRate;
+    document.getElementById('vendor_handling_out_cost').value = totalVendorCost;
+    document.getElementById('handling_out_remarks').value = remarks.join('; ');
+}
+
+// ========== AGGREGATE TRANSPORT ENTRIES ==========
+function aggregateTransport() {
+    const entries = document.querySelectorAll('[id^="transport-entry-"]');
+    if (entries.length === 0) return;
+
+    const firstEntry = entries[0];
+    const clientVehicleSelect = firstEntry.querySelector('[name$="_client_vehicle_type"]');
+    const vendorVehicleSelect = firstEntry.querySelector('[name$="_vendor_vehicle_type"]');
+
+    let totalClientAmount = 0;
+    let totalVendorAmount = 0;
+    let totalClientQuantity = 0;
+    let totalVendorQuantity = 0;
+    let clientRemarks = [];
+    let vendorRemarks = [];
+
+    entries.forEach((entry, index) => {
+        const clientAmount = parseFloat(entry.querySelector('[name$="_client_amount"]')?.value || 0);
+        const vendorAmount = parseFloat(entry.querySelector('[name$="_vendor_amount"]')?.value || 0);
+        const clientQuantity = parseFloat(entry.querySelector('[name$="_client_quantity"]')?.value || 0);
+        const vendorQuantity = parseFloat(entry.querySelector('[name$="_vendor_quantity"]')?.value || 0);
+        const entryRemarks = entry.querySelector('[name$="_remarks"]')?.value || '';
+
+
+        totalClientAmount += clientAmount;
+        totalVendorAmount += vendorAmount;
+        totalClientQuantity += clientQuantity;
+        totalVendorQuantity += vendorQuantity;
+
+        if (entryRemarks) {
+            clientRemarks.push(`Entry ${index + 1}: ${entryRemarks}`);
+            vendorRemarks.push(`Entry ${index + 1}: ${entryRemarks}`);
+        }
+    });
+
+
+    document.getElementById('client_transport_vehicle_type').value = clientVehicleSelect?.value || '';
+    document.getElementById('client_transport_quantity').value = totalClientQuantity;
+    document.getElementById('client_transport_amount').value = totalClientAmount;
+    document.getElementById('client_transport_remarks').value = clientRemarks.join('; ');
+    document.getElementById('vendor_transport_vehicle_type').value = vendorVehicleSelect?.value || '';
+    document.getElementById('vendor_transport_quantity').value = totalVendorQuantity;
+    document.getElementById('vendor_transport_amount').value = totalVendorAmount;
+    document.getElementById('vendor_transport_remarks').value = vendorRemarks.join('; ');
+}
+
+// ========== AGGREGATE VAS ENTRIES ==========
+function aggregateVAS() {
+    const entries = document.querySelectorAll('[id^="vas-entry-"]');
+    if (entries.length === 0) return;
+
+    const firstEntry = entries[0];
+    const clientServiceTypeSelect = firstEntry.querySelector('[name$="_client_service_type"]');
+    const vendorServiceTypeSelect = firstEntry.querySelector('[name$="_vendor_service_type"]');
+    const clientUnitSelect = firstEntry.querySelector('[name$="_client_unit"]');
+    const vendorUnitSelect = firstEntry.querySelector('[name$="_vendor_unit"]');
+
+    let totalQuantity = 0;
+    let totalClientBilling = 0;
+    let totalVendorCost = 0;
+    let clientRates = [];
+    let vendorRates = [];
+    let remarks = [];
+    let clientMiscAmount = 0;
+    let vendorMiscAmount = 0;
+    let clientMiscDesc = [];
+    let vendorMiscDesc = [];
+
+    entries.forEach((entry, index) => {
+        const quantity = parseFloat(entry.querySelector('[name$="_client_quantity"]')?.value || 0);
+        const clientTotal = parseFloat(entry.querySelector('[name$="_client_total"]')?.value || 0);
+        const clientRate = parseFloat(entry.querySelector('[name$="_client_rate"]')?.value || 0);
+        const vendorQuantity = parseFloat(entry.querySelector('[name$="_vendor_quantity"]')?.value || 0);
+        const vendorTotal = parseFloat(entry.querySelector('[name$="_vendor_total"]')?.value || 0);
+        const vendorRate = parseFloat(entry.querySelector('[name$="_vendor_rate"]')?.value || 0);
+        const entryRemarks = entry.querySelector('[name$="_remarks"]')?.value || '';
+
+        const entryServiceType = entry.querySelector('[name$="_client_service_type"]')?.value;
+        const clientDesc = entry.querySelector('[name$="_client_description"]')?.value || '';
+        const vendorDesc = entry.querySelector('[name$="_vendor_description"]')?.value || '';
+
+        if (!entryServiceType || entryServiceType === '') {
+            clientMiscAmount += clientTotal;
+            vendorMiscAmount += vendorTotal;
+            if (clientDesc) clientMiscDesc.push(`Entry ${index + 1}: ${clientDesc}`);
+            if (vendorDesc) vendorMiscDesc.push(`Entry ${index + 1}: ${vendorDesc}`);
+        } else {
+            totalQuantity += quantity;
+            totalClientBilling += clientTotal;
+            totalVendorCost += vendorTotal;
+            if (clientRate > 0) clientRates.push(clientRate);
+            if (vendorRate > 0) vendorRates.push(vendorRate);
+            if (entryRemarks) remarks.push(`Entry ${index + 1}: ${entryRemarks}`);
+        }
+    });
+
+    const avgClientRate = clientRates.length > 0 ? (clientRates.reduce((a, b) => a + b, 0) / clientRates.length) : 0;
+    const avgVendorRate = vendorRates.length > 0 ? (vendorRates.reduce((a, b) => a + b, 0) / vendorRates.length) : 0;
+
+    const finalServiceType = clientServiceTypeSelect?.value || vendorServiceTypeSelect?.value || '';
+    const finalUnit = clientUnitSelect?.value || vendorUnitSelect?.value || '';
+
+    // VAS fields
+    document.getElementById('vas_service_type').value = finalServiceType;
+    document.getElementById('vendor_vas_service_type').value = vendorServiceTypeSelect?.value || '';
+    document.getElementById('vas_quantity').value = totalQuantity.toFixed(2);
+    document.getElementById('vas_unit').value = finalUnit;
+    document.getElementById('client_vas_rate').value = avgClientRate;
+    document.getElementById('client_vas_billing').value = totalClientBilling;
+    document.getElementById('vendor_vas_rate').value = avgClientRate;
+    document.getElementById('vendor_vas_cost').value = totalVendorCost;
+    document.getElementById('vas_remarks').value = remarks.join('; ');
+
+    // MISC fields
+    document.getElementById('client_misc_amount').value = clientMiscAmount;
+    document.getElementById('vendor_misc_amount').value = vendorMiscAmount;
+    document.getElementById('client_misc_description').value = clientMiscDesc.join('; ');
+    document.getElementById('vendor_misc_description').value = vendorMiscDesc.join('; ');
+}
+
+// ========== AGGREGATE ALL SECTIONS ==========
+function aggregateAll() {
+    aggregateStorage();
+    aggregateHandlingIn();
+    aggregateHandlingOut();
+    aggregateTransport();
+    aggregateVAS();
+    aggregateInfrastructure();
+}
+
+// ========== REMOVE ENTRY ==========
+function removeEntry(entryId) {
+    const entry = document.getElementById(entryId);
+    if (entry) {
+        entry.remove();
+        // Re-aggregate after removal
+        aggregateAll();
+    }
+}
+
+// ========== ADHOC SUMMARY COUNTER (UNCHANGED) ==========
+{% if adhoc_entries %}
+document.addEventListener('DOMContentLoaded', function() {
+    const adhocCheckboxes = document.querySelectorAll('input[name="include_adhoc"]');
+    const adhocData = {
+        {% for entry in adhoc_entries %}
+        '{{ entry.id }}': {
+            client: {{ entry.total_client_amount }},
+            vendor: {{ entry.total_vendor_amount }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+    
+    function updateAdhocSummary() {
+        let count = 0;
+        let clientTotal = 0;
+        let vendorTotal = 0;
+        
+        adhocCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                count++;
+                const id = checkbox.value;
+                if (adhocData[id]) {
+                    clientTotal += adhocData[id].client;
+                    vendorTotal += adhocData[id].vendor;
+                }
+            }
+        });
+        
+        document.getElementById('adhoc-count').textContent = count;
+        document.getElementById('adhoc-client-total').textContent = clientTotal;
+        document.getElementById('adhoc-vendor-total').textContent = vendorTotal;
+    }
+    
+    adhocCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateAdhocSummary);
+    });
+    
+    updateAdhocSummary();
+});
+{% endif %}
+
+// ========== RACE CONDITION PROTECTION ==========
+// Global flag to prevent aggregation before data population completes
+window.billingDataPopulated = false;
+
+// ========== INITIALIZE: ADD ONE EMPTY ENTRY PER TAB ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // Add one entry per section
+    addStorageEntry();
+    addHandlingInEntry();
+    addHandlingOutEntry();
+    addTransportEntry();
+    addVASEntry();
+    addInfrastructureEntry();
+
+    // Set flag to allow aggregation
+    window.billingDataPopulated = true;
+});
+
+
+// ========== FORM SUBMIT HANDLER - AGGREGATE ALL DATA BEFORE SUBMISSION ==========
+const billingForm = document.getElementById('billingForm');
+if (billingForm) {
+    billingForm.addEventListener('submit', function(e) {
+
+        try {
+            // FIXED: Clear any pending debounced aggregations
+            if (window.aggregationTimeout) {
+                clearTimeout(window.aggregationTimeout);
+            }
+
+            // Force immediate aggregation
+            aggregateAll();
+
+            // Log final values for debugging
+        } catch (error) {
+            console.error('Error during aggregation:', error);
+            // Continue with form submission even if aggregation fails
+        }
+
+        // Form will submit normally
+    });
+}
+</script>
+
+{% endblock %}

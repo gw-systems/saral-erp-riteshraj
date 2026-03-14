@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User - MiniERP{% endblock %}
+
+{% block content %}
+
+<main class="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Deactivate User</h1>
+        <p class="text-sm text-gray-600 mt-1">Confirm user deactivation</p>
+    </div>
+
+    <!-- Warning Card -->
+    <div class="bg-white shadow-lg rounded-2xl border-2 border-red-200 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-red-50 to-rose-50 px-8 py-6 border-b border-red-100">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg width="48" height="48" aria-hidden="true" class="h-12 w-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Are you sure?</h2>
+                    <p class="text-sm text-gray-600 mt-1">This action will deactivate the user account</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Info -->
+        <div class="px-8 py-6 space-y-4">
+            <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div class="h-16 w-16 rounded-full bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center text-white text-2xl font-bold">
+                    {% if user_to_delete.first_name %}
+                        {{ user_to_delete.first_name|first|upper }}
+                    {% else %}
+                        {{ user_to_delete.username|first|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">
+                        {% if user_to_delete.first_name %}
+                            {{ user_to_delete.first_name }} {{ user_to_delete.last_name }}
+                        {% else %}
+                            {{ user_to_delete.username }}
+                        {% endif %}
+                    </h3>
+                    <p class="text-sm text-gray-600">@{{ user_to_delete.username }} • {{ user_to_delete.get_role_display }}</p>
+                    <p class="text-sm text-gray-500">{{ user_to_delete.email }}</p>
+                </div>
+            </div>
+
+            <!-- Warning Info -->
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-amber-800">What will happen:</h3>
+                        <div class="mt-2 text-sm text-amber-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>User will be marked as <strong>Inactive</strong></li>
+                                <li>User <strong>cannot login</strong> anymore</li>
+                                <li>All data will be <strong>preserved</strong></li>
+                                <li>Project assignments will remain</li>
+                                <li>You can <strong>reactivate</strong> the user later by editing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <p class="text-sm text-blue-700">
+                    <strong>Note:</strong> This is a soft delete. The user account will be deactivated but not permanently deleted. You can reactivate it anytime from the Edit User page.
+                </p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-gray-50 px-8 py-5 border-t border-gray-200 flex items-center justify-between">
+            <a href="{% url 'accounts:user_list' %}" class="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                Cancel
+            </a>
+            <form method="POST" onsubmit="return confirm('Are you absolutely sure you want to deactivate this user?');">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-md transition">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                    Yes, Deactivate User
+                </button>
+            </form>
+        </div>
+    </div>
+
+</main>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}My Projects - Saral ERP{% endblock %}
+
+{% block content %}
+
+<main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">My Projects</h1>
+            <p class="text-sm text-gray-500 mt-1">{{ total_count }} project{{ total_count|pluralize }} where you are the main coordinator</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- SEARCH & FILTER SECTION -->
+    <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-6">
+        <form method="GET" class="space-y-4">
+
+            <!-- 1. Search Bar -->
+            <div class="flex gap-4">
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-500" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search by project code, client, vendor, or location..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button type="submit" class="px-6 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 transition shadow-sm">
+                    Search
+                </button>
+                {% if search_query or current_filters.f_status or current_filters.f_mode or current_filters.f_mis or current_filters.f_sales %}
+                <a href="{% url 'projects:my_projects' %}" class="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 2. Filters Grid (4 columns - Status, Operation Mode, MIS Status, Sales Manager) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                <!-- Status Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                    <select name="f_status" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Statuses</option>
+                        {% for status in filter_options.statuses %}
+                        <option value="{{ status }}" {% if current_filters.f_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Operation Mode Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Op. Mode</label>
+                    <select name="f_mode" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All</option>
+                        <option value="auto_mode" {% if current_filters.f_mode == 'auto_mode' %}selected{% endif %}>Auto Mode</option>
+                        <option value="data_sharing" {% if current_filters.f_mode == 'data_sharing' %}selected{% endif %}>Data Sharing</option>
+                        <option value="active_engagement" {% if current_filters.f_mode == 'active_engagement' %}selected{% endif %}>Active Engagement</option>
+                    </select>
+                </div>
+
+                <!-- MIS Status Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">MIS Status</label>
+                    <select name="f_mis" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All</option>
+                        {% for mis in filter_options.mis_statuses %}
+                        <option value="{{ mis }}" {% if current_filters.f_mis == mis %}selected{% endif %}>{{ mis }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sales Manager Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Sales Mgr</label>
+                    <select name="f_sales" onchange="this.form.submit()" class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Sales Mgrs</option>
+                        {% for sales in filter_options.sales_managers %}
+                        <option value="{{ sales }}" {% if current_filters.f_sales == sales %}selected{% endif %}>{{ sales }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+    <!-- Projects Table -->
+    {% if projects %}
+    <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Code</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operation Mode</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MIS Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sales Manager</th>
+
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in projects %}
+                    <tr class="hover:bg-gray-50 transition">
+
+                        <!-- 1. Project Code -->
+                        <td class="px-6 py-4">
+                            <a href="{% url 'projects:project_detail' project.project_id %}?return_url={{ request.get_full_path|urlencode }}"
+                                class="text-blue-600 hover:text-blue-800 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                {{ project.project_code }}
+                            </a>
+                        </td>
+
+                        <!-- 2. Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if project.project_status == 'Active' %}bg-emerald-100 text-emerald-800
+                                {% elif project.project_status == 'Operation Not Started' %}bg-amber-100 text-amber-800
+                                {% elif project.project_status == 'Notice Period' %}bg-orange-100 text-orange-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ project.project_status }}
+                            </span>
+                        </td>
+
+                        <!-- 3. Operation Mode -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if project.operation_mode %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if project.operation_mode == 'Auto Mode' %}bg-gray-100 text-gray-700
+                                    {% elif project.operation_mode == 'Data Sharing' %}bg-sky-100 text-sky-800
+                                    {% elif project.operation_mode == 'Active Engagement' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                    {{ project.operation_mode }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500 text-xs">Not Set</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- 4. MIS Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if project.mis_status %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if 'Daily' in project.mis_status %}bg-blue-100 text-blue-800
+                                    {% elif 'Weekly' in project.mis_status %}bg-purple-100 text-purple-800
+                                    {% elif 'Monthly' in project.mis_status %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                    {{ project.mis_status }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500 text-xs">Not Set</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- 5. Sales Manager -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ project.sales_manager|default:"—" }}</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+        <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+        <p class="mt-1 text-sm text-gray-500">
+            {% if search_query %}
+            No projects match your search "{{ search_query }}"
+            {% else %}
+            You don't have any assigned projects yet
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+</main>
+
+{% endblock %}

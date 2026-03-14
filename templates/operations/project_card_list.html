@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Cards - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Project Cards</h1>
+            <p class="text-sm text-gray-500 mt-1">{{ total_count }} project card{{ total_count|pluralize }}</p>
+        </div>
+        <div class="flex gap-3">
+            {% if user.role == 'admin' or user.role == 'super_user' or user.role == 'backoffice' %}
+            <a href="{% url 'projects:project_card_create' %}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Project Card
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SEARCH & FILTER SECTION -->
+    <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-6">
+        <form method="GET" class="space-y-4">
+
+            <!-- 1. Search Bar -->
+            <div class="flex gap-4">
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-500" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           name="search"
+                           value="{{ search_query }}"
+                           placeholder="Search by project code, client name, vendor..."
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button type="submit"
+                        class="px-6 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 transition shadow-sm">
+                    Search
+                </button>
+                {% if search_query or current_filters.f_project or current_filters.f_status or current_filters.f_escalation %}
+                <a href="{% url 'projects:project_card_list' %}"
+                   class="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 2. Filters Grid (3 columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                <!-- Status Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                    <select name="f_status"
+                            onchange="this.form.submit()"
+                            class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Status</option>
+                        <option value="active" {% if current_filters.f_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="not_started" {% if current_filters.f_status == 'not_started' %}selected{% endif %}>Not Started</option>
+                        <option value="notice_period" {% if current_filters.f_status == 'notice_period' %}selected{% endif %}>Notice Period</option>
+                    </select>
+                </div>
+
+                <!-- Escalation Filter -->
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Escalation</label>
+                    <select name="f_escalation"
+                            onchange="this.form.submit()"
+                            class="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All</option>
+                        <option value="yes" {% if current_filters.f_escalation == 'yes' %}selected{% endif %}>Has Fixed Escalation</option>
+                        <option value="no" {% if current_filters.f_escalation == 'no' %}selected{% endif %}>No Fixed Escalation</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Project Cards Table -->
+    {% if project_cards %}
+    <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 250px;">
+                            <a href="?sort=project{% if request.GET.sort == 'project' %}_desc{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                               class="hover:text-gray-700 flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                Project
+                                {% if request.GET.sort == 'project' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/>
+                                    </svg>
+                                {% elif request.GET.sort == 'project_desc' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                                    </svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Agreement Period
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Escalation
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Monthly Billable
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Payment Terms
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="?sort=updated{% if request.GET.sort == 'updated' %}_desc{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                               class="hover:text-gray-700 flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                Modified
+                                {% if request.GET.sort == 'updated' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/>
+                                    </svg>
+                                {% elif request.GET.sort == 'updated_desc' %}
+                                    <svg class="w-4 h-4 ml-1" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                                    </svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project_card in project_cards %}
+                    <tr class="hover:bg-gray-50 transition">
+
+                        <!-- Project Column -->
+                        <td class="px-6 py-4">
+                            <a href="{% url 'projects:project_detail' project_id=project_card.project.project_id %}?return_url={{ request.get_full_path|urlencode }}"
+                               class="text-blue-600 hover:text-blue-800 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                {{ project_card.project.project_code }}
+                            </a>
+                            <div class="text-sm text-gray-500">{{ project_card.project.client_name }}</div>
+                        </td>
+
+                        <!-- Agreement Period -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ project_card.agreement_start_date|date:"d M Y" }}</div>
+                            <div class="text-sm text-gray-500">to {{ project_card.agreement_end_date|date:"d M Y" }}</div>
+                        </td>
+
+                        <!-- Escalation -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if project_card.has_fixed_escalation %}
+                                <div class="text-sm text-gray-900">{{ project_card.annual_escalation_percent }}% Annual</div>
+                                <div class="text-sm text-gray-500">On: {{ project_card.yearly_escalation_date|date:"d M Y" }}</div>
+                            {% else %}
+                                <div class="text-sm text-gray-500">No Fixed Escalation</div>
+                                <div class="text-sm text-gray-500">Date: {{ project_card.yearly_escalation_date|date:"d M Y" }}</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Monthly Billable -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if project_card.storage_rates.exists %}
+                                {% with first_storage=project_card.storage_rates.first %}
+                                    {% if first_storage.monthly_billable_amount %}
+                                        <div class="text-sm font-semibold text-gray-900">₹{{ first_storage.monthly_billable_amount|floatformat:0 }}</div>
+                                        {% if project_card.storage_rates.count > 1 %}
+                                            <div class="text-xs text-gray-500">+{{ project_card.storage_rates.count|add:"-1" }} more</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-gray-500 text-sm">Not set</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-gray-500 text-sm">No rates</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Payment Terms -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                Storage: {% if project_card.storage_payment_days %}{{ project_card.storage_payment_days }} days{% else %}<span class="text-gray-500">Not set</span>{% endif %}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                Handling: {% if project_card.handling_payment_days %}{{ project_card.handling_payment_days }} days{% else %}<span class="text-gray-500">Not set</span>{% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Modified Date (using time ago) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ project_card.updated_at|timesince }} ago
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+        <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No project cards found</h3>
+        <p class="mt-1 text-sm text-gray-500">
+            {% if search_query %}
+            No project cards match your search "{{ search_query }}"
+            {% else %}
+            Get started by creating a new project card
+            {% endif %}
+        </p>
+        {% if user.role == 'admin' or user.role == 'super_user' or user.role == 'backoffice' %}
+        <div class="mt-6">
+            <a href="{% url 'projects:project_card_create' %}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Project Card
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</main>
+
+{% endblock %}

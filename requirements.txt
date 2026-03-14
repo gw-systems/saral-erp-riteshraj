@@ -1,0 +1,72 @@
+# Django Core
+Django==5.2.11
+psycopg2-binary==2.9.10
+
+# WSGI Server for production
+gunicorn==23.0.0
+
+# Google Cloud integrations
+google-cloud-storage==2.14.0
+google-cloud-secret-manager==2.18.2
+google-cloud-tasks==2.16.0
+
+# Database connector for Cloud SQL
+cloud-sql-python-connector[pg8000]==1.7.0
+pg8000==1.31.5
+
+# HTTP requests for Zoho API
+requests==2.32.5
+
+# Environment variables
+python-decouple==3.8
+
+# Timezone support
+pytz==2024.1
+
+# Whitenoise for static file serving
+whitenoise==6.6.0
+django-storages[google]==1.14.6
+
+# Testing Dependencies
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+factory-boy==3.3.0
+faker==20.1.0
+
+mypy==1.8.0
+django-stubs==4.2.7
+types-requests==2.31.0
+# Gmail Integration (OAuth2)
+google-auth>=2.17.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+google-api-python-client>=2.80.0
+cryptography>=41.0.0
+
+# Google Ads Integration
+google-ads>=25.0.0
+openpyxl>=3.1.0
+
+# Pydantic for data validation in workers
+pydantic>=2.0.0
+
+# Date/time utilities (used for relative dates in agreements, billing)
+python-dateutil>=2.8.2
+
+# DOCX generation (LR + local quotation generators)
+python-docx>=1.1.2
+docx2pdf>=0.1.8; sys_platform == "win32"
+
+# PDF processing for Adobe Sign
+PyPDF2>=3.0.0
+pycryptodome>=3.20.0  # Required by PyPDF2 to read AES-encrypted PDFs
+
+# Cron expression evaluator (DB-driven scheduler tick)
+croniter>=3.0.0
+
+# Porter Invoice Editor (PDF processing)
+PyMuPDF>=1.24.0
+pdf2image>=1.17.0
+pytesseract>=0.3.10
+Pillow>=10.0.0

@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ email.subject }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'gmail:email_list' %}"
+                       class="inline-flex items-center px-4 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to Inbox
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-900">Email Details</h1>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-2">
+                    {% if 'UNREAD' in email.labels %}
+                    <button class="px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition text-sm font-medium">
+                        Mark as Read
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'gmail:dashboard' %}"
+                       class="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Card -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+            <!-- Email Header -->
+            <div class="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-white mb-2">
+                            {{ email.subject }}
+                        </h2>
+                        <div class="flex flex-wrap gap-2">
+                            {% if not email.is_read %}
+                            <span class="px-3 py-1 text-xs font-semibold text-blue-900 bg-blue-100 rounded-full">
+                                Unread
+                            </span>
+                            {% endif %}
+                            {% if 'IMPORTANT' in email.labels %}
+                            <span class="px-3 py-1 text-xs font-semibold text-yellow-900 bg-yellow-100 rounded-full">
+                                ⭐ Important
+                            </span>
+                            {% endif %}
+                            {% if email.has_attachments %}
+                            <span class="px-3 py-1 text-xs font-semibold text-purple-900 bg-purple-100 rounded-full">
+                                📎 Has Attachments
+                            </span>
+                            {% endif %}
+                            {% if 'SENT' in email.labels %}
+                            <span class="px-3 py-1 text-xs font-semibold text-green-900 bg-green-100 rounded-full">
+                                ↗ Sent
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Metadata -->
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- From -->
+                    <div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-red-100 rounded-full p-3">
+                                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">From</p>
+                                <p class="text-sm font-bold text-gray-900">
+                                    {% if email.sender_contact %}
+                                        {{ email.sender_contact.name|default:email.sender_contact.email }}
+                                    {% else %}
+                                        Unknown Sender
+                                    {% endif %}
+                                </p>
+                                {% if email.sender_contact and email.sender_contact.name %}
+                                <p class="text-xs text-gray-500">{{ email.sender_contact.email }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 rounded-full p-3">
+                                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Received</p>
+                                <p class="text-sm font-bold text-gray-900">{{ email.date|date:"F d, Y" }}</p>
+                                <p class="text-xs text-gray-500">{{ email.date|date:"g:i A" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account -->
+                    <div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-green-100 rounded-full p-3">
+                                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Account</p>
+                                <p class="text-sm font-bold text-gray-900">{{ email.account_email }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thread -->
+                    <div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-purple-100 rounded-full p-3">
+                                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Thread ID</p>
+                                <p class="text-xs font-mono text-gray-700 break-all">{{ email.thread_id }}</p>
+                                {% if thread_emails %}
+                                <p class="text-xs text-gray-500 mt-1">{{ thread_emails|length }} other emails in thread</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Body -->
+            <div class="px-6 py-8">
+                <div class="prose max-w-none">
+                    {% if email.body_html %}
+                        <!-- Render HTML body in iframe for security -->
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-semibold text-gray-700 uppercase">Email Content (HTML)</h3>
+                                <button onclick="togglePlainText()" class="text-xs text-blue-600 hover:underline">
+                                    View Plain Text
+                                </button>
+                            </div>
+                            <iframe
+                                id="html-body"
+                                srcdoc="{{ email.body_html|escape }}"
+                                class="w-full border border-gray-200 rounded-lg"
+                                style="min-height: 400px;"
+                                sandbox="allow-same-origin"
+                            ></iframe>
+                        </div>
+
+                        <!-- Plain text fallback (hidden by default) -->
+                        <div id="plain-text-body" class="hidden">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-semibold text-gray-700 uppercase">Plain Text Version</h3>
+                                <button onclick="togglePlainText()" class="text-xs text-blue-600 hover:underline">
+                                    View HTML
+                                </button>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <pre class="whitespace-pre-wrap text-sm text-gray-800 font-mono">{{ email.body_text }}</pre>
+                            </div>
+                        </div>
+                    {% elif email.body_text %}
+                        <!-- Plain text only -->
+                        <h3 class="text-sm font-semibold text-gray-700 uppercase mb-2">Email Content</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <pre class="whitespace-pre-wrap text-sm text-gray-800">{{ email.body_text }}</pre>
+                        </div>
+                    {% else %}
+                        <!-- No body content -->
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                            <p class="text-sm text-yellow-800">
+                                <strong>No email content available.</strong> This email may have been synced without body content.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Email Snippet (if no body) -->
+            {% if email.snippet and not email.body_text and not email.body_html %}
+            <div class="px-6 pb-6">
+                <h3 class="text-sm font-semibold text-gray-700 uppercase mb-2">Preview</h3>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p class="text-sm text-gray-800 italic">{{ email.snippet }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Labels -->
+            {% if email.labels %}
+            <div class="px-6 pb-6">
+                <h3 class="text-sm font-semibold text-gray-700 uppercase mb-2">Labels</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for label in email.labels %}
+                    <span class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
+                        {{ label }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Thread Emails (if any) -->
+        {% if thread_emails %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                    Related Emails in Thread
+                </h2>
+            </div>
+
+            <div class="divide-y divide-gray-200">
+                {% for thread_email in thread_emails %}
+                <div class="p-4 hover:bg-gray-50 transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 mb-1">{{ thread_email.subject }}</h4>
+                            <p class="text-sm text-gray-600 mb-2">{{ thread_email.snippet|truncatechars:100 }}</p>
+                            <p class="text-xs text-gray-500">
+                                From:
+                                {% if thread_email.sender_contact %}
+                                    {{ thread_email.sender_contact.name|default:thread_email.sender_contact.email }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                                • {{ thread_email.date|date:"M d, Y g:i A" }}
+                            </p>
+                        </div>
+                        <a href="{% url 'gmail:email_detail' thread_email.message_id %}"
+                           class="ml-4 px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition text-sm font-medium">
+                            View
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+function togglePlainText() {
+    const htmlBody = document.getElementById('html-body');
+    const plainTextBody = document.getElementById('plain-text-body');
+
+    if (htmlBody.classList.contains('hidden')) {
+        htmlBody.classList.remove('hidden');
+        plainTextBody.classList.add('hidden');
+    } else {
+        htmlBody.classList.add('hidden');
+        plainTextBody.classList.remove('hidden');
+    }
+}
+</script>
+
+{% endblock %}

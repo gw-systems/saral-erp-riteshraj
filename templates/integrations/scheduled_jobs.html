@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Scheduled Jobs — {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    {% csrf_token %}
+
+    {# ── Page Header ──────────────────────────────────────────────── #}
+    <div class="flex items-start justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Scheduled Jobs</h1>
+            <p class="text-sm text-gray-500 mt-1">
+                DB-driven cron manager. One master GCP Cloud Scheduler fires every minute —
+                all schedules controlled from this page, no GCP console needed.
+            </p>
+        </div>
+        <a href="{% url 'accounts:admin_dashboard_home' %}"
+           class="shrink-0 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition mt-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 rounded-xl">
+            <svg aria-hidden="true" width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Admin
+        </a>
+    </div>
+
+    {# ── Stats ────────────────────────────────────────────────────── #}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Jobs</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ jobs|length }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active</p>
+            <p class="text-3xl font-bold text-emerald-600 mt-1" id="stat-active">{{ enabled_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Paused</p>
+            <p class="text-3xl font-bold text-gray-500 mt-1" id="stat-paused">{{ paused_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Master Tick</p>
+            <code class="text-xs font-mono text-blue-600 mt-2 block leading-relaxed">POST …/tick/ every 1 min</code>
+        </div>
+    </div>
+
+    {# ── Today's Usage ──────────────────────────────────────────────── #}
+    {% if today_summary %}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-5 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Today's Usage</h2>
+            <a href="{% url 'integrations:monitoring_dashboard' %}"
+               class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">
+                Full Dashboard &rarr;
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-gray-900">{{ today_summary.total_runs }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Total Runs</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-gray-900">{{ today_summary.avg_duration }}s</p>
+                <p class="text-xs text-gray-500 mt-0.5">Avg Duration</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-gray-900">{{ today_summary.total_api_calls }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">API Calls</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold {% if today_summary.max_quota_pct > 80 %}text-red-600{% elif today_summary.max_quota_pct > 50 %}text-amber-600{% else %}text-gray-900{% endif %}">
+                    {{ today_summary.max_quota_pct }}%
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5">Peak Quota</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-gray-900">${{ today_summary.gcp_cost_usd }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">GCP Cost</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold {% if today_summary.failed_count > 0 %}text-red-600{% else %}text-gray-900{% endif %}">
+                    {{ today_summary.failed_count }}
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5">Failed</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Job Cards ─────────────────────────────────────────────────── #}
+    <div class="space-y-3">
+        {% for job in jobs %}
+
+        {# Determine badge + accent colour for this integration #}
+        {# badge/accent resolved inline in each element below via templatetag #}
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+             x-data="scheduledJob(
+                 {{ job.pk }},
+                 '{{ job.name|escapejs }}',
+                 '{{ job.cron_schedule|escapejs }}',
+                 '{{ job.cron_human|escapejs }}',
+                 '{{ job.endpoint|escapejs }}',
+                 JSON.parse('{{ job.payload_json|escapejs }}'),
+                 '{{ job.payload_human|escapejs }}',
+                 {{ job.is_enabled|yesno:'true,false' }}
+             )">
+
+            {# ── Card row ──────────────────────────────────── #}
+            <div class="px-4 sm:px-6 py-4 sm:py-5">
+                {# Top row: dot + name + badges + buttons #}
+                <div class="flex items-start sm:items-center gap-3 sm:gap-4">
+
+                    {# Status dot #}
+                    <button @click="toggleEnabled()" class="shrink-0 focus:outline-none mt-1.5 sm:mt-0.5"
+                            :title="enabled ? 'Click to pause' : 'Click to activate'">
+                        <span class="block w-2.5 h-2.5 rounded-full transition ring-4 ring-white shadow-sm
+                            {% if job.integration == 'bigin' %}bg-indigo-400
+                            {% elif job.integration == 'gmail_leads' %}bg-sky-400
+                            {% elif job.integration == 'google_ads' %}bg-red-400
+                            {% elif job.integration == 'callyzer' %}bg-orange-400
+                            {% elif job.integration == 'tallysync' %}bg-emerald-400
+                            {% elif job.integration == 'gmail' %}bg-pink-400
+                            {% elif job.integration == 'expense_log' %}bg-yellow-400
+                            {% else %}bg-gray-400{% endif %}"
+                              :class="enabled ? 'opacity-100' : 'opacity-30'"></span>
+                    </button>
+
+                    {# Name + integration badge #}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-semibold text-gray-900 text-sm" data-field="name">{{ job.name }}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                                {% if job.integration == 'bigin' %}bg-indigo-100 text-indigo-700
+                                {% elif job.integration == 'gmail_leads' %}bg-sky-100 text-sky-700
+                                {% elif job.integration == 'google_ads' %}bg-red-100 text-red-700
+                                {% elif job.integration == 'callyzer' %}bg-orange-100 text-orange-700
+                                {% elif job.integration == 'tallysync' %}bg-emerald-100 text-emerald-700
+                                {% elif job.integration == 'gmail' %}bg-pink-100 text-pink-700
+                                {% elif job.integration == 'expense_log' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {{ job.get_integration_display }}
+                            </span>
+                            <span x-show="!enabled" x-cloak
+                                  class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                                Paused
+                            </span>
+                        </div>
+                    </div>
+
+                    {# Buttons — always in DOM, shown/hidden with x-show #}
+                    <div class="shrink-0 flex items-center gap-2">
+                        <button x-show="!editing" @click="editing = true; msg = ''"
+                            class="text-xs px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition font-medium">
+                            Edit
+                        </button>
+                        <button x-show="!editing" @click="runNow()" :disabled="running"
+                            :class="running ? 'opacity-60 cursor-not-allowed' : 'hover:bg-emerald-700'"
+                            class="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold transition flex items-center gap-1.5">
+                            <svg x-show="!running" aria-hidden="true" width="12" height="12" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                            </svg>
+                            <span x-text="running ? 'Running…' : 'Run Now'"></span>
+                        </button>
+                        <button x-show="editing" @click="editing = false; msg = ''"
+                            class="text-xs px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition font-medium">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                {# Details row: schedule + payload + endpoint + last run #}
+                <div class="mt-2.5 ml-0 sm:ml-[26px] flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 text-xs text-gray-500">
+                    <span class="flex items-center gap-1.5">
+                        <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <strong class="text-gray-800 font-medium" data-field="human">{{ job.cron_human }}</strong>
+                        <code class="text-gray-500 font-mono text-[11px]" data-field="cron">{{ job.cron_schedule }}</code>
+                    </span>
+                    {% if job.payload_human %}
+                    <span class="flex items-center gap-1.5">
+                        <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
+                        </svg>
+                        <span data-field="payload">{{ job.payload_human }}</span>
+                    </span>
+                    {% endif %}
+                    <span class="flex items-center gap-1.5 font-mono text-[11px] text-gray-500 truncate max-w-xs">
+                        <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span class="truncate" data-field="endpoint">{{ job.endpoint }}</span>
+                    </span>
+
+                    {# Separator + last run inline #}
+                    <span class="hidden sm:inline text-gray-300">|</span>
+                    <span class="flex items-center gap-2">
+                        {% if job.last_fired_at %}
+                            <span class="text-gray-600 font-medium">{{ job.last_fired_at|naturaltime }}</span>
+                        {% else %}
+                            <span class="text-gray-500 italic">Never run</span>
+                        {% endif %}
+                        {% if job.last_fired_result == 'ok' %}
+                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <svg aria-hidden="true" width="10" height="10" class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                OK
+                            </span>
+                        {% elif job.last_fired_result == 'error' %}
+                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                                <svg aria-hidden="true" width="10" height="10" class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                Error
+                            </span>
+                        {% elif job.last_fired_result == 'skipped' %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Skipped</span>
+                        {% elif job.is_enabled and job.cron_schedule and not job.last_fired_at %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium text-sky-600 bg-sky-50 border border-sky-200">Pending</span>
+                        {% else %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] bg-gray-50 text-gray-500 border border-gray-200">Not run yet</span>
+                        {% endif %}
+                        {% if job.updated_by and job.updated_by != 'migration' %}
+                            <span class="text-gray-300 text-[10px]">by {{ job.updated_by }}</span>
+                        {% endif %}
+                    </span>
+                    {% if job.runs_today > 0 %}
+                    <span class="hidden sm:inline text-gray-300">|</span>
+                    <span class="flex items-center gap-2 text-[11px]">
+                        <span class="text-gray-600">{{ job.runs_today }} run{{ job.runs_today|pluralize }}</span>
+                        <span class="text-gray-400">&middot;</span>
+                        <span class="text-gray-600">{{ job.api_calls_today }} API calls</span>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Run-now result toast #}
+            <div x-show="msg && !editing" x-cloak class="px-6 pb-3 -mt-1">
+                <p class="text-xs font-medium px-3 py-1.5 rounded-lg inline-block border"
+                   :class="msgOk ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'"
+                   x-text="msg"></p>
+            </div>
+
+            {# ── Edit Panel ────────────────────────────────── #}
+            <div x-show="editing" x-cloak class="border-t border-blue-100 bg-blue-50/40 px-4 sm:px-6 py-4 sm:py-5">
+
+                {# Edit header with active toggle prominently placed #}
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Edit Job</p>
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <span class="text-xs sm:text-sm text-gray-600 font-medium">Status:</span>
+                        <button @click="toggleEnabled()"
+                            :class="enabled ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-gray-300 hover:bg-gray-400'"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-1">
+                            <span :class="enabled ? 'translate-x-6' : 'translate-x-1'"
+                                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow"></span>
+                        </button>
+                        <span class="text-xs sm:text-sm font-bold w-14" :class="enabled ? 'text-emerald-600' : 'text-gray-500'"
+                              x-text="enabled ? 'Active' : 'Paused'"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Job Name</label>
+                        <input x-model="name" type="text"
+                            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cron Schedule</label>
+                        <input x-model="cron" type="text" placeholder="*/15 * * * *"
+                            class="w-full text-sm font-mono border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none shadow-sm">
+                        <p class="text-xs text-blue-600 font-semibold mt-1.5" x-show="cron" x-text="'→ ' + cronLabel(cron)"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Worker Endpoint</label>
+                        <input x-model="endpoint" type="text"
+                            class="w-full text-xs font-mono border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Parameters (JSON)</label>
+                        <textarea x-model="payloadStr" rows="2" spellcheck="false"
+                            class="w-full text-xs font-mono border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:outline-none resize-none shadow-sm"></textarea>
+                        <p class="text-xs text-blue-600 font-semibold mt-1" x-show="payloadLabel(payloadStr)" x-text="payloadLabel(payloadStr)"></p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 mt-4">
+                    <button @click="save()" :disabled="saving"
+                        :class="saving ? 'opacity-60 cursor-not-allowed' : 'hover:bg-blue-700'"
+                        class="text-sm px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold transition shadow-sm"
+                        x-text="saving ? 'Saving…' : 'Save changes'">
+                    </button>
+                    <button @click="editing = false; msg = ''"
+                        class="text-sm px-5 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium transition shadow-sm">
+                        Cancel
+                    </button>
+                    <div x-show="msg" class="ml-2">
+                        <p class="text-sm px-3 py-1.5 rounded-lg font-medium border inline-block"
+                           :class="msgOk ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'"
+                           x-text="msg"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>{# end card #}
+
+        {% endfor %}
+
+        {% if not jobs %}
+        <div class="bg-white rounded-xl border border-gray-200 px-6 py-16 text-center">
+            <p class="text-sm font-medium text-gray-500">No scheduled jobs found</p>
+            <p class="text-xs text-gray-500 mt-1">Run <code class="bg-gray-100 px-1.5 py-0.5 rounded font-mono">python manage.py migrate</code></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <p class="text-xs text-gray-500 mt-5 text-right">Changes apply on the next minute tick</p>
+</div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('scheduledJob', (jobId, initName, initCron, initCronHuman, initEndpoint, initPayload, initPayloadHuman, initEnabled) => ({
+        jobId,
+        editing: false,
+        saving: false,
+        running: false,
+        name: initName,
+        cron: initCron,
+        cronHuman: initCronHuman,
+        endpoint: initEndpoint,
+        payloadStr: JSON.stringify(initPayload),
+        payloadHuman: initPayloadHuman,
+        enabled: initEnabled,
+        msg: '',
+        msgOk: true,
+
+        get csrf() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        },
+
+        cronLabel(expr) {
+            if (!expr) return '';
+            const p = expr.trim().split(/\s+/);
+            if (p.length !== 5) return expr;
+            const [m, h, dom, mon, dow] = p;
+            if (m.startsWith('*/') && h==='*' && dom==='*' && mon==='*' && dow==='*')
+                return 'Every ' + m.slice(2) + ' minutes';
+            if (m==='0' && h==='*' && dom==='*' && mon==='*' && dow==='*')
+                return 'Every hour';
+            if (m==='0' && h.startsWith('*/') && dom==='*' && mon==='*' && dow==='*')
+                return 'Every ' + h.slice(2) + ' hours';
+            if (m==='0' && !h.includes('/') && h!=='*' && dom==='*' && mon==='*' && dow==='*') {
+                const n=parseInt(h), ap=n>=12?'PM':'AM', h12=n%12||12;
+                return 'Daily at ' + h12 + ':00 ' + ap;
+            }
+            return expr;
+        },
+
+        payloadLabel(pl) {
+            try {
+                const obj = JSON.parse(pl), keys = Object.keys(obj);
+                if (!keys.length) return '';
+                return keys.map(k => {
+                    const v = obj[k];
+                    if (k==='days'||k==='days_back') return v+' days back';
+                    if (k==='run_full') return v ? 'Full sync' : 'Incremental';
+                    if (k==='force_full') return v ? 'Force full sync' : 'Incremental';
+                    if (k==='sync_yesterday') return v ? 'Sync yesterday' : null;
+                    if (k==='sync_current_month_search_terms') return v ? '+ search terms' : null;
+                    return k.replace(/_/g,' ') + ': ' + v;
+                }).filter(Boolean).join(' · ');
+            } catch(e) { return ''; }
+        },
+
+        async save() {
+            this.saving = true; this.msg = '';
+            let pl;
+            try { pl = JSON.parse(this.payloadStr); }
+            catch(e) { this.msg = 'Payload is not valid JSON'; this.msgOk = false; this.saving = false; return; }
+            try {
+                const r = await fetch('/integrations/scheduled-jobs/'+this.jobId+'/edit/', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','X-CSRFToken':this.csrf},
+                    body: JSON.stringify({name:this.name, cron_schedule:this.cron, endpoint:this.endpoint, payload:pl, is_enabled:this.enabled})
+                });
+                const d = await r.json();
+                if (d.status === 'ok') {
+                    // Patch server-rendered spans in-place
+                    this.$el.querySelector('[data-field="name"]').textContent    = this.name;
+                    this.$el.querySelector('[data-field="cron"]').textContent    = this.cron;
+                    this.$el.querySelector('[data-field="human"]').textContent   = this.cronLabel(this.cron) || this.cron;
+                    const pf = this.$el.querySelector('[data-field="payload"]');
+                    if (pf) pf.textContent = this.payloadLabel(this.payloadStr);
+                    this.$el.querySelector('[data-field="endpoint"]').textContent = this.endpoint;
+                    this.editing = false; this.msg = 'Saved'; this.msgOk = true;
+                    setTimeout(() => this.msg = '', 3000);
+                } else { this.msg = d.error || 'Save failed'; this.msgOk = false; }
+            } catch(e) { this.msg = 'Network error'; this.msgOk = false; }
+            this.saving = false;
+        },
+
+        async toggleEnabled() {
+            this.enabled = !this.enabled;
+            try {
+                let pl; try { pl = JSON.parse(this.payloadStr); } catch(e) { pl = {}; }
+                const r = await fetch('/integrations/scheduled-jobs/'+this.jobId+'/edit/', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','X-CSRFToken':this.csrf},
+                    body: JSON.stringify({name:this.name, cron_schedule:this.cron, payload:pl, is_enabled:this.enabled})
+                });
+                const d = await r.json();
+                if (d.status !== 'ok') {
+                    this.enabled = !this.enabled;
+                    this.msg = d.error || 'Toggle failed'; this.msgOk = false;
+                } else {
+                    this.msg = this.enabled ? 'Activated' : 'Paused';
+                    this.msgOk = true;
+                    setTimeout(() => this.msg = '', 2500);
+                    updateStats();
+                }
+            } catch(e) { this.enabled = !this.enabled; this.msg = 'Network error'; this.msgOk = false; }
+        },
+
+        async runNow() {
+            this.running = true; this.msg = '';
+            try {
+                const r = await fetch('/integrations/scheduled-jobs/'+this.jobId+'/run-now/', {
+                    method: 'POST', headers: {'X-CSRFToken':this.csrf}
+                });
+                const d = await r.json();
+                this.msg = d.status==='ok' ? 'Triggered — running in background' : (d.error||'Failed');
+                this.msgOk = d.status==='ok';
+                if (this.msgOk) setTimeout(() => this.msg = '', 5000);
+            } catch(e) { this.msg = 'Network error'; this.msgOk = false; }
+            this.running = false;
+        }
+    }));
+});
+
+function updateStats() {
+    let active = 0, total = 0;
+    document.querySelectorAll('[x-data^="scheduledJob"]').forEach(el => {
+        total++;
+        try { if (Alpine.$data(el).enabled) active++; } catch(e) {}
+    });
+    const a = document.getElementById('stat-active');
+    const p = document.getElementById('stat-paused');
+    if (a) a.textContent = active;
+    if (p) p.textContent = total - active;
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(updateStats, 400));
+</script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Escalation Tracker - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'projects:project_detail' project_id=project_card.project.project_id %}" class="text-gray-500 hover:text-gray-600">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">Create Escalation Tracker</h1>
+            </div>
+            <p class="text-gray-600 mt-1">
+                Project: {{ project_card.project.project_code }}
+            </p>
+        </div>
+
+        <!-- Project Card Info -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        <strong>Client:</strong> {{ project_card.project.client_name }}<br>
+                        <strong>Yearly Escalation Date:</strong> {{ project_card.yearly_escalation_date|date:"d M Y" }}<br>
+                        <strong>Current Escalation:</strong> {{ project_card.get_escalation_display }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Escalation Year -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escalation Year <span class="text-red-500">*</span>
+                    </label>
+                    <select name="escalation_year" required
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500">
+                        <option value="">Select Year</option>
+                        {% for year in "2024 2025 2026 2027 2028 2029 2030"|make_list %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Year when escalation is due</p>
+                </div>
+
+                <!-- Escalation Percentage -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escalation Percentage
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="escalation_percentage" step="0.01" min="0" max="100"
+                               value="{{ project_card.annual_escalation_percent }}"
+                               placeholder="5.00"
+                               class="w-32 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500">
+                        <span class="text-gray-700">%</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Leave blank if escalation is "Mutually Agreed"</p>
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <h3 class="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-1.5">
+                        <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Escalation Workflow
+                    </h3>
+                    <ol class="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
+                        <li>Initial intimation to client</li>
+                        <li>1st reminder</li>
+                        <li>2nd reminder</li>
+                        <li>Inform sales manager</li>
+                        <li>Final notice to client</li>
+                        <li>Inform finance team</li>
+                        <li>Apply escalation (create new project card)</li>
+                    </ol>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end gap-3">
+                    <a href="{% url 'projects:project_card_detail' project_card.id %}"
+                       class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        Create Tracker
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

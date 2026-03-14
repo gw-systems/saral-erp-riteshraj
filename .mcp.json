@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "mcp-memory-keeper",
+      "args": ["--db", "/Users/apple/Documents/DataScienceProjects/ERP/.claude/context.db"]
+    },
+    "django": {
+      "command": "/Users/apple/Documents/DataScienceProjects/ERP/venv/bin/python",
+      "args": ["-m", "mcp_django"],
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "minierp.settings",
+        "PYTHONPATH": "/Users/apple/Documents/DataScienceProjects/ERP"
+      }
+    },
+    "postgres": {
+      "command": "postgres-mcp",
+      "args": ["--connection-string", "postgresql://<db_user>:<db_password>@localhost:5432/erp_local"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<set-your-github-token-here>"
+      }
+    },
+    "puppeteer": {
+      "command": "mcp-server-puppeteer"
+    }
+  }
+}

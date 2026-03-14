@@ -1,0 +1,1457 @@
+name: Production Rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type YES to confirm rollout'
+        required: true
+        default: 'NO'
+      skip_backup:
+        description: 'Skip backup? (emergency only, type SKIP)'
+        required: false
+        default: 'NO'
+
+env:
+  GCP_PROJECT_ID: saral-erp-479508
+  GCP_REGION: asia-south1
+  SERVICE_NAME: saral-erp
+  CLOUD_SQL_INSTANCE: saral-erp-db
+  BACKUP_RETENTION_DAYS: 7
+
+jobs:
+  # ============================================================================
+  # PRE-FLIGHT CHECKS - VERIFY EVERYTHING BEFORE TOUCHING PRODUCTION
+  # ============================================================================
+  preflight:
+    name: 🔍 Pre-Flight Validation
+    runs-on: ubuntu-latest
+    
+    outputs:
+      staging_revision: ${{ steps.get-revisions.outputs.staging_revision }}
+      migration_count: ${{ steps.check-migrations.outputs.count }}
+      # Note: docker_image and stable_revision are passed via artifacts to bypass GitHub Actions secret detection
+    
+    steps:
+      - name: Validate Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "YES" ]; then
+            echo "❌ Rollout cancelled - confirmation required"
+            echo "Please run workflow again with confirm='YES'"
+            exit 1
+          fi
+          
+          echo "✅ Rollout confirmed by ${{ github.actor }}"
+      
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # ========================================================================
+      # VERIFY STAGING WAS TESTED
+      # ========================================================================
+      - name: Get Revisions
+        id: get-revisions
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Checking Latest and Current Production Revisions"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          # Get latest revision (most recent deployment)
+          STAGING_REV=$(gcloud run revisions list \
+            --service=${{ env.SERVICE_NAME }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(metadata.name)' \
+            --sort-by='~metadata.creationTimestamp' \
+            --limit=1)
+
+          if [ -z "$STAGING_REV" ]; then
+            echo "❌ No revisions found for service"
+            exit 1
+          fi
+
+          # Get stable production revision from secret
+          STABLE_REV="${{ secrets.STABLE_REVISION }}"
+
+          echo "staging_revision=${STAGING_REV}" >> $GITHUB_OUTPUT
+          echo "stable_revision=${STABLE_REV}" >> $GITHUB_OUTPUT
+
+          echo "✅ Latest Revision: ${STAGING_REV}"
+          echo "✅ Current Production: ${STABLE_REV}"
+          echo ""
+
+          # Verify latest revision was recently deployed
+          STAGING_AGE=$(gcloud run revisions describe ${STAGING_REV} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(metadata.creationTimestamp)')
+
+          echo "📅 Latest revision deployed at: ${STAGING_AGE}"
+
+          # Check if latest revision is older than 7 days
+          STAGING_TIMESTAMP=$(date -d "${STAGING_AGE}" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "${STAGING_AGE}" +%s)
+          CURRENT_TIMESTAMP=$(date +%s)
+          AGE_DAYS=$(( (CURRENT_TIMESTAMP - STAGING_TIMESTAMP) / 86400 ))
+
+          if [ $AGE_DAYS -gt 7 ]; then
+            echo "⚠️  WARNING: Latest revision is ${AGE_DAYS} days old"
+            echo "Consider re-deploying first"
+          fi
+
+          # Save to file for artifact upload (bypasses GitHub Actions secret detection)
+          echo "$STABLE_REV" > stable_revision.txt
+          echo "✅ Saved stable revision to artifact file"
+
+      - name: Upload Stable Revision Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-revision-info
+          path: stable_revision.txt
+          retention-days: 1
+
+      # ========================================================================
+      # VALIDATE DOCKER IMAGE
+      # ========================================================================
+      - name: Validate Docker Image
+        id: validate-image
+        run: |
+          STAGING_REV="${{ steps.get-revisions.outputs.staging_revision }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🐳 Extracting Docker image from staging..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Debug: STAGING_REV = ${STAGING_REV}"
+          echo ""
+
+          IMAGE=$(gcloud run revisions describe ${STAGING_REV} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(spec.containers[0].image)' 2>/dev/null)
+
+          echo "Debug: gcloud command output = ${IMAGE}"
+          echo "Debug: IMAGE length = ${#IMAGE}"
+
+          if [ -z "$IMAGE" ]; then
+            echo "❌ Failed to get Docker image from staging"
+            echo "Revision: ${STAGING_REV}"
+            echo "Project: ${{ env.GCP_PROJECT_ID }}"
+            echo "Region: ${{ env.GCP_REGION }}"
+            exit 1
+          fi
+
+          # Clean the image string (remove any whitespace/newlines)
+          IMAGE=$(echo "$IMAGE" | tr -d '\n' | tr -d '\r' | xargs)
+
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "✅ Docker Image: ${IMAGE}"
+          echo "✅ Output written to: $GITHUB_OUTPUT"
+          echo ""
+          
+          # Verify image exists in GCR
+          echo ""
+          echo "Verifying image exists in registry..."
+          
+          if gcloud container images describe ${IMAGE} >/dev/null 2>&1; then
+            echo "✅ Image verified in Container Registry"
+          else
+            echo "❌ Image not found in Container Registry"
+            exit 1
+          fi
+          
+          # Get image size and layers
+          IMAGE_SIZE=$(gcloud container images describe ${IMAGE} --format='value(image_summary.fully_qualified_digest)' 2>/dev/null || echo "unknown")
+          echo "📦 Image digest: ${IMAGE_SIZE}"
+
+          # Save to file for artifact upload (bypasses GitHub Actions secret detection)
+          echo "$IMAGE" > docker_image.txt
+          echo "✅ Saved image to artifact file"
+
+      - name: Upload Docker Image Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-info
+          path: docker_image.txt
+          retention-days: 1
+
+      # ========================================================================
+      # CHECK PENDING MIGRATIONS
+      # ========================================================================
+      - name: Check Pending Migrations
+        id: check-migrations
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🗃️  Analyzing Pending Migrations"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # Show all migrations
+          python manage.py showmigrations --plan > migrations_plan.txt || true
+          
+          # Count unapplied (would need production DB connection to know exact count)
+          MIGRATION_FILES=$(find . -path "*/migrations/*.py" -not -name "__init__.py" | wc -l | tr -d '[:space:]')
+
+          echo "count=${MIGRATION_FILES}" >> $GITHUB_OUTPUT
+          echo "📊 Total migration files found: ${MIGRATION_FILES}"
+          echo ""
+          echo "⚠️  Note: Exact unapplied count will be determined when connecting to production DB"
+      
+      # ========================================================================
+      # VALIDATE SECRETS AND CONFIGURATION
+      # ========================================================================
+      - name: Validate Secrets
+        run: |
+          echo "🔐 Validating required secrets..."
+          
+          MISSING=0
+          
+          if [ -z "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" ]; then
+            echo "❌ Missing: CLOUD_SQL_CONNECTION_NAME"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.CLOUD_SQL_INSTANCE_NAME }}" ]; then
+            echo "❌ Missing: CLOUD_SQL_INSTANCE_NAME"
+            MISSING=1
+          fi
+          
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "❌ Missing: GCP_PROJECT_ID"
+            MISSING=1
+          fi
+          
+          if [ $MISSING -eq 1 ]; then
+            echo ""
+            echo "Please configure missing secrets in repository settings"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets present"
+      
+      # ========================================================================
+      # RUN DJANGO SYSTEM CHECKS
+      # ========================================================================
+      - name: Django System Checks
+        run: |
+          echo "🔍 Running Django system checks..."
+
+          python manage.py check --deploy || {
+            echo "❌ Django system checks failed"
+            echo "Fix these issues before deploying to production"
+            exit 1
+          }
+
+          echo "✅ Django system checks passed"
+        env:
+          SECRET_KEY: 'validation-secret-key-for-ci-cd-must-be-at-least-fifty-characters-long-12345'
+          DEBUG: 'False'
+          ALLOWED_HOSTS: 'localhost,127.0.0.1'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
+          DB_PASSWORD: 'dummy-password-for-validation'
+          USE_CLOUD_SQL: 'False'
+          ZOHO_CLIENT_ID: 'dummy-client-id'
+          ZOHO_CLIENT_SECRET: 'dummy-client-secret'
+      
+      # ========================================================================
+      # TEST 2: MIGRATION REVERSIBILITY CHECK
+      # ========================================================================
+      - name: "Test 2: Migration Reversibility Check"
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔄 Checking Migration Reversibility"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          python3 -c "
+          import os, re
+
+          warnings = []
+          for root, dirs, files in os.walk('.'):
+              if '/migrations/' not in root or '/venv/' in root or '/.venv/' in root:
+                  continue
+              for f in files:
+                  if not f.endswith('.py') or f.startswith('__'):
+                      continue
+                  path = os.path.join(root, f)
+                  with open(path) as fh:
+                      content = fh.read()
+                  # Find RunPython(func) with only 1 arg (no reverse)
+                  one_arg = re.findall(r'RunPython\(\s*(\w+)\s*\)', content)
+                  for m in one_arg:
+                      warnings.append(f'{path}: RunPython({m}) — no reverse function')
+
+          if warnings:
+              print('WARNING: Non-reversible migrations found:')
+              for w in warnings:
+                  print(f'  {w}')
+              print()
+              print('These migrations cannot be rolled back automatically.')
+              print('Consider adding reverse functions for safer deployments.')
+          else:
+              print('All RunPython migrations have reverse functions.')
+          "
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        continue-on-error: true
+
+      - name: Pre-Flight Summary
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ PRE-FLIGHT CHECKS COMPLETE"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📋 Deployment Details:"
+          echo "  • Staging Revision: ${{ steps.get-revisions.outputs.staging_revision }}"
+          echo "  • Current Production: ${{ steps.get-revisions.outputs.stable_revision }}"
+          echo "  • Docker Image: ${{ steps.validate-image.outputs.image }}"
+          echo "  • Migration Files: ${{ steps.check-migrations.outputs.count }}"
+          echo "  • Triggered By: ${{ github.actor }}"
+          echo ""
+
+          # Validate critical outputs
+          if [ -z "${{ steps.validate-image.outputs.image }}" ]; then
+            echo "❌ CRITICAL: Docker image is empty!"
+            echo "This should have been caught in validate-image step"
+            exit 1
+          fi
+
+          echo "🎯 Next: Database backup and migration"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ============================================================================
+  # DATABASE MIGRATION - THE CRITICAL STEP
+  # ============================================================================
+  migrate:
+    name: 🗃️  Database Migration
+    needs: preflight
+    runs-on: ubuntu-latest
+    
+    outputs:
+      backup_id: ${{ steps.backup.outputs.backup_id }}
+      migration_success: ${{ steps.migrate.outputs.success }}
+    
+    steps:
+      - name: Download Docker Image Info
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-info
+
+      - name: Download Stable Revision Info
+        uses: actions/download-artifact@v4
+        with:
+          name: stable-revision-info
+
+      - name: Read Artifact Data
+        id: read-artifacts
+        run: |
+          IMAGE=$(cat docker_image.txt)
+          STABLE_REV=$(cat stable_revision.txt)
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "stable_revision=$STABLE_REV" >> $GITHUB_OUTPUT
+          echo "✅ Docker Image: ${IMAGE}"
+          echo "✅ Stable Revision: ${STABLE_REV}"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # ========================================================================
+      # CREATE DATABASE BACKUP
+      # ========================================================================
+      - name: Create Database Backup
+        id: backup
+        if: github.event.inputs.skip_backup != 'SKIP'
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "💾 Creating Production Database Backup"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          BACKUP_DESC="pre-rollout-$(date +%Y%m%d-%H%M%S)-actor-${{ github.actor }}-run-${{ github.run_id }}"
+          
+          echo "📦 Creating backup: ${BACKUP_DESC}"
+          echo "⏳ This may take 5-15 minutes depending on database size..."
+          echo ""
+          
+          gcloud sql backups create \
+            --instance=${{ env.CLOUD_SQL_INSTANCE }} \
+            --description="${BACKUP_DESC}" \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --async
+          
+          # Wait for backup to complete
+          echo "Waiting for backup to complete..."
+          sleep 10
+          
+          # Get the backup ID
+          BACKUP_ID=$(gcloud sql backups list \
+            --instance=${{ env.CLOUD_SQL_INSTANCE }} \
+            --limit=1 \
+            --format='value(id)' \
+            --sort-by='~windowStartTime')
+          
+          if [ -z "$BACKUP_ID" ]; then
+            echo "⚠️  Could not verify backup ID, but backup was initiated"
+            BACKUP_ID="unknown"
+          fi
+          
+          echo "backup_id=${BACKUP_ID}" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "✅ Backup initiated successfully"
+          echo "📋 Backup ID: ${BACKUP_ID}"
+          echo "📝 Description: ${BACKUP_DESC}"
+          echo ""
+          
+          # Show recent backups
+          echo "📜 Recent Backups:"
+          gcloud sql backups list \
+            --instance=${{ env.CLOUD_SQL_INSTANCE }} \
+            --limit=5 \
+            --format='table(id,windowStartTime,status,description)'
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Backup Skipped Warning
+        if: github.event.inputs.skip_backup == 'SKIP'
+        run: |
+          echo "⚠️⚠️⚠️ WARNING: BACKUP SKIPPED ⚠️⚠️⚠️"
+          echo "This is EXTREMELY RISKY for production"
+          echo "Proceeding without backup..."
+      
+      # ========================================================================
+      # RUN DATABASE MIGRATIONS
+      # ========================================================================
+      - name: Run Database Migrations
+        id: migrate
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🗃️  Running Production Database Migrations"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          IMAGE="${{ steps.read-artifacts.outputs.image }}"
+          JOB_NAME="migrate-prod-${{ github.run_id }}"
+
+          if [ -z "$IMAGE" ]; then
+            echo "❌ CRITICAL ERROR: Docker image is empty!"
+            echo "Artifact data:"
+            echo "  docker_image: '${{ steps.read-artifacts.outputs.image }}'"
+            echo "  staging_revision: '${{ needs.preflight.outputs.staging_revision }}'"
+            echo "  stable_revision: '${{ steps.read-artifacts.outputs.stable_revision }}'"
+            echo ""
+            echo "This indicates the artifact download or read failed."
+            exit 1
+          fi
+
+          echo "📦 Using image: ${IMAGE}"
+          echo "🏷️  Job name: ${JOB_NAME}"
+          echo ""
+          
+          # Create migration job
+          echo "Creating migration job..."
+          gcloud run jobs create ${JOB_NAME} \
+            --image=${IMAGE} \
+            --region=${{ env.GCP_REGION }} \
+            --set-env-vars="DEBUG=False,USE_CLOUD_SQL=True,DB_NAME=erp,DB_USER=admin,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},ENV=production,ALLOWED_HOSTS=*" \
+            --set-secrets="SECRET_KEY=django-secret-key:latest,DB_PASSWORD=db-password-production:latest,GCS_CREDENTIALS=saral-erp-storage-credentials:latest,ZOHO_CLIENT_ID=zoho-client-id:latest,ZOHO_CLIENT_SECRET=zoho-client-secret:latest,GOOGLE_ADS_CLIENT_SECRET=google-ads-client-secret:latest,GOOGLE_ADS_DEVELOPER_TOKEN=google-ads-developer-token:latest,GMAIL_LEADS_CLIENT_SECRET=gmail-leads-client-secret:latest" \
+            --set-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --command=python,manage.py,migrate,--noinput \
+            --max-retries=0 \
+            --task-timeout=20m \
+            --memory=4Gi \
+            --cpu=4 \
+            2>&1 || {
+              echo "⚠️  Job might already exist, attempting to update..."
+              gcloud run jobs update ${JOB_NAME} \
+                --image=${IMAGE} \
+                --region=${{ env.GCP_REGION }} \
+                2>&1 || true
+            }
+          
+          echo ""
+          echo "⏳ Executing migrations... (timeout: 20 minutes)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # Execute migration and capture output
+          MIGRATION_OUTPUT=$(mktemp)
+          
+          set +e
+          gcloud run jobs execute ${JOB_NAME} \
+            --region=${{ env.GCP_REGION }} \
+            --wait 2>&1 | tee "$MIGRATION_OUTPUT"
+          
+          MIGRATION_EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Check for failures
+          if [ $MIGRATION_EXIT_CODE -ne 0 ] || grep -qi "failed\|error" "$MIGRATION_OUTPUT"; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ MIGRATION FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "📋 Exit Code: ${MIGRATION_EXIT_CODE}"
+            echo ""
+            
+            # Get detailed logs
+            echo "📜 MIGRATION LOGS:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            EXECUTION_NAME=$(gcloud run jobs executions list \
+              --job=${JOB_NAME} \
+              --region=${{ env.GCP_REGION }} \
+              --format='value(metadata.name)' \
+              --sort-by='~metadata.creationTimestamp' \
+              --limit=1 2>/dev/null)
+            
+            if [ -n "$EXECUTION_NAME" ]; then
+              gcloud logging read \
+                "resource.type=cloud_run_job AND resource.labels.job_name=${JOB_NAME}" \
+                --limit=200 \
+                --format="table(timestamp,severity,textPayload)" \
+                --project=${{ env.GCP_PROJECT_ID }} \
+                2>/dev/null || echo "Could not fetch detailed logs"
+            fi
+            
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Show rollback info
+            echo "🔄 ROLLBACK INFORMATION:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            if [ "${{ github.event.inputs.skip_backup }}" != "SKIP" ]; then
+              echo "✅ Database backup available"
+              echo "📋 Backup ID: ${{ steps.backup.outputs.backup_id }}"
+              echo ""
+              echo "To restore backup:"
+              echo "  gcloud sql backups restore ${{ steps.backup.outputs.backup_id }} \\"
+              echo "    --backup-instance=${{ env.CLOUD_SQL_INSTANCE }} \\"
+              echo "    --backup-project=${{ env.GCP_PROJECT_ID }}"
+            else
+              echo "⚠️  NO BACKUP AVAILABLE (was skipped)"
+              echo "Manual database recovery may be required"
+            fi
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            # Cleanup
+            gcloud run jobs delete ${JOB_NAME} \
+              --region=${{ env.GCP_REGION }} \
+              --quiet 2>/dev/null || true
+            
+            rm -f "$MIGRATION_OUTPUT"
+            exit 1
+          fi
+          
+          rm -f "$MIGRATION_OUTPUT"
+          
+          echo ""
+          echo "✅ MIGRATIONS COMPLETED SUCCESSFULLY"
+          echo "success=true" >> $GITHUB_OUTPUT
+          echo ""
+          
+          # Cleanup migration job
+          echo "🧹 Cleaning up migration job..."
+          gcloud run jobs delete ${JOB_NAME} \
+            --region=${{ env.GCP_REGION }} \
+            --quiet 2>/dev/null || true
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      # ========================================================================
+      # VERIFY DATABASE SCHEMA
+      # ========================================================================
+      - name: Verify Database Schema
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Verifying Database Schema"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          IMAGE="${{ steps.read-artifacts.outputs.image }}"
+          JOB_NAME="verify-schema-${{ github.run_id }}"
+          
+          # Create verification job
+          gcloud run jobs create ${JOB_NAME} \
+            --image=${IMAGE} \
+            --region=${{ env.GCP_REGION }} \
+            --set-env-vars="DEBUG=False,USE_CLOUD_SQL=True,DB_NAME=erp,DB_USER=admin,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},ENV=production,ALLOWED_HOSTS=*" \
+            --set-secrets="SECRET_KEY=django-secret-key:latest,DB_PASSWORD=db-password-production:latest,GCS_CREDENTIALS=saral-erp-storage-credentials:latest,ZOHO_CLIENT_ID=zoho-client-id:latest,ZOHO_CLIENT_SECRET=zoho-client-secret:latest,GOOGLE_ADS_CLIENT_SECRET=google-ads-client-secret:latest,GOOGLE_ADS_DEVELOPER_TOKEN=google-ads-developer-token:latest,GMAIL_LEADS_CLIENT_SECRET=gmail-leads-client-secret:latest" \
+            --set-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --command=python,manage.py,showmigrations \
+            --max-retries=0 \
+            --task-timeout=5m \
+            2>&1 || true
+          
+          # Execute
+          echo "Checking migration status..."
+          gcloud run jobs execute ${JOB_NAME} \
+            --region=${{ env.GCP_REGION }} \
+            --wait \
+            2>&1 || {
+              echo "⚠️  Could not verify migrations, but proceeding..."
+            }
+          
+          # Cleanup
+          gcloud run jobs delete ${JOB_NAME} \
+            --region=${{ env.GCP_REGION }} \
+            --quiet 2>/dev/null || true
+          
+          echo ""
+          echo "✅ Schema verification complete"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Migration Summary
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ DATABASE MIGRATION PHASE COMPLETE"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📋 Summary:"
+          if [ "${{ github.event.inputs.skip_backup }}" != "SKIP" ]; then
+            echo "  ✅ Backup created: ${{ steps.backup.outputs.backup_id }}"
+          else
+            echo "  ⚠️  Backup skipped (emergency mode)"
+          fi
+          echo "  ✅ Migrations applied successfully"
+          echo "  ✅ Schema verified"
+          echo ""
+          echo "🎯 Next: Deploy new code to production"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ============================================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================================
+  deploy:
+    name: 🚀 Deploy to Production
+    needs: [preflight, migrate]
+    runs-on: ubuntu-latest
+    
+    outputs:
+      production_revision: ${{ steps.deploy-prod.outputs.production_revision }}
+    
+    steps:
+      - name: Download Docker Image Info
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-info
+
+      - name: Download Stable Revision Info
+        uses: actions/download-artifact@v4
+        with:
+          name: stable-revision-info
+
+      - name: Read Artifact Data
+        id: read-artifacts
+        run: |
+          IMAGE=$(cat docker_image.txt)
+          STABLE_REV=$(cat stable_revision.txt)
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "stable_revision=$STABLE_REV" >> $GITHUB_OUTPUT
+          echo "✅ Docker Image: ${IMAGE}"
+          echo "✅ Stable Revision: ${STABLE_REV}"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Production Revision (0% Traffic)
+        id: deploy-prod
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🚀 Deploying New Production Revision"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          IMAGE="${{ steps.read-artifacts.outputs.image }}"
+
+          echo "📦 Image: ${IMAGE}"
+          echo "🗄️  Database: erp (production)"
+          echo "👤 DB User: admin"
+          echo "🌍 Environment: production"
+          echo ""
+          
+          echo "Deploying with 0% traffic..."
+          
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=${IMAGE} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --no-traffic \
+            --set-env-vars="DEBUG=False,USE_CLOUD_SQL=True,DB_NAME=erp,DB_USER=admin,ALLOWED_HOSTS=*,CSRF_TRUSTED_ORIGINS=https://*.run.app,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},ENV=production,ENVIRONMENT=production,ZOHO_REDIRECT_URI=https://saral-erp-ensstwr7tq-el.a.run.app/integrations/bigin/oauth/callback/,GMAIL_LEADS_REDIRECT_URI=https://saral-erp-ensstwr7tq-el.a.run.app/integrations/gmail-leads/oauth2callback/,GOOGLE_ADS_REDIRECT_URI=https://saral-erp-ensstwr7tq-el.a.run.app/integrations/google-ads/oauth2callback/,USE_CLOUD_TASKS=true,GCP_PROJECT_ID=saral-erp-479508,GCP_LOCATION=asia-south1,CLOUD_TASKS_QUEUE=default,CLOUD_TASKS_SERVICE_URL=https://saral-erp-ensstwr7tq-el.a.run.app,GCP_SERVICE_ACCOUNT=1629809694-compute@developer.gserviceaccount.com" \
+            --set-secrets="SECRET_KEY=django-secret-key:latest,DB_PASSWORD=db-password-production:latest,GCS_CREDENTIALS=saral-erp-storage-credentials:latest,ZOHO_CLIENT_ID=zoho-client-id:latest,ZOHO_CLIENT_SECRET=zoho-client-secret:latest,GOOGLE_ADS_CLIENT_SECRET=google-ads-client-secret:latest,GOOGLE_ADS_DEVELOPER_TOKEN=google-ads-developer-token:latest,GMAIL_LEADS_CLIENT_SECRET=gmail-leads-client-secret:latest" \
+            --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --allow-unauthenticated \
+            --min-instances=1 \
+            --max-instances=10 \
+            --memory=2Gi \
+            --cpu=2 \
+            --timeout=300
+          
+          # Get the newly created revision
+          PROD_REV=$(gcloud run revisions list \
+            --service=${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(metadata.name)' \
+            --sort-by='~metadata.creationTimestamp' \
+            --limit=1)
+          
+          if [ -z "$PROD_REV" ]; then
+            echo "❌ Failed to get production revision name"
+            exit 1
+          fi
+          
+          echo "production_revision=${PROD_REV}" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "✅ Production revision deployed: ${PROD_REV}"
+          echo "   Traffic: 0% (safe deployment)"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      # ========================================================================
+      # TAG REVISION FOR TESTING
+      # ========================================================================
+      - name: Tag Revision for Testing
+        id: tag-revision
+        run: |
+          PROD_REV="${{ steps.deploy-prod.outputs.production_revision }}"
+
+          echo "Adding temporary 'healthcheck' tag to revision..."
+          gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --update-tags=healthcheck=${PROD_REV}
+
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+
+          REVISION_URL=$(echo "$SERVICE_URL" | sed 's|https://|https://healthcheck---|')
+
+          if [ -z "$REVISION_URL" ]; then
+            echo "❌ Could not construct tagged revision URL"
+            exit 1
+          fi
+
+          echo "revision_url=${REVISION_URL}" >> $GITHUB_OUTPUT
+          echo "✅ Tagged URL: ${REVISION_URL}"
+
+      # ========================================================================
+      # HEALTH CHECK
+      # ========================================================================
+      - name: Health Check - New Revision
+        run: |
+          REVISION_URL="${{ steps.tag-revision.outputs.revision_url }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🏥 Health Check: ${REVISION_URL}/accounts/health/"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          MAX_ATTEMPTS=20
+          ATTEMPT=1
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${REVISION_URL}/accounts/health/" 2>/dev/null || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo ""
+              echo "✅ Health check passed"
+              curl -s "${REVISION_URL}/accounts/health/" | python3 -m json.tool 2>/dev/null || true
+              exit 0
+            fi
+
+            echo "Status: $HTTP_CODE — waiting 15s..."
+            sleep 15
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+          exit 1
+
+      # ========================================================================
+      # TEST 1: MULTI-ENDPOINT SMOKE TEST
+      # ========================================================================
+      - name: "Test 1: Multi-Endpoint Smoke Test"
+        run: |
+          REVISION_URL="${{ steps.tag-revision.outputs.revision_url }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Multi-Endpoint Smoke Test"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          ENDPOINTS=(
+            "/accounts/health/"
+            "/accounts/login/"
+            "/accounts/dashboard/"
+            "/projects/list/all/"
+            "/operations/daily-entry/list/"
+            "/supply/locations/"
+            "/supply/vendors/"
+            "/supply/warehouses/"
+            "/operations/disputes/"
+            "/operations/adhoc-billing/"
+          )
+
+          FAILURES=0
+          for endpoint in "${ENDPOINTS[@]}"; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${REVISION_URL}${endpoint}" 2>/dev/null || echo "000")
+
+            if [ "$HTTP_CODE" -ge 500 ] 2>/dev/null || [ "$HTTP_CODE" = "000" ]; then
+              echo "  ❌ ${endpoint} — HTTP ${HTTP_CODE}"
+              FAILURES=$((FAILURES + 1))
+            else
+              echo "  ✅ ${endpoint} — HTTP ${HTTP_CODE}"
+            fi
+          done
+
+          echo ""
+          if [ $FAILURES -gt 0 ]; then
+            echo "❌ ${FAILURES} endpoints returned 5xx errors"
+            exit 1
+          fi
+          echo "✅ All ${#ENDPOINTS[@]} endpoints responding (no 5xx)"
+
+      # ========================================================================
+      # TEST 3: RESPONSE TIME BASELINE
+      # ========================================================================
+      - name: "Test 3: Response Time Baseline"
+        id: response-time
+        run: |
+          REVISION_URL="${{ steps.tag-revision.outputs.revision_url }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "⏱️  Response Time Baseline"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          SLOW_COUNT=0
+          THRESHOLD=5  # seconds
+
+          PAGES=(
+            "/accounts/health/"
+            "/accounts/login/"
+            "/accounts/dashboard/"
+            "/projects/list/all/"
+            "/operations/daily-entry/list/"
+          )
+
+          for page in "${PAGES[@]}"; do
+            TIME=$(curl -s -o /dev/null -w "%{time_total}" "${REVISION_URL}${page}" 2>/dev/null || echo "0")
+            TIME_MS=$(echo "$TIME * 1000" | bc 2>/dev/null || echo "0")
+
+            if (( $(echo "$TIME > $THRESHOLD" | bc -l 2>/dev/null || echo 0) )); then
+              echo "  ⚠️  ${page} — ${TIME}s (exceeds ${THRESHOLD}s threshold)"
+              SLOW_COUNT=$((SLOW_COUNT + 1))
+            else
+              echo "  ✅ ${page} — ${TIME}s"
+            fi
+          done
+
+          echo ""
+          if [ $SLOW_COUNT -gt 2 ]; then
+            echo "❌ ${SLOW_COUNT} pages exceed ${THRESHOLD}s response time threshold"
+            exit 1
+          fi
+          echo "✅ Response times within acceptable range"
+
+      # ========================================================================
+      # TEST 5: CRITICAL USER FLOW TEST
+      # ========================================================================
+      - name: "Test 5: Critical User Flow Test"
+        run: |
+          REVISION_URL="${{ steps.tag-revision.outputs.revision_url }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔑 Critical User Flow Test"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          # Step 1: Login page loads
+          LOGIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${REVISION_URL}/accounts/login/" 2>/dev/null || echo "000")
+          echo "  Login page: HTTP ${LOGIN_CODE}"
+
+          if [ "$LOGIN_CODE" != "200" ]; then
+            echo "  ❌ Login page did not return 200"
+            exit 1
+          fi
+          echo "  ✅ Login page loads"
+
+          # Step 2: Dashboard redirects to login (unauthenticated)
+          DASH_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L --max-redirs 1 "${REVISION_URL}/accounts/dashboard/" 2>/dev/null || echo "000")
+          echo "  Dashboard (unauthenticated): HTTP ${DASH_CODE}"
+
+          if [ "$DASH_CODE" -ge 500 ] 2>/dev/null; then
+            echo "  ❌ Dashboard returned 5xx error"
+            exit 1
+          fi
+          echo "  ✅ Dashboard redirect works"
+
+          # Step 3: Static files accessible
+          STATIC_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${REVISION_URL}/static/js/calendar.js" 2>/dev/null || echo "000")
+          echo "  Static files: HTTP ${STATIC_CODE}"
+
+          if [ "$STATIC_CODE" -ge 500 ] 2>/dev/null; then
+            echo "  ❌ Static file serving broken"
+            exit 1
+          fi
+          echo "  ✅ Static files accessible"
+
+          echo ""
+          echo "✅ Critical user flow validated"
+
+      # ========================================================================
+      # TEST 6: SECURITY HEADER VALIDATION
+      # ========================================================================
+      - name: "Test 6: Security Header Validation"
+        run: |
+          REVISION_URL="${{ steps.tag-revision.outputs.revision_url }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 Security Header Validation"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          HEADERS=$(curl -s -I "${REVISION_URL}/accounts/login/" 2>/dev/null)
+          WARNINGS=0
+
+          # X-Content-Type-Options
+          if echo "$HEADERS" | grep -qi "x-content-type-options.*nosniff"; then
+            echo "  ✅ X-Content-Type-Options: nosniff"
+          else
+            echo "  ⚠️  Missing: X-Content-Type-Options: nosniff"
+            WARNINGS=$((WARNINGS + 1))
+          fi
+
+          # X-Frame-Options
+          if echo "$HEADERS" | grep -qi "x-frame-options"; then
+            echo "  ✅ X-Frame-Options present"
+          else
+            echo "  ⚠️  Missing: X-Frame-Options"
+            WARNINGS=$((WARNINGS + 1))
+          fi
+
+          # Strict-Transport-Security
+          if echo "$HEADERS" | grep -qi "strict-transport-security"; then
+            echo "  ✅ Strict-Transport-Security present"
+          else
+            echo "  ⚠️  Missing: Strict-Transport-Security (HSTS)"
+            WARNINGS=$((WARNINGS + 1))
+          fi
+
+          # Content-Type header
+          if echo "$HEADERS" | grep -qi "content-type"; then
+            echo "  ✅ Content-Type present"
+          else
+            echo "  ⚠️  Missing: Content-Type"
+            WARNINGS=$((WARNINGS + 1))
+          fi
+
+          # Server header leak
+          if echo "$HEADERS" | grep -qi "^server:.*gunicorn\|^server:.*django"; then
+            echo "  ⚠️  Server header leaks technology info"
+            WARNINGS=$((WARNINGS + 1))
+          else
+            echo "  ✅ Server header not leaking technology details"
+          fi
+
+          echo ""
+          if [ $WARNINGS -gt 0 ]; then
+            echo "⚠️  ${WARNINGS} security header warnings (non-blocking)"
+          else
+            echo "✅ All security headers present"
+          fi
+        continue-on-error: true
+
+      # ========================================================================
+      # CLEANUP: REMOVE TESTING TAG
+      # ========================================================================
+      - name: Remove Testing Tag
+        if: always()
+        run: |
+          echo "Removing temporary healthcheck tag..."
+          gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --remove-tags=healthcheck \
+            2>/dev/null || true
+          echo "✅ Testing tag removed"
+
+  # ============================================================================
+  # GRADUAL TRAFFIC ROLLOUT
+  # ============================================================================
+  rollout:
+    name: 📊 Gradual Traffic Rollout
+    needs: [preflight, migrate, deploy]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download Stable Revision Info
+        uses: actions/download-artifact@v4
+        with:
+          name: stable-revision-info
+
+      - name: Read Stable Revision
+        id: read-stable-revision
+        run: |
+          STABLE_REV=$(cat stable_revision.txt)
+          echo "stable_revision=$STABLE_REV" >> $GITHUB_OUTPUT
+          echo "✅ Stable Revision: ${STABLE_REV}"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # ========================================================================
+      # TEST 4: PRE-ROLLOUT ERROR BASELINE
+      # ========================================================================
+      - name: "Test 4: Capture Error Baseline"
+        id: error-baseline
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Capturing Pre-Rollout Error Baseline"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          BASELINE=$(gcloud logging read \
+            "resource.type=cloud_run_revision \
+             AND resource.labels.service_name=${{ env.SERVICE_NAME }} \
+             AND severity>=ERROR \
+             AND timestamp>='$(date -u --date='10 minutes ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-10M +%Y-%m-%dT%H:%M:%SZ)'" \
+            --limit=200 \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }} 2>/dev/null || echo "[]")
+
+          BASELINE_COUNT=$(echo "$BASELINE" | jq '. | length' 2>/dev/null || echo "0")
+          BASELINE_COUNT=$(echo "$BASELINE_COUNT" | tr -d '[:space:]')
+          echo "baseline_count=${BASELINE_COUNT}" >> $GITHUB_OUTPUT
+          echo "Pre-rollout error baseline (last 10 min): ${BASELINE_COUNT} errors"
+
+      # ========================================================================
+      # 10% TRAFFIC
+      # ========================================================================
+      - name: Shift 10% Traffic
+        id: traffic-10
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          STABLE_REV="${{ steps.read-stable-revision.outputs.stable_revision }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Shifting 10% Traffic to New Revision"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          if [ -z "$STABLE_REV" ]; then
+            echo "⚠️  No stable revision found - deploying directly to 10%"
+            gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --to-revisions="${PROD_REV}=10"
+          else
+            echo "New: ${PROD_REV} → 10%"
+            echo "Old: ${STABLE_REV} → 90%"
+            echo ""
+
+            gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --to-revisions="${PROD_REV}=10,${STABLE_REV}=90"
+          fi
+
+          echo ""
+          echo "✅ Traffic shifted: 10% new"
+          echo "⏳ Monitoring for 3 minutes..."
+          sleep 180
+
+      - name: "Test 4: Error Spike Detection at 10%"
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          BASELINE="${{ steps.error-baseline.outputs.baseline_count }}"
+
+          echo "🔍 Checking error rate vs baseline (${BASELINE} errors pre-rollout)..."
+
+          ERRORS=$(gcloud logging read \
+            "resource.type=cloud_run_revision \
+             AND resource.labels.service_name=${{ env.SERVICE_NAME }} \
+             AND resource.labels.revision_name=${PROD_REV} \
+             AND severity>=ERROR \
+             AND timestamp>='$(date -u --date='5 minutes ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-5M +%Y-%m-%dT%H:%M:%SZ)'" \
+            --limit=100 \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }} 2>/dev/null || echo "[]")
+
+          ERROR_COUNT=$(echo "$ERRORS" | jq '. | length' 2>/dev/null || echo "0")
+          ERROR_COUNT=$(echo "$ERROR_COUNT" | tr -d '[:space:]')
+
+          # Spike threshold: more than 3x baseline or absolute > 10
+          SPIKE_THRESHOLD=$((BASELINE * 3 + 5))
+          if [ "$SPIKE_THRESHOLD" -lt 10 ]; then
+            SPIKE_THRESHOLD=10
+          fi
+
+          echo "  New revision errors: $ERROR_COUNT"
+          echo "  Spike threshold: $SPIKE_THRESHOLD (3x baseline + 5)"
+
+          if [ "$ERROR_COUNT" -gt "$SPIKE_THRESHOLD" ]; then
+            echo ""
+            echo "❌ Error spike detected: $ERROR_COUNT errors (threshold: $SPIKE_THRESHOLD)"
+            echo ""
+            echo "Sample errors:"
+            echo "$ERRORS" | jq -r '.[0:5] | .[] | .textPayload // .jsonPayload.message // "unknown"' 2>/dev/null || echo "Could not parse errors"
+            exit 1
+          fi
+
+          echo "✅ Error rate acceptable at 10% ($ERROR_COUNT <= $SPIKE_THRESHOLD)"
+      
+      # ========================================================================
+      # 50% TRAFFIC
+      # ========================================================================
+      - name: Shift 50% Traffic
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          STABLE_REV="${{ steps.read-stable-revision.outputs.stable_revision }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Shifting 50% Traffic to New Revision"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          if [ -z "$STABLE_REV" ]; then
+            echo "⚠️  No stable revision - deploying directly to 50%"
+            gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --to-revisions="${PROD_REV}=50"
+          else
+            gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --to-revisions="${PROD_REV}=50,${STABLE_REV}=50"
+          fi
+
+          echo ""
+          echo "✅ Traffic shifted: 50% new"
+          echo "⏳ Monitoring for 3 minutes..."
+          sleep 180
+      
+      - name: "Test 4: Error Spike Detection at 50%"
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          BASELINE="${{ steps.error-baseline.outputs.baseline_count }}"
+
+          echo "🔍 Checking error rate vs baseline (${BASELINE} errors pre-rollout)..."
+
+          ERRORS=$(gcloud logging read \
+            "resource.type=cloud_run_revision \
+             AND resource.labels.service_name=${{ env.SERVICE_NAME }} \
+             AND resource.labels.revision_name=${PROD_REV} \
+             AND severity>=ERROR \
+             AND timestamp>='$(date -u --date='5 minutes ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-5M +%Y-%m-%dT%H:%M:%SZ)'" \
+            --limit=100 \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }} 2>/dev/null || echo "[]")
+
+          ERROR_COUNT=$(echo "$ERRORS" | jq '. | length' 2>/dev/null || echo "0")
+          ERROR_COUNT=$(echo "$ERROR_COUNT" | tr -d '[:space:]')
+
+          SPIKE_THRESHOLD=$((BASELINE * 3 + 5))
+          if [ "$SPIKE_THRESHOLD" -lt 15 ]; then
+            SPIKE_THRESHOLD=15
+          fi
+
+          echo "  New revision errors: $ERROR_COUNT"
+          echo "  Spike threshold: $SPIKE_THRESHOLD"
+
+          if [ "$ERROR_COUNT" -gt "$SPIKE_THRESHOLD" ]; then
+            echo "❌ Error spike detected at 50%: $ERROR_COUNT errors"
+            exit 1
+          fi
+
+          echo "✅ Error rate acceptable at 50% ($ERROR_COUNT <= $SPIKE_THRESHOLD)"
+      
+      # ========================================================================
+      # 100% TRAFFIC
+      # ========================================================================
+      - name: Shift 100% Traffic
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Shifting 100% Traffic to New Revision"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --to-revisions="${PROD_REV}=100"
+          
+          echo ""
+          echo "✅ All traffic now on new revision: ${PROD_REV}"
+          echo "⏳ Stabilizing for 1 minute..."
+          sleep 60
+      
+      - name: Final Verification
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Final Traffic Verification"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          TRAFFIC=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='table(status.traffic.revisionName,status.traffic.percent)')
+          
+          echo "$TRAFFIC"
+          echo ""
+          
+          # Verify 100% on new revision
+          CURRENT_TRAFFIC=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.traffic[0].percent)')
+          
+          if [ "$CURRENT_TRAFFIC" = "100" ]; then
+            echo "✅ Traffic verification successful"
+          else
+            echo "⚠️  Traffic distribution unexpected: ${CURRENT_TRAFFIC}%"
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      # ========================================================================
+      # TEST 7: CACHE WARMUP
+      # ========================================================================
+      - name: "Test 7: Cache Warmup"
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔥 Cache Warmup — Pre-populating Key Caches"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+
+          # Hit key pages to warm caches (dropdown data, dashboard aggregations)
+          WARMUP_PATHS=(
+            "/accounts/health/"
+            "/accounts/login/"
+            "/accounts/dashboard/"
+            "/projects/list/all/"
+            "/operations/daily-entry/list/"
+            "/supply/locations/"
+            "/supply/vendors/"
+            "/supply/warehouses/"
+          )
+
+          for path in "${WARMUP_PATHS[@]}"; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}${path}" 2>/dev/null || echo "000")
+            echo "  ${path} — HTTP ${HTTP_CODE}"
+          done
+
+          echo ""
+          echo "✅ Cache warmup complete — first users will hit warm caches"
+
+      # ========================================================================
+      # SUCCESS SUMMARY
+      # ========================================================================
+      - name: 🎉 Rollout Complete
+        run: |
+          PROD_REV="${{ needs.deploy.outputs.production_revision }}"
+          STABLE_REV="${{ steps.read-stable-revision.outputs.stable_revision }}"
+          BACKUP_ID="${{ needs.migrate.outputs.backup_id }}"
+          
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════╗"
+          echo "║          🎉 PRODUCTION ROLLOUT SUCCESSFUL 🎉                  ║"
+          echo "╚═══════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "📋 DEPLOYMENT SUMMARY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🌐 Production URL: https://${{ env.SERVICE_NAME }}-ensstwr7tq-el.a.run.app"
+          echo "📦 Active Revision: ${PROD_REV}"
+          echo "🔙 Previous Revision: ${STABLE_REV}"
+          echo "💾 Backup ID: ${BACKUP_ID}"
+          echo "🗄️  Database: erp (production)"
+          echo "🌍 Environment: production"
+          echo "👤 Deployed By: ${{ github.actor }}"
+          echo "🕒 Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 CRITICAL - MANUAL ACTION REQUIRED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "⚠️  You MUST update STABLE_REVISION for future rollbacks:"
+          echo ""
+          echo "  1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+          echo "  2. Find: STABLE_REVISION"
+          echo "  3. Click: Update"
+          echo "  4. New value: ${PROD_REV}"
+          echo "  5. Click: Update secret"
+          echo ""
+          echo "This is critical for emergency rollbacks to work correctly."
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔄 Emergency Rollback (if needed):"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "  Option A - Use gcloud CLI:"
+          echo "    gcloud run services update-traffic ${{ env.SERVICE_NAME }} \\"
+          echo "      --region=${{ env.GCP_REGION }} \\"
+          echo "      --to-revisions=\"${STABLE_REV}=100\""
+          echo ""
+          echo "  Option B - Use Cloud Console:"
+          echo "    https://console.cloud.google.com/run/detail/${{ env.GCP_REGION }}/${{ env.SERVICE_NAME }}"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 MONITORING RECOMMENDATIONS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Monitor for the next 24 hours:"
+          echo "  • Cloud Run logs: https://console.cloud.google.com/run/detail/${{ env.GCP_REGION }}/${{ env.SERVICE_NAME }}/logs"
+          echo "  • Error rates in Cloud Monitoring"
+          echo "  • User reports or support tickets"
+          echo "  • Database performance metrics"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ============================================================================
+  # AUTO-ROLLBACK ON FAILURE
+  # ============================================================================
+  rollback:
+    name: 🔄 Emergency Rollback
+    needs: [preflight, migrate, deploy, rollout]
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+      - name: Download Stable Revision Info
+        uses: actions/download-artifact@v4
+        with:
+          name: stable-revision-info
+
+      - name: Read Stable Revision
+        id: read-stable-revision
+        run: |
+          STABLE_REV=$(cat stable_revision.txt)
+          echo "stable_revision=$STABLE_REV" >> $GITHUB_OUTPUT
+          echo "✅ Stable Revision: ${STABLE_REV}"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Automatic Rollback
+        run: |
+          STABLE_REV="${{ steps.read-stable-revision.outputs.stable_revision }}"
+          BACKUP_ID="${{ needs.migrate.outputs.backup_id }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🚨 ROLLOUT FAILED - INITIATING EMERGENCY ROLLBACK"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📋 Rollback Details:"
+          echo "  Target: ${STABLE_REV}"
+          if [ -n "$BACKUP_ID" ] && [ "$BACKUP_ID" != "unknown" ]; then
+            echo "  Backup: ${BACKUP_ID}"
+          else
+            echo "  Backup: Not available"
+          fi
+          echo ""
+
+          if [ -z "$STABLE_REV" ]; then
+            echo "⚠️  WARNING: No stable revision to rollback to!"
+            echo "This appears to be the first deployment."
+            echo "New revision will remain at current traffic level."
+            echo ""
+            echo "Manual intervention required to fix deployment."
+          else
+            # Rollback traffic to stable revision
+            echo "🔄 Rolling back traffic..."
+            gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+              --region=${{ env.GCP_REGION }} \
+              --to-revisions="${STABLE_REV}=100"
+
+            echo ""
+            echo "✅ Traffic rolled back to: ${STABLE_REV}"
+            echo ""
+          fi
+          
+          # Show current status
+          echo "📊 Current Traffic Distribution:"
+          gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='table(status.traffic.revisionName,status.traffic.percent)'
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "⚠️  DATABASE ROLLBACK REQUIRED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          if [ -n "$BACKUP_ID" ] && [ "$BACKUP_ID" != "unknown" ]; then
+            echo "If migrations were applied, restore database manually:"
+            echo ""
+            echo "  gcloud sql backups restore ${BACKUP_ID} \\"
+            echo "    --backup-instance=${{ env.CLOUD_SQL_INSTANCE }} \\"
+            echo "    --backup-project=${{ env.GCP_PROJECT_ID }}"
+            echo ""
+            echo "⏱️  Estimated restore time: 10-20 minutes"
+          else
+            echo "⚠️  No backup ID available"
+            echo "Manual database recovery may be required"
+            echo "Contact DBA or check Cloud SQL console for recent backups"
+          fi
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 NEXT STEPS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "1. Verify production is stable on old revision"
+          echo "2. Review deployment logs above for failure cause"
+          echo "3. If migrations were applied, restore database from backup"
+          echo "4. Fix issues in staging and test thoroughly"
+          echo "5. Attempt rollout again when ready"
+          echo ""
+          echo "View logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""

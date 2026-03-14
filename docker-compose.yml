@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: erp
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Godam@123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --reload minierp.wsgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=true
+      - SECRET_KEY=django-insecure-local-dev-key
+      - DB_NAME=erp
+      - DB_USER=admin
+      - DB_PASSWORD=Godam@123
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - USE_CLOUD_SQL=false
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build: .
+    command: celery -A minierp worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=true
+      - SECRET_KEY=django-insecure-local-dev-key
+      - DB_NAME=erp
+      - DB_USER=admin
+      - DB_PASSWORD=Godam@123
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - USE_CLOUD_SQL=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    build: .
+    command: celery -A minierp beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=true
+      - SECRET_KEY=django-insecure-local-dev-key
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

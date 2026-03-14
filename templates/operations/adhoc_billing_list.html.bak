@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}Adhoc Billing - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Adhoc Billing Tracker</h1>
+                    <p class="text-gray-600 mt-1">Track extra chargeable events (Client Billables & Vendor Costs)</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'accounts:dashboard' %}"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+
+                    <!-- Create Button: Visible to Admins, Managers, and Coordinators -->
+                    {% if user.role in 'admin,super_user,operation_manager,operation_coordinator,operation_controller' %}
+                    <a href="{% url 'operations:adhoc_billing_create' %}"
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm font-medium">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Entry
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <!-- Total Entries -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-400">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Entries</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ entries.count }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Count -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-400">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Pending</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ pending_count }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Receivable (Client) - TEAL -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-teal-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-xs font-bold text-teal-600 uppercase tracking-wide">Receivable</p>
+                        <p class="text-xl font-bold text-gray-900">₹{{ total_client_amount|floatformat:0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Payable (Vendor) - INDIGO -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-xs font-bold text-indigo-600 uppercase tracking-wide">Payable</p>
+                        <p class="text-xl font-bold text-gray-900">₹{{ total_vendor_amount|floatformat:0 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search project or client..."
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+
+                <div>
+                    <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="">All Statuses</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                        <option value="billed" {% if status_filter == 'billed' %}selected{% endif %}>✅ Billed</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                    </select>
+                </div>
+
+                <div>
+                    <select name="charge_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="">All Types</option>
+                        {% for charge_type in charge_types %}
+                            <option value="{{ charge_type.code }}" {% if charge_type_filter == charge_type.code %}selected{% endif %}>
+                                {{ charge_type.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 md:col-span-2">
+                    <button type="submit" class="flex-1 px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition text-sm font-medium">
+                        Apply Filters
+                    </button>
+                    {% if search_query or status_filter or charge_type_filter %}
+                        <a href="{% url 'operations:adhoc_billing_list' %}"
+                           class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                           title="Clear Filters">
+                            Clear
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Entries List -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+            {% if entries %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Items</th>
+
+                            <!-- Teal Header -->
+                            <th class="px-6 py-3 text-right text-xs font-bold text-teal-800 uppercase tracking-wider bg-teal-50">Client</th>
+
+                            <!-- Indigo Header -->
+                            <th class="px-6 py-3 text-right text-xs font-bold text-indigo-800 uppercase tracking-wider bg-indigo-50">Vendor</th>
+
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for entry in entries %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="font-medium">{{ entry.event_date|date:"d M Y" }}</div>
+                                <div class="text-xs text-gray-500">Bill: {{ entry.service_month|date:"M Y" }}</div>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <a href="{% url 'operations:adhoc_billing_detail' entry.id %}"
+                                   class="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                                    {{ entry.project.project_code }}
+                                </a>
+                                <div class="text-xs text-gray-500 truncate max-w-[200px]">{{ entry.project.client_name }}</div>
+                            </td>
+
+
+                            <!-- Item Counts -->
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800" title="Client Items">
+                                        {{ entry.client_items_count }}
+                                    </span>
+                                    <span class="text-gray-400">|</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800" title="Vendor Items">
+                                        {{ entry.vendor_items_count }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Client Amount (Teal) -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-teal-700 bg-teal-50/30">
+                                {% if entry.total_client_amount > 0 %}
+                                    ₹{{ entry.total_client_amount|floatformat:0 }}
+                                {% else %}
+                                    <span class="text-gray-300">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Vendor Amount (Indigo) -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-indigo-700 bg-indigo-50/30">
+                                {% if entry.total_vendor_amount > 0 %}
+                                    ₹{{ entry.total_vendor_amount|floatformat:0 }}
+                                {% else %}
+                                    <span class="text-gray-300">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Status Dropdown -->
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <form action="{% url 'operations:adhoc_update_status' entry.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <select name="status" onchange="this.form.submit()"
+                                            class="text-xs font-semibold rounded-full px-3 py-1 border-0 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none text-center
+                                            {% if entry.status.code == 'pending' %}bg-yellow-100 text-yellow-800
+                                            {% elif entry.status.code == 'billed' %}bg-green-100 text-green-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        <option value="pending" {% if entry.status.code == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                                        <option value="billed" {% if entry.status.code == 'billed' %}selected{% endif %}>✅ Billed</option>
+                                        <option value="cancelled" {% if entry.status.code == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                    <!-- Table Footer with Totals -->
+                    <tfoot class="bg-gray-100 border-t-2 border-gray-300">
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 text-right text-sm font-bold text-gray-700 uppercase">
+                                Total ({{ entries.count }} entries):
+                            </td>
+                            <td class="px-6 py-4"></td>
+                            <td class="px-6 py-4 text-right text-base font-bold text-teal-700 bg-teal-50/50">
+                                ₹{{ total_client_amount|floatformat:0 }}
+                            </td>
+                            <td class="px-6 py-4 text-right text-base font-bold text-indigo-700 bg-indigo-50/50">
+                                ₹{{ total_vendor_amount|floatformat:0 }}
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12 bg-white">
+                <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No adhoc billing entries found</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    {% if search_query or status_filter or charge_type_filter %}
+                        No entries match your filters. Try adjusting your search.
+                    {% else %}
+                        Get started by creating your first adhoc billing entry.
+                    {% endif %}
+                </p>
+                {% if user.role in 'admin,super_user,operation_manager,operation_coordinator,operation_controller' %}
+                <div class="mt-6">
+                    <a href="{% url 'operations:adhoc_billing_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Create New Entry
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

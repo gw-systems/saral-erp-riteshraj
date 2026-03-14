@@ -1,0 +1,958 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ vendor.vendor_short_name }} - Vendor Details{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header with Back Button -->
+        <div class="mb-8">
+            <a href="{% url 'supply:vendor_list' %}"
+               class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Vendors
+            </a>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ vendor.vendor_short_name }}</h1>
+                    <p class="mt-2 text-sm text-gray-600">Vendor Code: <span class="font-mono font-semibold">{{ vendor.vendor_code }}</span></p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <!-- Status Badge -->
+                    {% if vendor.vendor_is_active %}
+                        <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg bg-green-100 text-green-800">
+                            <svg class="w-4 h-4 mr-2" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg bg-gray-100 text-gray-800">
+                            <svg class="w-4 h-4 mr-2" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Inactive
+                        </span>
+                    {% endif %}
+
+                    <!-- Edit Button -->
+                    <a href="{% url 'supply:vendor_edit' vendor.vendor_code %}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition">
+                        <svg class="w-4 h-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Edit Vendor
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+
+            <!-- Active Warehouses -->
+            <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-blue-50 uppercase">Warehouses</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ active_warehouses }}</p>
+                    <p class="text-xs text-blue-50 mt-1">Active</p>
+                </div>
+            </div>
+
+            <!-- Locations -->
+            <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-purple-50 uppercase">Locations</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ locations_count }}</p>
+                    <p class="text-xs text-purple-50 mt-1">Cities</p>
+                </div>
+            </div>
+
+            <!-- Projects -->
+            <div class="bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-green-50 uppercase">Projects</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ projects_count }}</p>
+                    <p class="text-xs text-green-50 mt-1">Linked</p>
+                </div>
+            </div>
+
+            <!-- Total Space Occupied -->
+            <div class="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-orange-50 uppercase">Space Occupied</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ total_space_sqft|floatformat:0|default:"0" }}</p>
+                    <p class="text-xs text-orange-50 mt-1">Sq. Ft</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Two-Column Grid: Left (Basic Info + Tax & Legal) / Right (Quick Actions + Contacts) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+            <!-- Left Column (2/3 width) - Basic Information & Tax/Legal -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Basic Information Card -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 border-b border-purple-600">
+                        <h2 class="text-lg font-bold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Basic Information
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Vendor Code</dt>
+                                <dd class="mt-1 text-sm font-mono font-semibold text-gray-900">{{ vendor.vendor_code }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Vendor Name</dt>
+                                <dd class="mt-1 text-sm font-semibold text-gray-900">{{ vendor.vendor_short_name }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Category</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ vendor.vendor_category|default:"—" }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                <dd class="mt-1">
+                                    {% if vendor.vendor_is_active %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Created</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ vendor.vendor_created_at|date:"d M Y, h:i A" }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ vendor.vendor_updated_at|date:"d M Y, h:i A" }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Tax & Legal Information Card -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 border-b border-indigo-600">
+                        <h2 class="text-lg font-bold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Tax & Legal Information
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">GST Number</dt>
+                                <dd class="mt-1 text-sm font-mono text-gray-900">{{ vendor.vendor_gstin|default:"Not provided" }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">PAN Number</dt>
+                                <dd class="mt-1 text-sm font-mono text-gray-900">{{ vendor.vendor_pan|default:"Not provided" }}</dd>
+                            </div>
+                            <div class="md:col-span-2">
+                                <dt class="text-sm font-medium text-gray-500">Registered Address</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ vendor.vendor_address|default:"Not provided" }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column (1/3 width) - Quick Actions & Contacts -->
+            <div class="space-y-6">
+
+                <!-- Quick Actions -->
+                <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Quick Actions
+                    </h3>
+                    <div class="space-y-2">
+                        <a href="{% url 'supply:vendor_edit' vendor.vendor_code %}"
+                           class="block w-full px-4 py-3 bg-white bg-opacity-10 hover:bg-opacity-20 text-white text-sm font-medium rounded-lg transition text-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            <svg class="w-4 h-4 inline mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit Vendor
+                        </a>
+
+                        <a href="{% url 'supply:warehouse_create' %}?vendor={{ vendor.vendor_code }}"
+                           class="block w-full px-4 py-3 bg-white bg-opacity-10 hover:bg-opacity-20 text-white text-sm font-medium rounded-lg transition text-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                            <svg class="w-4 h-4 inline mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add Warehouse
+                        </a>
+
+                        <form method="post" action="{% url 'supply:vendor_toggle_active' vendor.vendor_code %}" class="w-full">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="block w-full px-4 py-3 bg-white bg-opacity-10 hover:bg-opacity-20 text-white text-sm font-medium rounded-lg transition">
+                                <svg class="w-4 h-4 inline mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                                {% if vendor.vendor_is_active %}Deactivate{% else %}Activate{% endif %} Vendor
+                            </button>
+                        </form>
+
+                        {% if request.user.role == 'admin' %}
+                        <a href="{% url 'supply:admin_delete_vendor' vendor.vendor_code %}"
+                           class="block w-full px-4 py-3 bg-red-600 bg-opacity-80 hover:bg-opacity-100 text-white text-sm font-medium rounded-lg transition text-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                           onclick="return confirm('This will open the deletion confirmation page. Continue?')">
+                            <svg class="w-4 h-4 inline mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Delete Vendor (Admin)
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contacts Card -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 border-b border-orange-600 flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Contacts ({{ contacts.count }})
+                        </h2>
+                        <button onclick="openAddContactModal()" class="inline-flex items-center px-3 py-1.5 border border-white border-opacity-50 rounded-lg text-xs font-medium text-white hover:bg-white hover:bg-opacity-10 transition">
+                            <svg class="w-4 h-4 mr-1" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add Contact
+                        </button>
+                    </div>
+                    {% if contacts %}
+                    <div class="divide-y divide-gray-200">
+                        {% for contact in contacts %}
+                        <div class="p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-orange-600" width="20" height="20" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm font-semibold text-gray-900">{{ contact.vendor_contact_person }}</p>
+                                        <div class="flex items-center gap-2">
+                                            {% if contact.vendor_contact_is_primary %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    Primary
+                                                </span>
+                                            {% endif %}
+                                            <button onclick="openEditContactModal({{ contact.id }}, '{{ contact.vendor_contact_person|escapejs }}', '{{ contact.vendor_contact_designation|escapejs }}', '{{ contact.vendor_contact_department|escapejs }}', '{{ contact.vendor_contact_phone|escapejs }}', '{{ contact.vendor_contact_email|escapejs }}', {{ contact.vendor_contact_is_primary|yesno:'true,false' }}, {{ contact.is_rfq_contact|yesno:'true,false' }}, '{{ contact.rfq_cities|escapejs }}', '{{ contact.rfq_contact_number|escapejs }}', '{{ contact.rfq_cc_emails|join:','|escapejs }}')" class="text-yellow-600 hover:text-yellow-700 text-xs">
+                                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                            </button>
+                                            {% if user.role == 'admin' %}
+                                            <form method="POST" action="{% url 'supply:vendor_contact_manage' vendor.vendor_code %}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this contact?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="contact_id" value="{{ contact.id }}">
+                                                <button type="submit" class="text-red-600 hover:text-red-700 text-xs">
+                                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if contact.vendor_contact_designation %}
+                                        <p class="text-xs text-gray-500 mt-0.5">{{ contact.vendor_contact_designation }}</p>
+                                    {% endif %}
+                                    {% if contact.vendor_contact_department %}
+                                        <p class="text-xs text-gray-500">{{ contact.vendor_contact_department }}</p>
+                                    {% endif %}
+                                    <div class="mt-2 space-y-1">
+                                        {% if contact.vendor_contact_phone %}
+                                            <a href="tel:{{ contact.vendor_contact_phone }}" class="block text-xs text-blue-600 hover:text-blue-800">
+                                                <svg class="inline w-3 h-3 mr-1" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                </svg>
+                                                {{ contact.vendor_contact_phone }}
+                                            </a>
+                                        {% endif %}
+                                        {% if contact.vendor_contact_email %}
+                                            <a href="mailto:{{ contact.vendor_contact_email }}" class="block text-xs text-blue-600 hover:text-blue-800 break-all">
+                                                <svg class="inline w-3 h-3 mr-1" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                </svg>
+                                                {{ contact.vendor_contact_email }}
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    {% if contact.is_rfq_contact %}
+                                        <div class="mt-2 pt-2 border-t border-gray-100">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                <svg class="w-3 h-3 mr-1" width="12" height="12" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                                </svg>
+                                                RFQ Contact
+                                            </span>
+                                            {% if contact.rfq_cities %}
+                                                <p class="text-xs text-gray-500 mt-1">Cities: {{ contact.rfq_cities }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-10 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No contacts</h3>
+                        <p class="mt-1 text-sm text-gray-500">Click "Add Contact" to create the first contact.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Warehouses Section (Full Width) -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 border-b border-blue-600 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white flex items-center">
+                        <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                        Warehouses ({{ warehouses.count }})
+                    </h2>
+                    <a href="{% url 'supply:warehouse_create' %}?vendor={{ vendor.vendor_code }}"
+                       class="inline-flex items-center px-3 py-1.5 border border-white border-opacity-50 rounded-lg text-xs font-medium text-white hover:bg-white hover:bg-opacity-10 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg class="w-4 h-4 mr-1" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Warehouse
+                    </a>
+                </div>
+                <div class="overflow-x-auto">
+                    {% if warehouses %}
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for warehouse in warehouses %}
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <a href="{% url 'supply:warehouse_detail' warehouse.warehouse_code %}"
+                                           class="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            {{ warehouse.warehouse_code }}
+                                        </a>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-gray-900">{{ warehouse.warehouse_name|default:"—" }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if warehouse.warehouse_location_id %}
+                                            <div class="text-sm text-gray-900">{{ warehouse.warehouse_location_id.city }}</div>
+                                            <div class="text-xs text-gray-500">{{ warehouse.warehouse_location_id.state }}</div>
+                                        {% else %}
+                                            <span class="text-sm text-gray-500">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if warehouse.warehouse_is_active %}
+                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="{% url 'supply:warehouse_detail' warehouse.warehouse_code %}"
+                                           class="text-blue-600 hover:text-blue-900 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="p-10 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No warehouses</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by adding a warehouse for this vendor.</p>
+                            <div class="mt-6">
+                                <a href="{% url 'supply:warehouse_create' %}?vendor={{ vendor.vendor_code }}"
+                                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                    <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Add Warehouse
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Section (Full Width) -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 border-b border-purple-600 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white flex items-center">
+                        <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Projects ({{ projects_count }})
+                    </h2>
+                </div>
+
+                <div class="p-6">
+
+                    <!-- Link New Projects Form -->
+                    {% if unlinked_projects %}
+                    <div class="mb-6 p-5 bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500 rounded-lg">
+                        <form method="POST" action="{% url 'supply:vendor_link_projects' vendor.vendor_code %}" id="link-projects-form">
+                            {% csrf_token %}
+
+                            <div class="flex flex-col md:flex-row md:items-start gap-4">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-semibold text-gray-800 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1 text-purple-600" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Link WAAS Projects to This Vendor
+                                    </label>
+
+                                    <select name="project_ids" id="project-multiselect" multiple="multiple" style="width: 100%;" class="rounded-lg">
+                                        {% for project in unlinked_projects %}
+                                        <option value="{{ project.project_id }}">
+                                            {{ project.project_code }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <p class="text-xs text-gray-600 mt-2">
+                                        Type to search by project code. Select multiple projects to link.
+                                    </p>
+                                </div>
+
+                                <div class="flex flex-row md:flex-col gap-2 md:pt-8">
+                                    <button type="submit" class="flex-1 md:w-40 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-semibold whitespace-nowrap shadow-lg hover:shadow-xl">
+                                        <svg class="w-5 h-5 inline mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                        </svg>
+                                        Link Selected
+                                    </button>
+                                    {% if projects_count > 0 %}
+                                    <button type="button" onclick="unlinkAllProjects()" class="flex-1 md:w-40 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition font-semibold whitespace-nowrap shadow-lg hover:shadow-xl">
+                                        <svg class="w-5 h-5 inline mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                        </svg>
+                                        Unlink All
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Linked Projects Table -->
+                    {% if projects %}
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gradient-to-r from-purple-50 to-pink-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Project Code</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Client</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Location</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for project in projects %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <a href="{% url 'projects:project_detail' project.project_id %}"
+                                           class="text-blue-600 hover:text-blue-800 font-semibold text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                            {{ project.project_code }}
+                                        </a>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="text-sm text-gray-900">{{ project.client_name|default:"—" }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if project.project_status %}
+                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                {% if project.project_status == 'Active' %}bg-green-100 text-green-800
+                                                {% elif project.project_status == 'Operation Not Started' %}bg-yellow-100 text-yellow-800
+                                                {% elif project.project_status == 'Notice Period' %}bg-orange-100 text-orange-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ project.project_status }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-gray-500 text-xs">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-gray-700 text-sm">{{ project.location|default:"—" }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="flex items-center justify-center gap-3">
+                                            <a href="{% url 'projects:project_detail' project.project_id %}"
+                                               class="text-blue-600 hover:text-blue-800 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                                               title="View Project">
+                                                <svg class="h-5 w-5" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                            </a>
+                                            <form method="POST" action="{% url 'supply:vendor_unlink_project' vendor.vendor_code %}" class="inline" onsubmit="return confirm('Unlink {{ project.project_code }} from this vendor?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="project_id" value="{{ project.project_id }}">
+                                                <button type="submit"
+                                                        class="text-red-600 hover:text-red-800 transition-colors"
+                                                        title="Unlink Project">
+                                                    <svg class="h-5 w-5" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Summary Footer -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">Total Projects:</span>
+                                <span class="font-semibold text-gray-800 ml-2">{{ projects_count }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Unique Clients:</span>
+                                <span class="font-semibold text-gray-800 ml-2">{{ unique_clients|length }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Total Min. Area:</span>
+                                <span class="font-semibold text-green-700 ml-2">{{ total_min_area|floatformat:0 }} sqft</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Total Min. Amount:</span>
+                                <span class="font-semibold text-green-700 ml-2">&#8377;{{ total_min_amount|floatformat:0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <svg class="h-16 w-16 mx-auto text-gray-500 mb-4" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        <p class="text-gray-500 text-lg font-medium mb-2">No projects linked yet</p>
+                        <p class="text-gray-500 text-sm">Link WAAS projects using the form above</p>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Add Contact Modal -->
+<div id="addContactModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-lg bg-white">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b">
+            <h3 class="text-xl font-bold text-gray-900">Add New Contact</h3>
+            <button onclick="closeAddContactModal()" class="text-gray-500 hover:text-gray-600">
+                <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'supply:vendor_contact_manage' vendor.vendor_code %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                    <input type="text" name="vendor_contact_person" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Designation *</label>
+                    <input type="text" name="vendor_contact_designation" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                    <input type="text" name="vendor_contact_department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                    <input type="text" name="vendor_contact_phone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" name="vendor_contact_email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="vendor_contact_is_primary" class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700">Mark as Primary Contact</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- RFQ-specific fields -->
+            <div class="border-t pt-4">
+                <div class="mb-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_rfq_contact" id="add_is_rfq_contact" onchange="toggleRfqFields('add')" class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                        <span class="ml-2 text-sm font-medium text-gray-700">RFQ Contact</span>
+                    </label>
+                </div>
+                <div id="add_rfq_fields" class="hidden space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RFQ Cities (comma-separated)</label>
+                        <input type="text" name="rfq_cities" placeholder="Mumbai, Pune, Bangalore" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Cities this vendor serves</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RFQ Contact Number</label>
+                        <input type="text" name="rfq_contact_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RFQ CC Emails (comma-separated)</label>
+                        <input type="text" name="rfq_cc_emails" placeholder="email1@example.com, email2@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Additional emails to CC when sending RFQs</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <button type="button" onclick="closeAddContactModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                    Add Contact
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Contact Modal -->
+<div id="editContactModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-lg bg-white">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b">
+            <h3 class="text-xl font-bold text-gray-900">Edit Contact</h3>
+            <button onclick="closeEditContactModal()" class="text-gray-500 hover:text-gray-600">
+                <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'supply:vendor_contact_manage' vendor.vendor_code %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="contact_id" id="edit_contact_id">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                    <input type="text" name="vendor_contact_person" id="edit_vendor_contact_person" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Designation *</label>
+                    <input type="text" name="vendor_contact_designation" id="edit_vendor_contact_designation" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                    <input type="text" name="vendor_contact_department" id="edit_vendor_contact_department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                    <input type="text" name="vendor_contact_phone" id="edit_vendor_contact_phone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" name="vendor_contact_email" id="edit_vendor_contact_email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="vendor_contact_is_primary" id="edit_vendor_contact_is_primary" class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700">Mark as Primary Contact</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- RFQ-specific fields -->
+            <div class="border-t pt-4">
+                <div class="mb-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_rfq_contact" id="edit_is_rfq_contact" onchange="toggleRfqFields('edit')" class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                        <span class="ml-2 text-sm font-medium text-gray-700">RFQ Contact</span>
+                    </label>
+                </div>
+                <div id="edit_rfq_fields" class="hidden space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RFQ Cities (comma-separated)</label>
+                        <input type="text" name="rfq_cities" id="edit_rfq_cities" placeholder="Mumbai, Pune, Bangalore" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Cities this vendor serves</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RFQ Contact Number</label>
+                        <input type="text" name="rfq_contact_number" id="edit_rfq_contact_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RFQ CC Emails (comma-separated)</label>
+                        <input type="text" name="rfq_cc_emails" id="edit_rfq_cc_emails" placeholder="email1@example.com, email2@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Additional emails to CC when sending RFQs</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <button type="button" onclick="closeEditContactModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                    Update Contact
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Select2 for Project Multiselect -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+.select2-container { font-size: 14px; }
+.select2-container--default .select2-selection--multiple {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.5rem !important;
+    min-height: 52px !important;
+    padding: 4px 8px !important;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: #9333ea !important;
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1) !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #9333ea !important;
+    border-color: #7e22ce !important;
+    color: white !important;
+    border-radius: 0.375rem !important;
+    padding: 2px 8px !important;
+    margin: 4px 4px 0 0 !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: white !important;
+    margin-right: 5px !important;
+}
+.select2-dropdown {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+.select2-results__option { padding: 10px 12px !important; }
+.select2-results__option--highlighted { background-color: #f3e8ff !important; color: #6b21a8 !important; }
+.select2-results__option--selected { background-color: #e9d5ff !important; }
+</style>
+
+<script>
+// Initialize Select2 for project selection
+$(document).ready(function() {
+    $('#project-multiselect').select2({
+        placeholder: 'Type to search by project code...',
+        allowClear: true,
+        closeOnSelect: false,
+        width: '100%'
+    });
+
+    // Validate form submission
+    $('#link-projects-form').on('submit', function(e) {
+        var selected = $('#project-multiselect').val();
+        if (!selected || selected.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one project to link');
+            return false;
+        }
+    });
+});
+
+// Add Contact Modal Functions
+function openAddContactModal() {
+    document.getElementById('addContactModal').classList.remove('hidden');
+}
+
+function closeAddContactModal() {
+    document.getElementById('addContactModal').classList.add('hidden');
+}
+
+// Edit Contact Modal Functions
+function openEditContactModal(id, person, designation, department, phone, email, isPrimary, isRfq, rfqCities, rfqContactNumber, rfqCcEmails) {
+    document.getElementById('edit_contact_id').value = id;
+    document.getElementById('edit_vendor_contact_person').value = person;
+    document.getElementById('edit_vendor_contact_designation').value = designation;
+    document.getElementById('edit_vendor_contact_department').value = department;
+    document.getElementById('edit_vendor_contact_phone').value = phone;
+    document.getElementById('edit_vendor_contact_email').value = email;
+    document.getElementById('edit_vendor_contact_is_primary').checked = isPrimary;
+    document.getElementById('edit_is_rfq_contact').checked = isRfq;
+    document.getElementById('edit_rfq_cities').value = rfqCities;
+    document.getElementById('edit_rfq_contact_number').value = rfqContactNumber;
+    document.getElementById('edit_rfq_cc_emails').value = rfqCcEmails;
+
+    // Show/hide RFQ fields based on checkbox
+    toggleRfqFields('edit');
+
+    document.getElementById('editContactModal').classList.remove('hidden');
+}
+
+function closeEditContactModal() {
+    document.getElementById('editContactModal').classList.add('hidden');
+}
+
+// Toggle RFQ fields visibility
+function toggleRfqFields(mode) {
+    const checkbox = document.getElementById(mode + '_is_rfq_contact');
+    const fields = document.getElementById(mode + '_rfq_fields');
+    if (checkbox.checked) {
+        fields.classList.remove('hidden');
+    } else {
+        fields.classList.add('hidden');
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const addModal = document.getElementById('addContactModal');
+    const editModal = document.getElementById('editContactModal');
+    if (event.target == addModal) {
+        closeAddContactModal();
+    }
+    if (event.target == editModal) {
+        closeEditContactModal();
+    }
+}
+
+// Link/Unlink Projects
+function unlinkProject(projectId) {
+    if (confirm(`Are you sure you want to unlink project ${projectId} from this vendor?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'supply:vendor_unlink_project' vendor.vendor_code %}";
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        const projectInput = document.createElement('input');
+        projectInput.type = 'hidden';
+        projectInput.name = 'project_id';
+        projectInput.value = projectId;
+        form.appendChild(projectInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function unlinkAllProjects() {
+    const projectCount = {{ projects_count }};
+    if (confirm(`Are you sure you want to unlink ALL ${projectCount} project(s) from this vendor? This action cannot be undone.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'supply:vendor_unlink_all_projects' vendor.vendor_code %}";
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+{% endblock %}

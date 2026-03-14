@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* web-interface.csv #28: Use specific transition properties instead of transition: all */
+    .section-card {
+        transition: box-shadow 0.2s ease;
+    }
+    .section-card:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ux-guidelines.csv #9: Respect prefers-reduced-motion */
+    /* html-tailwind.csv #42: Use motion-safe/motion-reduce variants */
+    .alert-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .alert-pulse {
+            animation: none;
+        }
+    }
+
+    /* ux-guidelines.csv #50: Use skeleton screens instead of spinners */
+    /* ui-reasoning.csv #8: Use loading skeletons to maintain layout stability */
+    @keyframes skeleton-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.5s ease-in-out infinite;
+        border-radius: 0.375rem;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .skeleton {
+            animation: none;
+            background: #f0f0f0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p class="text-gray-600 mt-2">System management and oversight</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <!-- html-tailwind.csv #55: SVG width/height -->
+                <!-- html-tailwind.csv #5: Use Tailwind ring utilities for focus states -->
+                <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
+                <span class="text-xs text-gray-500">{{ current_time }}</span>
+            </div>
+        </div>
+
+        <!-- Critical Alerts Banner -->
+        <!-- web-interface.csv #5: Use role='alert' for important messages -->
+        {% if total_critical_alerts > 0 %}
+        <div role="alert" class="bg-gradient-to-r from-red-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden mb-8">
+            <div class="absolute top-0 right-0 opacity-10">
+                <svg class="w-64 h-64" width="256" height="256" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="relative">
+                <div class="flex items-start justify-between flex-wrap gap-4">
+                    <div class="flex items-center">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-4 mr-4 alert-pulse">
+                            <svg class="h-8 w-8 text-white" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold">{{ total_critical_alerts }} Critical Alert{{ total_critical_alerts|pluralize }}</h2>
+                            <p class="text-white text-opacity-90 mt-1">Requires immediate attention</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        {% if projects_without_id > 0 %}
+                        <a href="{% url 'projects:project_list_all' %}?filter=no_id" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2 hover:bg-opacity-30 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-500">
+                            <p class="text-sm font-medium">{{ projects_without_id }} Project{{ projects_without_id|pluralize }} Without ID</p>
+                            <p class="text-xs text-white text-opacity-75 mt-1">Click to fix</p>
+                        </a>
+                        {% endif %}
+                        {% if incomplete_project_cards > 0 %}
+                        <a href="{% url 'projects:incomplete_project_cards' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2 hover:bg-opacity-30 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-500">
+                            <p class="text-sm font-medium">{{ incomplete_project_cards }} Incomplete Card{{ incomplete_project_cards|pluralize }}</p>
+                            <p class="text-xs text-white text-opacity-75 mt-1">Missing rate info</p>
+                        </a>
+                        {% endif %}
+                        {% if disputes_open_7days > 0 %}
+                        <a href="{% url 'operations:dispute_list' %}?filter=old" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2 hover:bg-opacity-30 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-500">
+                            <p class="text-sm font-medium">{{ disputes_open_7days }} Dispute{{ disputes_open_7days|pluralize }} > 7 Days</p>
+                            <p class="text-xs text-white text-opacity-75 mt-1">Overdue resolution</p>
+                        </a>
+                        {% endif %}
+                        {% if adhoc_pending_30days > 0 %}
+                        <a href="{% url 'operations:adhoc_billing_list' %}?filter=old_pending" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2 hover:bg-opacity-30 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-500">
+                            <p class="text-sm font-medium">{{ adhoc_pending_30days }} Adhoc > 30 Days</p>
+                            <p class="text-xs text-white text-opacity-75 mt-1">Pending approval</p>
+                        </a>
+                        {% endif %}
+                        {% if missing_daily_entries > 0 %}
+                        <a href="{% url 'operations:daily_entry_bulk' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2 hover:bg-opacity-30 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-500">
+                            <p class="text-sm font-medium">{{ missing_daily_entries }} Missing Entries</p>
+                            <p class="text-xs text-white text-opacity-75 mt-1">Today's pending</p>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- App Hub Navigation -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center mb-4">
+                <svg class="h-5 w-5 text-blue-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"/>
+                </svg>
+                App Hubs
+            </h3>
+            <!-- html-tailwind.csv #5: Use Tailwind ring for focus states -->
+            <!-- web-interface.csv #29: Never remove focus outlines without alternative -->
+            <!-- ui-reasoning.csv #15: Focus indicators must be visible on all interactive elements -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="{% url 'accounts:admin_dashboard_projects' %}" class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-blue-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">Projects Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">All project management</p>
+                </a>
+
+                <a href="{% url 'accounts:admin_dashboard_operations' %}" class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:border-green-300 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-green-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-green-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">Operations Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">Daily operations & billing</p>
+                </a>
+
+                <a href="{% url 'accounts:admin_dashboard_supply' %}" class="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 hover:border-indigo-300 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-indigo-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">Supply Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">Vendors & warehouses</p>
+                </a>
+
+                <a href="{% url 'accounts:admin_dashboard_team' %}" class="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:border-purple-300 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-purple-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">Team Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">Users & permissions</p>
+                </a>
+
+                <a href="{% url 'accounts:admin_dashboard_finance' %}" class="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border border-orange-100 hover:border-orange-300 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-orange-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">Finance Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">Billing & revenue</p>
+                </a>
+
+                <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="p-4 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl border border-teal-100 hover:border-teal-300 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-teal-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">Integrations Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">External services</p>
+                </a>
+
+                <a href="{% url 'accounts:admin_dashboard_system' %}" class="p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 hover:border-gray-400 hover:shadow-md transition-shadow group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="h-6 w-6 text-gray-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <svg class="h-4 w-4 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-gray-900">System Hub</p>
+                    <p class="text-xs text-gray-600 mt-1">Health & configuration</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Create New & Notifications Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+            <!-- Create Records -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center mb-4">
+                    <svg class="h-5 w-5 text-green-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Create New
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{% url 'projects:project_create' %}" class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:border-blue-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Project</p>
+                        <p class="text-xs text-gray-600 mt-1">New project record</p>
+                    </a>
+                    <a href="{% url 'projects:client_card_create' %}" class="p-4 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg border border-teal-100 hover:border-teal-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Client</p>
+                        <p class="text-xs text-gray-600 mt-1">New client card</p>
+                    </a>
+                    <a href="{% url 'accounts:user_create' %}" class="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-100 hover:border-purple-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">User</p>
+                        <p class="text-xs text-gray-600 mt-1">New team member</p>
+                    </a>
+                    <a href="{% url 'supply:vendor_create' %}" class="p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg border border-orange-100 hover:border-orange-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Vendor</p>
+                        <p class="text-xs text-gray-600 mt-1">New vendor card</p>
+                    </a>
+                    <a href="{% url 'supply:warehouse_create' %}" class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100 hover:border-green-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Warehouse</p>
+                        <p class="text-xs text-gray-600 mt-1">New warehouse</p>
+                    </a>
+                    <a href="{% url 'supply:location_create' %}" class="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:border-pink-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Location</p>
+                        <p class="text-xs text-gray-600 mt-1">New location</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Notifications Card -->
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-md p-6 border border-blue-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <svg class="h-5 w-5 text-blue-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        Notifications
+                    </h3>
+                    <a href="{% url 'accounts:notifications_list' %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">View All →</a>
+                </div>
+
+                <!-- Stats Grid -->
+                <!-- styles.csv #25: Use tabular-nums for numeric data alignment -->
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="bg-white rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-blue-900 tabular-nums" id="notif-total">{{ notifications_total|default:0 }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-3 text-center border border-red-200">
+                        <p class="text-2xl font-bold text-red-900 tabular-nums" id="notif-unread">{{ notifications_unread|default:0 }}</p>
+                        <p class="text-xs text-red-600 mt-1 font-medium">Unread</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3 text-center border border-green-200">
+                        <p class="text-2xl font-bold text-green-900 tabular-nums" id="notif-urgent">{{ notifications_urgent|default:0 }}</p>
+                        <p class="text-xs text-orange-600 mt-1 font-medium">Urgent</p>
+                    </div>
+                </div>
+
+                <!-- Recent Notifications -->
+                <!-- ux-guidelines.csv #50: Use skeleton screens instead of spinners -->
+                <div class="space-y-2 max-h-64 overflow-y-auto" id="recent-notifications">
+                    {% if recent_notifications %}
+                        {% for notif in recent_notifications|slice:":5" %}
+                        <a href="{{ notif.action_url|default:'#' }}" class="block p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border {% if not notif.is_read %}border-blue-300 bg-blue-50{% else %}border-gray-200{% endif %} outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                            <div class="flex items-start gap-2">
+                                <span class="text-lg flex-shrink-0">{{ notif.icon }}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        {% if notif.priority == 'urgent' %}
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">URGENT</span>
+                                        {% elif notif.priority == 'high' %}
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">High</span>
+                                        {% endif %}
+                                        <span class="text-xs text-gray-500 capitalize">{{ notif.category }}</span>
+                                    </div>
+                                    <p class="text-sm font-semibold text-gray-900 {% if not notif.is_read %}font-bold{% endif %} truncate">{{ notif.title }}</p>
+                                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ notif.message }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ notif.created_at|timesince }} ago</p>
+                                </div>
+                                {% if not notif.is_read %}
+                                <span class="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center py-8">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                        </svg>
+                        <p class="text-sm text-gray-500 mt-2">No notifications</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- View All Button -->
+                <div class="mt-4 pt-4 border-t border-blue-200">
+                    <a href="{% url 'accounts:notifications_list' %}" class="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        View All Notifications
+                    </a>
+                </div>
+            </div>
+
+            <!-- Admin Tools & Utilities -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center mb-4">
+                    <svg class="h-5 w-5 text-gray-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Admin Tools
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{% url 'accounts:error_list' %}" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 rounded-lg border border-red-100 hover:border-red-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Error Log</p>
+                        <p class="text-xs text-gray-600 mt-1">View & resolve errors</p>
+                    </a>
+                    <a href="{% url 'accounts:impersonation_logs' %}" class="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100 hover:border-indigo-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Impersonation</p>
+                        <p class="text-xs text-gray-600 mt-1">Login as user</p>
+                    </a>
+                    <a href="{% url 'projects:all_change_logs' %}" class="p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg border border-cyan-100 hover:border-cyan-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Change Logs</p>
+                        <p class="text-xs text-gray-600 mt-1">Audit trail</p>
+                    </a>
+                    <a href="{% url 'accounts:user_list' %}" class="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100 hover:border-purple-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">User Management</p>
+                        <p class="text-xs text-gray-600 mt-1">Manage users</p>
+                    </a>
+                    <a href="{% url 'projects:admin_project_codes' %}" class="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg border border-amber-100 hover:border-amber-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Project Codes</p>
+                        <p class="text-xs text-gray-600 mt-1">Edit & delete codes</p>
+                    </a>
+                    <a href="{% url 'dropdown_master_data:master_list' %}" class="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:border-pink-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Master Data</p>
+                        <p class="text-xs text-gray-600 mt-1">Dropdowns</p>
+                    </a>
+                    <a href="{% url 'projects:admin_temp_cleanup' %}" class="p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg border border-red-100 hover:border-red-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">TEMP Cleanup</p>
+                        <p class="text-xs text-gray-600 mt-1">Fix TEMP issues</p>
+                    </a>
+                    <a href="{% url 'supply:vendor_list' %}" class="p-4 bg-gradient-to-br from-violet-50 to-purple-50 rounded-lg border border-violet-100 hover:border-violet-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Delete Vendors</p>
+                        <p class="text-xs text-gray-600 mt-1">Remove duplicates</p>
+                    </a>
+                    <a href="{% url 'projects:client_card_list' %}" class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100 hover:border-green-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Delete Clients</p>
+                        <p class="text-xs text-gray-600 mt-1">Remove duplicates</p>
+                    </a>
+                    <a href="{% url 'supply:warehouse_list' %}" class="p-4 bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg border border-sky-100 hover:border-sky-300 hover:shadow-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <p class="text-sm font-bold text-gray-900">Delete Warehouses</p>
+                        <p class="text-xs text-gray-600 mt-1">Remove mistakes</p>
+                    </a>
+                    <!-- ux-guidelines.csv #7: Removed hover:scale-105 (avoid jarring motion) -->
+                    <a href="{% url 'accounts:admin_file_manager' %}" class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:border-blue-300 hover:shadow-md transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <div class="flex items-center mb-1">
+                            <svg class="h-4 w-4 text-blue-600 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                            <p class="text-sm font-bold text-gray-900">File Manager</p>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1">Browse all system files</p>
+                    </a>
+                    <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="p-4 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg border border-teal-100 hover:border-teal-300 hover:shadow-md transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <div class="flex items-center mb-1">
+                            <svg class="h-4 w-4 text-teal-600 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <p class="text-sm font-bold text-gray-900">Integrations Sync</p>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1">Monitor all syncs</p>
+                    </a>
+                    <a href="{% url 'activity_logs:calendar' %}" class="p-4 bg-gradient-to-br from-violet-50 to-indigo-50 rounded-lg border border-violet-100 hover:border-violet-300 hover:shadow-md transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <div class="flex items-center mb-1">
+                            <svg class="h-4 w-4 text-violet-600 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                            <p class="text-sm font-bold text-gray-900">Activity Log</p>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1">User activity calendar</p>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- System Health Overview -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-green-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                System Health
+            </h3>
+
+            <!-- styles.csv #25: Use tabular-nums for numeric data alignment -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div class="text-3xl font-bold text-green-600 tabular-nums">{{ data_quality_score }}%</div>
+                    <p class="text-xs text-gray-600 mt-1">Data Quality</p>
+                </div>
+                <div class="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="text-3xl font-bold text-blue-600 tabular-nums">{{ users_online_now }}</div>
+                    <p class="text-xs text-gray-600 mt-1">Users Online</p>
+                </div>
+                <div class="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div class="text-3xl font-bold text-purple-600 tabular-nums">{{ database_size_mb }}MB</div>
+                    <p class="text-xs text-gray-600 mt-1">Database Size</p>
+                </div>
+                <div class="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <div class="flex items-center justify-center text-emerald-600">
+                        <svg class="h-8 w-8" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">All Systems OK</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,1369 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load operations_filters %}
+
+{% block title %}Billing #{{ billing.id }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-6 flex justify-between items-start">
+            <div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'operations:monthly_billing_dashboard' %}"
+                       class="text-gray-500 hover:text-gray-600">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-900">Billing #{{ billing.id }}</h1>
+                    
+                    <!-- Status Badge -->
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold
+                        {% if billing.status.code == 'approved' %}bg-green-100 text-green-800
+                        {% elif billing.status.code == 'draft' %}bg-gray-100 text-gray-800
+                        {% elif 'pending' in billing.status.code %}bg-yellow-100 text-yellow-800
+                        {% elif 'rejected' in billing.status.code %}bg-red-100 text-red-800
+                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ billing.status.label }}
+                    </span>
+                </div>
+                <p class="text-gray-600 mt-2">
+                    Project: 
+                    <a href="{% url 'projects:project_detail' billing.project.project_id %}" 
+                    class="text-blue-600 hover:text-blue-800 hover:underline font-semibold">
+                        {{ billing.project.project_code }}
+                    </a>
+                    <span class="mx-2 text-gray-300">|</span> 
+                    Client: <span class="font-medium">{{ billing.project.client_name }}</span>
+                </p>
+                <div class="mt-2 flex gap-4 text-sm">
+                    <div class="bg-green-100 px-3 py-1 rounded-full">
+                        <span class="text-green-700">🛠️ Service: <strong>{{ billing.service_month|date:"F Y" }}</strong></span>
+                    </div>
+                    {% if billing.billing_month %}
+                    <div class="bg-purple-100 px-3 py-1 rounded-full">
+                        <span class="text-purple-700">💰 Billed: <strong>{{ billing.billing_month|date:"F Y" }}</strong></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+                {% if can_edit %}
+                <a href="{% url 'operations:monthly_billing_edit' billing.id %}" 
+                class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium shadow-sm">
+                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                </a>
+                {% endif %}
+                
+                <!-- NEW: Recall Button -->
+                {% if billing.status.code == 'pending_controller' and user.role in 'operation_coordinator,operation_manager,admin,super_user' %}
+                {% if billing.created_by == user or billing.project.operation_coordinator == user.get_full_name or user.role in 'admin,super_user' %}
+                <form method="POST" action="{% url 'operations:monthly_billing_recall' billing.id %}" 
+                    onsubmit="return confirm('Recall this billing back to draft? You can then edit it.');" 
+                    class="inline">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-yellow-300 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition text-sm font-medium shadow-sm">
+                        <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                        </svg>
+                        Recall to Edit
+                    </button>
+                </form>
+                {% endif %}
+                {% endif %}
+                
+                {% if can_submit %}
+                <form method="POST" action="{% url 'operations:monthly_billing_submit' billing.id %}" 
+                    onsubmit="return confirm('Submit this billing for controller review?');" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium shadow-sm">
+                        <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Submit for Review
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created By</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ billing.created_by.get_full_name }}</p>
+                    <p class="text-xs text-gray-500">{{ billing.created_at|date:"d M Y, h:i A" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Billing Period</p>
+                    <p class="text-green-700 font-medium mt-1">Service: {{ billing.service_month|date:"M Y" }}</p>
+                    {% if billing.billing_month %}
+                    <p class="text-purple-700 text-xs">Billed: {{ billing.billing_month|date:"M Y" }}</p>
+                    {% else %}
+                    <p class="text-gray-500 text-xs">Not yet billed</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Project Card</p>
+                    <p class="text-gray-900 font-medium mt-1">
+                        {% if billing.project_card_used %}
+                            <span class="text-green-600">✓ Used</span>
+                        {% else %}
+                            <span class="text-yellow-600">Manual Entry</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Last Updated</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ billing.updated_at|date:"d M Y, h:i A" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Locked Status</p>
+                    <p class="mt-1">
+                        {% if billing.is_locked %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                                🔒 Locked
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                🔓 Unlocked
+                            </span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+            <h2 class="text-lg font-bold mb-4">💰 Financial Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-{% if show_financials %}4{% else %}2{% endif %} gap-4">
+                <div class="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <p class="text-sm opacity-90">Client Billing</p>
+                    <p class="text-2xl font-bold mt-1">₹{{ billing.client_total|smart_num }}</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <p class="text-sm opacity-90">Vendor Cost</p>
+                    <p class="text-2xl font-bold mt-1">₹{{ billing.vendor_total|smart_num }}</p>
+                </div>
+                {% if show_financials %}
+                <div class="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <p class="text-sm opacity-90">Margin Amount</p>
+                    <p class="text-2xl font-bold mt-1">₹{{ billing.margin_amount|smart_num }}</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <p class="text-sm opacity-90">Margin %</p>
+                    <p class="text-2xl font-bold mt-1">{{ billing.margin_percentage|smart_num }}%</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Included Adhoc Billings -->
+        {% if included_adhoc %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
+            <h3 class="text-lg font-bold text-blue-900 mb-3">📋 Included Adhoc Billings ({{ billing.service_month|date:"F Y" }})</h3>
+            <div class="space-y-2">
+                {% for adhoc in included_adhoc %}
+                <div class="bg-white rounded-lg p-3 border border-blue-200 flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-gray-900">Adhoc Entry #{{ adhoc.id }}</p>
+                        <p class="text-sm text-gray-600">{{ adhoc.event_date|date:"d M Y" }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-teal-700">Client: ₹{{ adhoc.total_client_amount|smart_num }}</p>
+                        <p class="text-sm font-bold text-indigo-700">Vendor: ₹{{ adhoc.total_vendor_amount|smart_num }}</p>
+                    </div>
+                    <a href="{% url 'operations:adhoc_billing_detail' adhoc.id %}" 
+                       class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View →
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- STORAGE SECTION -->
+        <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden border border-gray-200">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-700 to-gray-900">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    📦 Storage
+                </h2>
+            </div>
+
+            <div class="p-6">
+                {% if storage_items.exists %}
+                    {% for item in storage_items %}
+                    {% if not forloop.first %}<div class="border-t-2 border-gray-200 pt-6 mt-6"></div>{% endif %}
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-sm font-semibold text-gray-700">Entry {{ forloop.counter }}</h4>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full {% if item.pricing_type == 'flat' %}bg-blue-100 text-blue-800{% elif item.pricing_type == 'slab' %}bg-purple-100 text-purple-800{% else %}bg-orange-100 text-orange-800{% endif %}">{{ item.get_pricing_type_display }}</span>
+                    </div>
+                    {% if item.remarks %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                        <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ item.remarks }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                            <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Min Space:</span>
+                                    <span class="font-semibold text-teal-900">{{ item.client_min_space|smart_num }} {% if item.client_storage_unit_type %}{{ item.client_storage_unit_type.label }}{% endif %}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Additional Space:</span>
+                                    <span class="font-semibold text-teal-900">{{ item.client_additional_space|smart_num }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Unit:</span>
+                                    <span class="font-semibold text-teal-900">{{ item.client_storage_unit_type.label|default:"-" }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Days:</span>
+                                    <span class="font-semibold text-teal-900">{{ item.client_storage_days }}</span>
+                                </div>
+                                {% if item.pricing_type == 'lumpsum' %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Lumpsum Amount:</span>
+                                    <span class="font-semibold text-teal-900">{% if item.client_rate %}₹{{ item.client_rate|smart_num }}{% else %}-{% endif %}</span>
+                                </div>
+                                {% else %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Rate:</span>
+                                    <span class="font-semibold text-teal-900">{% if item.client_rate %}₹{{ item.client_rate|smart_num }}{% else %}-{% endif %}</span>
+                                </div>
+                                {% endif %}
+                                <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                    <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                    <span class="font-bold text-teal-900 text-lg">₹{{ item.client_billing|smart_num }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                            <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Min Space:</span>
+                                    <span class="font-semibold text-indigo-900">{{ item.vendor_min_space|smart_num }} {% if item.vendor_storage_unit_type %}{{ item.vendor_storage_unit_type.label }}{% endif %}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Additional Space:</span>
+                                    <span class="font-semibold text-indigo-900">{{ item.vendor_additional_space|smart_num }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Unit:</span>
+                                    <span class="font-semibold text-indigo-900">{{ item.vendor_storage_unit_type.label|default:"-" }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Days:</span>
+                                    <span class="font-semibold text-indigo-900">{{ item.vendor_storage_days }}</span>
+                                </div>
+                                {% if item.pricing_type == 'lumpsum' %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Lumpsum Amount:</span>
+                                    <span class="font-semibold text-indigo-900">{% if item.vendor_rate %}₹{{ item.vendor_rate|smart_num }}{% else %}-{% endif %}</span>
+                                </div>
+                                {% else %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-700">Rate:</span>
+                                    <span class="font-semibold text-indigo-900">{% if item.vendor_rate %}₹{{ item.vendor_rate|smart_num }}{% else %}-{% endif %}</span>
+                                </div>
+                                {% endif %}
+                                <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                    <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                    <span class="font-bold text-indigo-900 text-lg">₹{{ item.vendor_cost|smart_num }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if item.pricing_type == 'slab' %}
+                    {% with slabs=item.slabs.all %}
+                    {% if slabs %}
+                    <div class="mt-4 bg-gray-50 rounded-lg p-3">
+                        <h5 class="text-xs font-bold text-gray-700 mb-2">📊 Pricing Slabs</h5>
+                        <table class="min-w-full text-xs">
+                            <thead><tr class="bg-gray-100">
+                                <th class="px-3 py-1 text-left">Side</th>
+                                <th class="px-3 py-1 text-right">Min Qty</th>
+                                <th class="px-3 py-1 text-right">Max Qty</th>
+                                <th class="px-3 py-1 text-right">Rate/Unit</th>
+                                <th class="px-3 py-1 text-left">Remarks</th>
+                            </tr></thead>
+                            <tbody>
+                            {% for slab in slabs %}
+                            <tr class="border-t {% if slab.side == 'client' %}bg-teal-50{% else %}bg-indigo-50{% endif %}">
+                                <td class="px-3 py-1 font-semibold {% if slab.side == 'client' %}text-teal-800{% else %}text-indigo-800{% endif %}">{{ slab.get_side_display }}</td>
+                                <td class="px-3 py-1 text-right">{{ slab.min_quantity|smart_num }}</td>
+                                <td class="px-3 py-1 text-right">{% if slab.max_quantity %}{{ slab.max_quantity|smart_num }}{% else %}∞{% endif %}</td>
+                                <td class="px-3 py-1 text-right font-semibold">₹{{ slab.rate_per_unit|smart_num }}</td>
+                                <td class="px-3 py-1 text-gray-600">{{ slab.remarks|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                    {% endfor %}
+                {% else %}
+                {# Legacy fallback #}
+                {% if billing.storage_min_space or billing.client_storage_billing %}
+                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-bold text-yellow-800">⚠️ Legacy Data (Old Format)</p>
+                </div>
+                {% if billing.storage_remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ billing.storage_remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Min Space:</span>
+                                <span class="font-semibold text-teal-900">{{ billing.storage_min_space|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Additional Space:</span>
+                                <span class="font-semibold text-teal-900">{{ billing.storage_additional_space|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Unit:</span>
+                                <span class="font-semibold text-teal-900">{% if billing.storage_unit_type %}{{ billing.storage_unit_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Days:</span>
+                                <span class="font-semibold text-teal-900">{{ billing.storage_days }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Rate:</span>
+                                <span class="font-semibold text-teal-900">{% if billing.client_storage_rate %}₹{{ billing.client_storage_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ billing.client_storage_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Min Space:</span>
+                                <span class="font-semibold text-indigo-900">{{ billing.storage_min_space|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Additional Space:</span>
+                                <span class="font-semibold text-indigo-900">{{ billing.storage_additional_space|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Unit:</span>
+                                <span class="font-semibold text-indigo-900">{% if billing.storage_unit_type %}{{ billing.storage_unit_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Days:</span>
+                                <span class="font-semibold text-indigo-900">{{ billing.storage_days }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Rate:</span>
+                                <span class="font-semibold text-indigo-900">{% if billing.vendor_storage_rate %}₹{{ billing.vendor_storage_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ billing.vendor_storage_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <p class="font-medium">No storage data</p>
+                </div>
+                {% endif %}
+                {% endif %}
+
+            <!-- Section Total Footer -->
+            <div class="border-t-2 border-gray-100 px-6 py-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Client Billing Total</p>
+                        <p class="text-2xl font-bold text-teal-800">₹{{ billing.client_storage_billing|smart_num }}</p>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Vendor Cost Total</p>
+                        <p class="text-2xl font-bold text-indigo-800">₹{{ billing.vendor_storage_cost|smart_num }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HANDLING IN SECTION -->
+        <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden border border-gray-200">
+            <div class="px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    📥 Handling IN (Inbound)
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if handling_in_items %}
+                {% for item in handling_in_items %}
+                {% if not forloop.first %}<div class="border-t-2 border-gray-200 pt-6 mt-6"></div>{% endif %}
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-semibold text-gray-700">Entry {{ forloop.counter }}</h4>
+                </div>
+                {% if item.remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ item.remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Quantity:</span>
+                                <span class="font-semibold text-teal-900">{{ item.client_quantity|smart_num }} {% if item.client_unit_type %}{{ item.client_unit_type.label }}{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Channel:</span>
+                                <span class="font-semibold text-teal-900">{{ item.client_channel.label|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Base Type:</span>
+                                <span class="font-semibold text-teal-900">{{ item.client_base_type.label|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Rate:</span>
+                                <span class="font-semibold text-teal-900">{% if item.client_rate %}₹{{ item.client_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ item.client_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Quantity:</span>
+                                <span class="font-semibold text-indigo-900">{{ item.vendor_quantity|smart_num }} {% if item.vendor_unit_type %}{{ item.vendor_unit_type.label }}{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Channel:</span>
+                                <span class="font-semibold text-indigo-900">{{ item.vendor_channel.label|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Base Type:</span>
+                                <span class="font-semibold text-indigo-900">{{ item.vendor_base_type.label|default:"-" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Rate:</span>
+                                <span class="font-semibold text-indigo-900">{% if item.vendor_rate %}₹{{ item.vendor_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ item.vendor_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% elif billing.handling_in_quantity > 0 or billing.client_handling_in_billing > 0 %}
+                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-bold text-yellow-800">⚠️ Legacy Data (Old Format)</p>
+                </div>
+                {% if billing.handling_in_remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ billing.handling_in_remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Quantity:</span>
+                                <span class="font-semibold text-teal-900">{{ billing.handling_in_quantity|smart_num }} {% if billing.handling_in_unit_type %}{{ billing.handling_in_unit_type.label }}{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Channel:</span>
+                                <span class="font-semibold text-teal-900">{% if billing.handling_in_channel %}{{ billing.handling_in_channel.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Base Type:</span>
+                                <span class="font-semibold text-teal-900">{% if billing.handling_in_base_type %}{{ billing.handling_in_base_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Rate:</span>
+                                <span class="font-semibold text-teal-900">{% if billing.client_handling_in_rate %}₹{{ billing.client_handling_in_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ billing.client_handling_in_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Quantity:</span>
+                                <span class="font-semibold text-indigo-900">{{ billing.handling_in_quantity|smart_num }} {% if billing.handling_in_unit_type %}{{ billing.handling_in_unit_type.label }}{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Channel:</span>
+                                <span class="font-semibold text-indigo-900">{% if billing.handling_in_channel %}{{ billing.handling_in_channel.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Base Type:</span>
+                                <span class="font-semibold text-indigo-900">{% if billing.handling_in_base_type %}{{ billing.handling_in_base_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Rate:</span>
+                                <span class="font-semibold text-indigo-900">{% if billing.vendor_handling_in_rate %}₹{{ billing.vendor_handling_in_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ billing.vendor_handling_in_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <p class="font-medium">No handling IN data</p>
+                </div>
+                {% endif %}
+
+            <!-- Section Total Footer -->
+            <div class="border-t-2 border-gray-100 px-6 py-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Client Billing Total</p>
+                        <p class="text-2xl font-bold text-teal-800">₹{{ billing.client_handling_in_billing|smart_num }}</p>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Vendor Cost Total</p>
+                        <p class="text-2xl font-bold text-indigo-800">₹{{ billing.vendor_handling_in_cost|smart_num }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HANDLING OUT SECTION -->
+        <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 border-b">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    📤 Handling OUT (Outbound)
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if handling_out_items %}
+                {% for item in handling_out_items %}
+                {% if not forloop.first %}<div class="border-t-2 border-gray-200 pt-6 mt-6"></div>{% endif %}
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-semibold text-gray-700">Entry {{ forloop.counter }}</h4>
+                </div>
+                {% if item.remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ item.remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ item.client_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if item.client_unit_type %}{{ item.client_unit_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Channel:</span>
+                                <span class="text-gray-900">{% if item.client_channel %}{{ item.client_channel.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Base Type:</span>
+                                <span class="text-gray-900">{% if item.client_base_type %}{{ item.client_base_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if item.client_rate %}₹{{ item.client_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-teal-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ item.client_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ item.vendor_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if item.vendor_unit_type %}{{ item.vendor_unit_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Channel:</span>
+                                <span class="text-gray-900">{% if item.vendor_channel %}{{ item.vendor_channel.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Base Type:</span>
+                                <span class="text-gray-900">{% if item.vendor_base_type %}{{ item.vendor_base_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if item.vendor_rate %}₹{{ item.vendor_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-indigo-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ item.vendor_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% elif billing.handling_out_quantity > 0 or billing.client_handling_out_billing > 0 or billing.vendor_handling_out_cost > 0 %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-700">⚠️ Legacy data (migrated from old format)</p>
+                </div>
+                {% if billing.handling_out_remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ billing.handling_out_remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ billing.handling_out_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if billing.handling_out_unit_type %}{{ billing.handling_out_unit_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Channel:</span>
+                                <span class="text-gray-900">{% if billing.handling_out_channel %}{{ billing.handling_out_channel.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Base Type:</span>
+                                <span class="text-gray-900">{% if billing.handling_out_base_type %}{{ billing.handling_out_base_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if billing.client_handling_out_rate %}₹{{ billing.client_handling_out_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-teal-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ billing.client_handling_out_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ billing.handling_out_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if billing.handling_out_unit_type %}{{ billing.handling_out_unit_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Channel:</span>
+                                <span class="text-gray-900">{% if billing.handling_out_channel %}{{ billing.handling_out_channel.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Base Type:</span>
+                                <span class="text-gray-900">{% if billing.handling_out_base_type %}{{ billing.handling_out_base_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if billing.vendor_handling_out_rate %}₹{{ billing.vendor_handling_out_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-indigo-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ billing.vendor_handling_out_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <svg width="40" height="40" aria-hidden="true" class="mx-auto h-10 w-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <p class="font-medium">No handling OUT data</p>
+                </div>
+                {% endif %}
+
+            <!-- Section Total Footer -->
+            <div class="border-t-2 border-gray-100 px-6 py-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Client Billing Total</p>
+                        <p class="text-2xl font-bold text-teal-800">₹{{ billing.client_handling_out_billing|smart_num }}</p>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Vendor Cost Total</p>
+                        <p class="text-2xl font-bold text-indigo-800">₹{{ billing.vendor_handling_out_cost|smart_num }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANSPORT SECTION -->
+        <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 border-b">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                    </svg>
+                    🚚 Transport
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- CLIENT TRANSPORT -->
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Transport</h3>
+                        {% if client_transport_items %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs">
+                                <thead class="bg-teal-100">
+                                    <tr>
+                                        <th class="px-2 py-1 text-left text-xs font-medium text-teal-800">#</th>
+                                        <th class="px-2 py-1 text-left text-xs font-medium text-teal-800">Vehicle</th>
+                                        <th class="px-2 py-1 text-center text-xs font-medium text-teal-800">Qty</th>
+                                        <th class="px-2 py-1 text-right text-xs font-bold text-teal-800">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-teal-100">
+                                    {% for item in client_transport_items %}
+                                    <tr>
+                                        <td class="px-2 py-1 text-xs text-gray-500">{{ forloop.counter }}</td>
+                                        <td class="px-2 py-1 text-xs text-gray-900">{% if item.vehicle_type %}{{ item.vehicle_type.label }}{% else %}-{% endif %}</td>
+                                        <td class="px-2 py-1 text-xs text-center text-gray-900">{{ item.quantity|smart_num }}</td>
+                                        <td class="px-2 py-1 text-xs text-right font-bold text-teal-700">₹{{ item.amount|smart_num }}</td>
+                                    </tr>
+                                    {% if item.remarks %}
+                                    <tr>
+                                        <td colspan="4" class="px-2 py-1 text-xs text-gray-600 italic">{{ item.remarks }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="bg-teal-200">
+                                    <tr>
+                                        <td colspan="3" class="px-2 py-1 text-xs font-bold text-right text-teal-800">Total:</td>
+                                        <td class="px-2 py-1 text-xs font-bold text-right text-teal-800">₹{{ billing.client_transport_amount|smart_num }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-2 text-sm">No client transport items</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- VENDOR TRANSPORT -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Transport</h3>
+                        {% if vendor_transport_items %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs">
+                                <thead class="bg-indigo-100">
+                                    <tr>
+                                        <th class="px-2 py-1 text-left text-xs font-medium text-indigo-800">#</th>
+                                        <th class="px-2 py-1 text-left text-xs font-medium text-indigo-800">Vehicle</th>
+                                        <th class="px-2 py-1 text-center text-xs font-medium text-indigo-800">Qty</th>
+                                        <th class="px-2 py-1 text-right text-xs font-bold text-indigo-800">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-indigo-100">
+                                    {% for item in vendor_transport_items %}
+                                    <tr>
+                                        <td class="px-2 py-1 text-xs text-gray-500">{{ forloop.counter }}</td>
+                                        <td class="px-2 py-1 text-xs text-gray-900">{% if item.vehicle_type %}{{ item.vehicle_type.label }}{% else %}-{% endif %}</td>
+                                        <td class="px-2 py-1 text-xs text-center text-gray-900">{{ item.quantity|smart_num }}</td>
+                                        <td class="px-2 py-1 text-xs text-right font-bold text-indigo-700">₹{{ item.amount|smart_num }}</td>
+                                    </tr>
+                                    {% if item.remarks %}
+                                    <tr>
+                                        <td colspan="4" class="px-2 py-1 text-xs text-gray-600 italic">{{ item.remarks }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="bg-indigo-200">
+                                    <tr>
+                                        <td colspan="3" class="px-2 py-1 text-xs font-bold text-right text-indigo-800">Total:</td>
+                                        <td class="px-2 py-1 text-xs font-bold text-right text-indigo-800">₹{{ billing.vendor_transport_amount|smart_num }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-2 text-sm">No vendor transport items</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            <!-- Section Total Footer -->
+            <div class="border-t-2 border-gray-100 px-6 py-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Client Transport Total</p>
+                        <p class="text-2xl font-bold text-teal-800">₹{{ billing.client_transport_amount|smart_num }}</p>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Vendor Transport Total</p>
+                        <p class="text-2xl font-bold text-indigo-800">₹{{ billing.vendor_transport_amount|smart_num }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAS / Value Added Services -->
+        <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 border-b">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    </svg>
+                    ⚙️ Value Added Services (VAS)
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if vas_items %}
+                {% for item in vas_items %}
+                {% if not forloop.first %}<div class="border-t-2 border-gray-200 pt-6 mt-6"></div>{% endif %}
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-semibold text-gray-700">Entry {{ forloop.counter }}</h4>
+                </div>
+                {% if item.remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ item.remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Service Type:</span>
+                                <span class="text-gray-900">{% if item.client_service_type %}{{ item.client_service_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ item.client_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if item.client_unit %}{{ item.client_unit.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            {% if item.client_hours %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Hours:</span>
+                                <span class="text-gray-900">{{ item.client_hours }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if item.client_rate %}₹{{ item.client_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-teal-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ item.client_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Service Type:</span>
+                                <span class="text-gray-900">{% if item.vendor_service_type %}{{ item.vendor_service_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ item.vendor_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if item.vendor_unit %}{{ item.vendor_unit.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            {% if item.vendor_hours %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Hours:</span>
+                                <span class="text-gray-900">{{ item.vendor_hours }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if item.vendor_rate %}₹{{ item.vendor_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-indigo-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ item.vendor_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% elif billing.vas_quantity > 0 or billing.client_vas_billing > 0 or billing.vendor_vas_cost > 0 %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-700">⚠️ Legacy data (migrated from old format)</p>
+                </div>
+                {% if billing.vas_remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-800 mb-1">📝 Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ billing.vas_remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Service Type:</span>
+                                <span class="text-gray-900">{% if billing.vas_service_type %}{{ billing.vas_service_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ billing.vas_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if billing.vas_unit %}{{ billing.vas_unit.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if billing.client_vas_rate %}₹{{ billing.client_vas_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-teal-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ billing.client_vas_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Service Type:</span>
+                                <span class="text-gray-900">{% if billing.vendor_vas_service_type %}{{ billing.vendor_vas_service_type.label }}{% elif billing.vas_service_type %}{{ billing.vas_service_type.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quantity:</span>
+                                <span class="text-gray-900 font-medium">{{ billing.vas_quantity|smart_num }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unit:</span>
+                                <span class="text-gray-900">{% if billing.vas_unit %}{{ billing.vas_unit.label }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Rate:</span>
+                                <span class="text-gray-900">{% if billing.vendor_vas_rate %}₹{{ billing.vendor_vas_rate|smart_num }}{% else %}-{% endif %}</span>
+                            </div>
+                            <div class="flex justify-between border-t-2 border-indigo-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ billing.vendor_vas_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <svg width="40" height="40" aria-hidden="true" class="mx-auto h-10 w-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    </svg>
+                    <p class="font-medium">No VAS items</p>
+                </div>
+                {% endif %}
+
+            <!-- Section Total Footer -->
+            <div class="border-t-2 border-gray-100 px-6 py-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Client Billing Total</p>
+                        <p class="text-2xl font-bold text-teal-800">₹{{ billing.client_vas_billing|smart_num }}</p>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Vendor Cost Total</p>
+                        <p class="text-2xl font-bold text-indigo-800">₹{{ billing.vendor_vas_cost|smart_num }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Infrastructure Costs -->
+        <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-red-600 to-pink-600 border-b">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    🏗️ Infrastructure Costs
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if infrastructure_items %}
+                {% for item in infrastructure_items %}
+                {% if not forloop.first %}<div class="border-t-2 border-gray-200 pt-6 mt-6"></div>{% endif %}
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-semibold text-gray-700">
+                        Entry {{ forloop.counter }}{% if item.cost_type %} — {{ item.cost_type.name }}{% endif %}
+                    </h4>
+                </div>
+                {% if item.description %}
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-gray-600 mb-1">📋 Description</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ item.description }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Billing</h3>
+                        <div class="space-y-2 text-sm">
+                            {% if item.cost_type %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Cost Type:</span>
+                                <span class="text-gray-900">{{ item.cost_type.name }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between border-t-2 border-teal-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ item.client_billing|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Cost</h3>
+                        <div class="space-y-2 text-sm">
+                            {% if item.cost_type %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Cost Type:</span>
+                                <span class="text-gray-900">{{ item.cost_type.name }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between border-t-2 border-indigo-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ item.vendor_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% elif billing.client_infrastructure_amount > 0 or billing.vendor_infrastructure_cost > 0 or billing.infrastructure_remarks %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs font-semibold text-yellow-700">⚠️ Legacy data (migrated from old format)</p>
+                </div>
+                {% if billing.infrastructure_remarks %}
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">📋 Details</h4>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ billing.infrastructure_remarks }}</p>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-teal-900 mb-3">💰 Client Infrastructure</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between border-t-2 border-teal-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Amount:</span>
+                                <span class="font-bold text-teal-900 text-lg">₹{{ billing.client_infrastructure_amount|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-3">🏭 Vendor Infrastructure</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between border-t-2 border-indigo-200 pt-2 mt-2">
+                                <span class="text-gray-700 font-semibold">Total Cost:</span>
+                                <span class="font-bold text-indigo-900 text-lg">₹{{ billing.vendor_infrastructure_cost|smart_num }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <svg width="40" height="40" aria-hidden="true" class="mx-auto h-10 w-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <p class="font-medium">No infrastructure cost data</p>
+                </div>
+                {% endif %}
+
+            <!-- Section Total Footer -->
+            <div class="border-t-2 border-gray-100 px-6 py-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Client Billing Total</p>
+                        <p class="text-2xl font-bold text-teal-800">₹{{ billing.client_infrastructure_amount|smart_num }}</p>
+                    </div>
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Vendor Cost Total</p>
+                        <p class="text-2xl font-bold text-indigo-800">₹{{ billing.vendor_infrastructure_cost|smart_num }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MIS REFERENCE & DOCUMENTS -->
+        {% if billing.mis_email_subject or billing.mis_link or billing.mis_document or billing.transport_document or billing.other_document %}
+        <div class="bg-white rounded-lg shadow-sm mb-6 p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">📧 MIS Reference & Documents</h3>
+
+            <!-- Email Reference Section -->
+            {% if billing.mis_email_subject or billing.mis_link %}
+            <div class="mb-4 pb-4 border-b border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Email Reference</h4>
+                <div class="space-y-3 text-sm">
+                    {% if billing.mis_email_subject %}
+                    <div>
+                        <p class="text-gray-600 font-medium">Email Subject:</p>
+                        <p class="text-gray-900">{{ billing.mis_email_subject }}</p>
+                    </div>
+                    {% endif %}
+                    {% if billing.mis_link %}
+                    <div>
+                        <p class="text-gray-600 font-medium">MIS Link:</p>
+                        <a href="{{ billing.mis_link }}" target="_blank"
+                           class="text-blue-600 hover:text-blue-800 hover:underline break-all">
+                            {{ billing.mis_link }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Document Uploads Section -->
+            {% if billing.mis_document or billing.transport_document or billing.other_document %}
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">📎 Uploaded Documents</h4>
+                <div class="space-y-3">
+                    {% if billing.mis_document %}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p class="text-sm font-semibold text-blue-900 mb-2">MIS Document</p>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <a href="{% url 'operations:monthly_billing_document_preview' billing.id 'mis_document' %}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                👁️ Preview
+                            </a>
+                            <span class="text-gray-500 text-xs">|</span>
+                            <a href="{% url 'operations:monthly_billing_document_download' billing.id 'mis_document' %}" class="text-green-600 hover:text-green-800 text-xs font-medium">
+                                ⬇️ Download
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if billing.transport_document %}
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p class="text-sm font-semibold text-green-900 mb-2">Transport Document</p>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <a href="{% url 'operations:monthly_billing_document_preview' billing.id 'transport_document' %}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                👁️ Preview
+                            </a>
+                            <span class="text-gray-500 text-xs">|</span>
+                            <a href="{% url 'operations:monthly_billing_document_download' billing.id 'transport_document' %}" class="text-green-600 hover:text-green-800 text-xs font-medium">
+                                ⬇️ Download
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if billing.other_document %}
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                        <p class="text-sm font-semibold text-gray-900 mb-2">Other Document</p>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <a href="{% url 'operations:monthly_billing_document_preview' billing.id 'other_document' %}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                👁️ Preview
+                            </a>
+                            <span class="text-gray-500 text-xs">|</span>
+                            <a href="{% url 'operations:monthly_billing_document_download' billing.id 'other_document' %}" class="text-green-600 hover:text-green-800 text-xs font-medium">
+                                ⬇️ Download
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- WORKFLOW HISTORY -->
+        <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-bold text-gray-900">🔄 Workflow History</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <!-- Created -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-24 text-sm text-gray-600">
+                            {{ billing.created_at|date:"d M Y" }}
+                        </div>
+                        <div class="flex-1 pl-4 border-l-2 border-blue-300">
+                            <p class="text-sm font-semibold text-gray-900">📝 Created</p>
+                            <p class="text-sm text-gray-600">By {{ billing.created_by.get_full_name }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Service: {{ billing.service_month|date:"M Y" }}
+                                {% if billing.billing_month %}| Billing: {{ billing.billing_month|date:"M Y" }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Submitted -->
+                    {% if billing.submitted_at %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-24 text-sm text-gray-600">
+                            {{ billing.submitted_at|date:"d M Y" }}
+                        </div>
+                        <div class="flex-1 pl-4 border-l-2 border-yellow-300">
+                            <p class="text-sm font-semibold text-gray-900">📤 Submitted</p>
+                            <p class="text-sm text-gray-600">By {{ billing.submitted_by.get_full_name }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Controller Review -->
+                    {% if billing.controller_reviewed_at %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-24 text-sm text-gray-600">
+                            {{ billing.controller_reviewed_at|date:"d M Y" }}
+                        </div>
+                        <div class="flex-1 pl-4 border-l-2 {% if billing.controller_action.code == 'approved' %}border-green-300{% else %}border-red-300{% endif %}">
+                            <p class="text-sm font-semibold text-gray-900">
+                                {% if billing.controller_action.code == 'approved' %}✅{% else %}❌{% endif %}
+                                Controller {{ billing.controller_action.label }}
+                            </p>
+                            <p class="text-sm text-gray-600">By {{ billing.controller_reviewed_by.get_full_name }}</p>
+                            {% if billing.controller_remarks %}
+                            <p class="text-sm text-gray-700 mt-1 italic">"{{ billing.controller_remarks }}"</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Finance Review -->
+                    {% if billing.finance_reviewed_at %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-24 text-sm text-gray-600">
+                            {{ billing.finance_reviewed_at|date:"d M Y" }}
+                        </div>
+                        <div class="flex-1 pl-4 border-l-2 {% if billing.finance_action.code == 'approved' %}border-green-300{% else %}border-red-300{% endif %}">
+                            <p class="text-sm font-semibold text-gray-900">
+                                {% if billing.finance_action.code == 'approved' %}✅{% else %}❌{% endif %}
+                                Finance {{ billing.finance_action.label }}
+                            </p>
+                            <p class="text-sm text-gray-600">By {{ billing.finance_reviewed_by.get_full_name }}</p>
+                            {% if billing.finance_remarks %}
+                            <p class="text-sm text-gray-700 mt-1 italic">"{{ billing.finance_remarks }}"</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Locked -->
+                    {% if billing.edit_locked_at %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-24 text-sm text-gray-600">
+                            {{ billing.edit_locked_at|date:"d M Y" }}
+                        </div>
+                        <div class="flex-1 pl-4 border-l-2 border-red-500">
+                            <p class="text-sm font-semibold text-gray-900">🔒 Locked</p>
+                            <p class="text-sm text-gray-600">No further edits allowed</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEW ACTIONS (for controllers and finance) -->
+        {% if can_controller_review or can_finance_review %}
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+                {% if can_controller_review %}🎯 Controller Review
+                {% elif can_finance_review %}💰 Finance Review{% endif %}
+            </h3>
+            
+            <form method="POST" action="{% if can_controller_review %}{% url 'operations:monthly_billing_controller_review' billing.id %}{% else %}{% url 'operations:monthly_billing_finance_review' billing.id %}{% endif %}">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                    <textarea name="remarks" rows="3" 
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Enter your review comments..."></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" name="action" value="approve"
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition">
+                        ✅ Approve
+                    </button>
+                    <button type="submit" name="action" value="reject"
+                            onclick="return confirm('Are you sure you want to reject this billing?');"
+                            class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition">
+                        ❌ Reject
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

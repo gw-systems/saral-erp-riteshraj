@@ -1,0 +1,115 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: 2089f850-ff2b-48c7-90d4-bc34a890ab6b
+    run.googleapis.com/build-image-uri: asia-south1-docker.pkg.dev/saral-erp-479508/cloud-run-source-deploy/saral-erp
+    run.googleapis.com/build-name: projects/1629809694/locations/asia-south1/builds/2089f850-ff2b-48c7-90d4-bc34a890ab6b
+    run.googleapis.com/build-source-location: gs://run-sources-saral-erp-479508-asia-south1/services/saral-erp/1765621126.229827-e3baeee61e4547e882dedf131ca5e538.zip#1765621139200731
+    run.googleapis.com/client-name: gcloud
+    run.googleapis.com/client-version: 550.0.0
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/operation-id: 474ef271-5f49-47af-b54c-8a5fa0d6d73e
+    run.googleapis.com/urls: '["https://saral-erp-1629809694.asia-south1.run.app","https://saral-erp-ensstwr7tq-el.a.run.app"]'
+    serving.knative.dev/creator: saral@godamwale.com
+    serving.knative.dev/lastModifier: github-actions@saral-erp-479508.iam.gserviceaccount.com
+  creationTimestamp: '2025-11-27T14:16:55.814808Z'
+  generation: 74
+  labels:
+    cloud.googleapis.com/location: asia-south1
+    run.googleapis.com/satisfiesPzs: 'true'
+  name: saral-erp
+  namespace: '1629809694'
+  resourceVersion: AAZGj3NOxVY
+  selfLink: /apis/serving.knative.dev/v1/namespaces/1629809694/services/saral-erp
+  uid: 7bc11725-f9ba-4dcc-b369-3068e158ee16
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 550.0.0
+        run.googleapis.com/cloudsql-instances: saral-erp-479508:asia-south1:saral-erp-db
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        run.googleapis.com/startupProbeType: Default
+      name: saral-erp-r20251222-060629
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: USE_CLOUD_SQL
+          value: 'true'
+        - name: CLOUD_SQL_CONNECTION_NAME
+          value: saral-erp-479508:asia-south1:saral-erp-db
+        - name: DB_NAME
+          value: erp
+        - name: DB_USER
+          value: admin
+        - name: DEBUG
+          value: 'false'
+        - name: ENVIRONMENT
+          value: production
+        - name: GIT_COMMIT
+          value: efe68fe
+        - name: DEPLOYED_AT
+          value: 20251222-060629
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: django-secret-key
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: db-password
+        - name: GCS_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: saral-erp-storage-credentials
+        image: gcr.io/saral-erp-479508/saral-erp:efe68fe-20251222-060629
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: 1629809694-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+  traffic:
+  - percent: 100
+    revisionName: saral-erp-r20251220-102000
+status:
+  address:
+    url: https://saral-erp-ensstwr7tq-el.a.run.app
+  conditions:
+  - lastTransitionTime: '2025-12-22T06:18:54.715241Z'
+    status: 'True'
+    type: Ready
+  - lastTransitionTime: '2025-12-22T06:18:54.757139Z'
+    message: Deploying revision succeeded in 6.46s.
+    reason: Retired
+    status: 'True'
+    type: ConfigurationsReady
+  - lastTransitionTime: '2025-12-22T06:18:54.675292Z'
+    status: 'True'
+    type: RoutesReady
+  latestCreatedRevisionName: saral-erp-r20251222-060629
+  latestReadyRevisionName: saral-erp-r20251222-060629
+  observedGeneration: 74
+  traffic:
+  - percent: 100
+    revisionName: saral-erp-r20251220-102000
+  url: https://saral-erp-ensstwr7tq-el.a.run.app

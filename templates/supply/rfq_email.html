@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; font-size: 11pt; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <div style="max-width: 800px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a73e8; margin: 0 0 10px 0; font-size: 24px;">Request for Quotation</h1>
+            <p style="color: #666; margin: 0; font-size: 14px;">Saral ERP - Supply Chain Management</p>
+        </div>
+
+        <!-- Greeting -->
+        <p style="margin: 0 0 20px 0;">Dear Sir/Ma'am,</p>
+        <p style="margin: 0 0 30px 0;">We are pleased to share an RFQ for your quote.</p>
+
+        <!-- RFQ Details Table -->
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
+            <thead>
+                <tr style="background-color: #1a73e8; color: white;">
+                    <th style="border: 1px solid #1a73e8; padding: 12px; text-align: left; font-weight: 600;">Field</th>
+                    <th style="border: 1px solid #1a73e8; padding: 12px; text-align: left; font-weight: 600;">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 600; width: 30%;">RFQ ID</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ rfq.rfq_id }}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 600;">City</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ rfq.city }}</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 600;">Area Required</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;"><strong>{{ rfq.area_required_sqft }} Sq Ft</strong></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 600;">Product</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ rfq.product }}</td>
+                </tr>
+                {% if rfq.tenure %}
+                <tr style="background-color: #f9f9f9;">
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 600;">Tenure</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ rfq.get_tenure_display }}</td>
+                </tr>
+                {% endif %}
+                {% if rfq.remarks %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 600; vertical-align: top;">Remarks</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; white-space: pre-wrap;">{{ rfq.remarks }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Rates Table (if any rates are provided) -->
+        {% if rfq.storage_rate_sqft or rfq.storage_rate_pallet or rfq.storage_rate_mt or rfq.handling_rate_pallet %}
+        <h3 style="color: #1a73e8; margin: 30px 0 15px 0; font-size: 16px;">Expected Rate Structure:</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
+            <thead>
+                <tr style="background-color: #4caf50; color: white;">
+                    <th style="border: 1px solid #4caf50; padding: 12px; text-align: left;">Category</th>
+                    <th style="border: 1px solid #4caf50; padding: 12px; text-align: right;">Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if rfq.storage_rate_sqft %}
+                <tr style="background-color: #f9f9f9;">
+                    <td style="border: 1px solid #ddd; padding: 10px;">Storage Rate (per Sq Ft)</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">₹{{ rfq.storage_rate_sqft }}</td>
+                </tr>
+                {% endif %}
+                {% if rfq.storage_rate_pallet %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">Storage Rate (per Pallet)</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">₹{{ rfq.storage_rate_pallet }}</td>
+                </tr>
+                {% endif %}
+                {% if rfq.storage_rate_mt %}
+                <tr style="background-color: #f9f9f9;">
+                    <td style="border: 1px solid #ddd; padding: 10px;">Storage Rate (per MT)</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">₹{{ rfq.storage_rate_mt }}</td>
+                </tr>
+                {% endif %}
+                {% if rfq.handling_rate_pallet %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">Handling Rate (per Pallet)</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: right;">₹{{ rfq.handling_rate_pallet }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <!-- Deadline -->
+        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
+            <p style="margin: 0; color: #856404;">
+                <strong><svg style="display:inline;vertical-align:middle;" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Deadline:</strong> Please help us with your rates by <strong>{{ deadline|date:"jS F Y" }}</strong> EOD.
+            </p>
+        </div>
+
+        <!-- Point of Contact -->
+        {% if poc %}
+        <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; border-radius: 5px; background-color: #f8f9fa;">
+            <p style="margin: 0 0 10px 0; font-size: 12px; color: #555; font-weight: 600;"><svg style="display:inline;vertical-align:middle;" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> For any queries regarding this RFQ, please contact:</p>
+            <p style="margin: 5px 0; font-size: 14px; font-weight: 700; color: #1a73e8;">{{ poc.get_full_name }}</p>
+            {% if poc.role %}
+            <p style="margin: 2px 0; font-size: 12px; color: #666;">{{ poc.get_role_display }}</p>
+            {% endif %}
+            <p style="margin: 2px 0; font-size: 12px; color: #666;">
+                <svg style="display:inline;vertical-align:middle;" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> Email: <a href="mailto:{{ poc.email }}" style="color: #1a73e8; text-decoration: none;">{{ poc.email }}</a>
+            </p>
+            {% if poc.phone %}
+            <p style="margin: 2px 0; font-size: 12px; color: #666;"><svg style="display:inline;vertical-align:middle;" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> Contact: {{ poc.phone }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Closing -->
+        <p style="margin: 30px 0 5px 0;">Regards,</p>
+        <p style="margin: 0 0 5px 0; color: #1a73e8; font-weight: 700; font-size: 13px;">{{ sender.get_full_name }}</p>
+        {% if sender.role %}
+        <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">{{ sender.get_role_display }}</p>
+        {% endif %}
+        {% if sender.phone %}
+        <p style="margin: 0 0 20px 0; color: #666; font-size: 12px;">{{ sender.phone }}</p>
+        {% endif %}
+
+        <!-- Footer -->
+        <div style="border-top: 2px solid #ddd; padding-top: 20px; margin-top: 30px; text-align: center;">
+            <p style="margin: 0 0 10px 0; color: #1a73e8; font-weight: 700; font-size: 16px;">Godamwale</p>
+            <p style="margin: 0; color: #666; font-size: 11px;">Supply Chain Management | Warehouse Solutions</p>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 11px;">
+                <a href="mailto:saral@godamwale.com" style="color: #1a73e8; text-decoration: none;">saral@godamwale.com</a>
+            </p>
+        </div>
+
+    </div>
+</body>
+</html>

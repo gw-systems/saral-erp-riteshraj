@@ -1,0 +1,442 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - {{ APP_FULL_NAME }}</title>
+    <!-- FIX: Use pre-built CSS matching base.html instead of CDN (Tailwind #43) -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Shake animation for errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* FIX: Replace transition:all with specific properties (Web #28) */
+        .eye-icon {
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .eye-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* FIX: Add prefers-reduced-motion support (UX #9, Tailwind #42) */
+        @media (prefers-reduced-motion: reduce) {
+            .fade-in {
+                animation: none;
+            }
+            .shake {
+                animation: none;
+            }
+            .spinner {
+                animation: spin 1.5s linear infinite; /* Keep spinner but slow it */
+            }
+            .eye-icon {
+                transition: none;
+            }
+            /* Disable all transform transitions for reduced motion users */
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+            /* Keep spinner visible */
+            .spinner {
+                animation: spin 1.5s linear infinite !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center fade-in">
+            <!-- Logo -->
+            <div class="flex justify-center mb-4">
+                <!-- FIX: Add explicit width/height to img for layout stability (UX #19) -->
+                <img src="{% static 'images/GW Logo.png' %}"
+                     alt="{{ APP_NAME }} Logo"
+                     width="80" height="80"
+                     class="h-20 w-20 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
+            </div>
+
+            <!-- App Name -->
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                {{ APP_NAME }}
+            </h1>
+            <p class="text-sm text-gray-600 font-medium mb-1">{{ APP_VERSION }}</p>
+            <p class="text-sm text-gray-500">Warehouse &amp; Logistics Management System</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 fade-in" id="login-card">
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900 text-center">Sign in to your account</h2>
+                <p class="text-sm text-gray-500 text-center mt-2">Enter your credentials to access your dashboard</p>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <!-- FIX: Add role="alert" for screen reader announcement (UX #44) -->
+            <div class="mb-4 space-y-2 shake" role="alert">
+                {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-700{% elif message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-700{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-700{% endif %} p-4 rounded-lg shadow-sm">
+                    <p class="text-sm font-medium">{{ message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Failed Login Counter Alert -->
+            <div id="failed-login-alert" class="hidden mb-4 bg-orange-50 border-l-4 border-orange-500 text-orange-700 p-4 rounded-lg shadow-sm" role="alert">
+                <p class="text-sm font-medium">
+                    <span id="failed-attempts">0</span> failed login attempt(s). Account will be temporarily locked after 5 attempts.
+                </p>
+            </div>
+
+            <!-- Caps Lock Warning -->
+            <!-- FIX: Add aria-live on the warning div itself for screen reader announcements (UX #44, Web #5) -->
+            <div id="caps-lock-warning" class="hidden mb-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-lg" role="status" aria-live="polite">
+                <p class="text-sm font-medium">Caps Lock is ON</p>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'accounts:login' %}" class="space-y-6" id="login-form" autocomplete="on">
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        Username <span class="text-red-500" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
+                    </label>
+                    <!-- FIX: Replace transition with transition-colors (Web #28) -->
+                    <!-- FIX: Add aria-label declaratively in HTML, not JS (UX #40) -->
+                    <!-- FIX: Add spellcheck="false" for username field (Web #13) -->
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           required
+                           autofocus
+                           autocomplete="username"
+                           spellcheck="false"
+                           aria-label="Username"
+                           aria-required="true"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
+                           placeholder="Enter your username">
+                </div>
+
+                <!-- Password with Show/Hide Toggle -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Password <span class="text-red-500" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
+                    </label>
+                    <div class="relative">
+                        <!-- FIX: Replace transition with transition-colors (Web #28) -->
+                        <!-- FIX: Add aria-label declaratively (UX #40) -->
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               required
+                               autocomplete="current-password"
+                               aria-label="Password"
+                               aria-required="true"
+                               class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
+                               placeholder="Enter your password">
+
+                        <!-- Eye Icon Toggle -->
+                        <!-- FIX: Remove tabindex="-1" to make keyboard-accessible (UX #41) -->
+                        <!-- FIX: Replace focus:outline-none with focus:outline-none + focus:ring (Web #29, Critical) -->
+                        <!-- FIX: Add aria-label declaratively (UX #40) -->
+                        <button type="button"
+                                id="toggle-password"
+                                aria-label="Toggle password visibility"
+                                aria-pressed="false"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded eye-icon">
+                            <!-- FIX: Add explicit width/height to SVGs to prevent layout shift (Tailwind #55) -->
+                            <!-- Eye Closed Icon (default) -->
+                            <svg id="eye-closed" class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
+                            <!-- Eye Open Icon (hidden initially) -->
+                            <svg id="eye-open" class="w-6 h-6 hidden" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Show Password Checkbox (Alternative option - hidden by default) -->
+                    <div class="mt-2 flex items-center hidden" id="show-password-checkbox">
+                        <input
+                            type="checkbox"
+                            id="show-password-check"
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="show-password-check" class="ml-2 text-sm text-gray-600 cursor-pointer">
+                            Show password
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Remember Me -->
+                <!-- FIX: Wrap checkbox and label together for larger hit target (Web #9) -->
+                <div class="flex items-center justify-between">
+                    <label for="remember_me" class="flex items-center cursor-pointer select-none">
+                        <input type="checkbox"
+                               id="remember_me"
+                               name="remember_me"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                        <span class="ml-2 block text-sm text-gray-700">
+                            Remember me for 30 days
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Submit Button with Loading State -->
+                <!-- FIX: Replace transition with specific transitions (Web #28) -->
+                <!-- FIX: Keep button enabled during loading, show spinner (Web #14) -->
+                <div>
+                    <button type="submit"
+                            id="submit-btn"
+                            class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-opacity duration-200 active:scale-[0.98]">
+                        <span id="button-text">Sign in</span>
+                        <span id="loading-spinner" class="hidden">
+                            <span class="spinner" role="status" aria-label="Signing in"></span>
+                            Signing in...
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Keyboard Shortcuts Help -->
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">
+                        Press <kbd class="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> to sign in
+                    </p>
+                </div>
+            </form>
+
+            <!-- Security Badge -->
+            <!-- FIX: Add explicit width/height to SVG (Tailwind #55) -->
+            <div class="mt-6 flex items-center justify-center gap-2 text-xs text-gray-500">
+                <svg class="w-4 h-4 text-green-600" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span>Secure Connection (HTTPS)</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <!-- FIX: Use dynamic year instead of hardcoded 2025 (Web #30) -->
+        <div class="text-center fade-in">
+            <p class="text-xs text-gray-500 font-medium">
+                &copy; {% now "Y" %} {{ APP_NAME }}. All rights reserved.
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+                Powered by Django
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript for Enhanced Features -->
+    <script>
+        // ====================================================================
+        // 1. SHOW/HIDE PASSWORD TOGGLE
+        // ====================================================================
+        const passwordField = document.getElementById('password');
+        const toggleButton = document.getElementById('toggle-password');
+        const eyeClosed = document.getElementById('eye-closed');
+        const eyeOpen = document.getElementById('eye-open');
+
+        toggleButton.addEventListener('click', function() {
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeClosed.classList.add('hidden');
+                eyeOpen.classList.remove('hidden');
+                // FIX: Update aria-pressed state for screen readers
+                toggleButton.setAttribute('aria-pressed', 'true');
+                toggleButton.setAttribute('aria-label', 'Hide password');
+            } else {
+                passwordField.type = 'password';
+                eyeClosed.classList.remove('hidden');
+                eyeOpen.classList.add('hidden');
+                toggleButton.setAttribute('aria-pressed', 'false');
+                toggleButton.setAttribute('aria-label', 'Toggle password visibility');
+            }
+        });
+
+        // ====================================================================
+        // 2. CAPS LOCK WARNING
+        // FIX: aria-live is now on the div in HTML, so screen readers
+        // announce it automatically when the div becomes visible
+        // ====================================================================
+        const capsLockWarning = document.getElementById('caps-lock-warning');
+
+        passwordField.addEventListener('keyup', function(event) {
+            if (event.getModifierState && event.getModifierState('CapsLock')) {
+                capsLockWarning.classList.remove('hidden');
+                capsLockWarning.classList.add('fade-in');
+            } else {
+                capsLockWarning.classList.add('hidden');
+            }
+        });
+
+        // ====================================================================
+        // 3. LOADING STATE ON SUBMIT
+        // FIX: Show spinner but keep button visually active (Web #14)
+        // Prevent double-submit via a flag instead of disabling
+        // ====================================================================
+        const loginForm = document.getElementById('login-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        let isSubmitting = false;
+
+        loginForm.addEventListener('submit', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+            isSubmitting = true;
+
+            // Show loading state without disabling the button
+            buttonText.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+            loadingSpinner.classList.add('flex', 'items-center');
+            submitBtn.classList.add('opacity-75');
+        });
+
+        // ====================================================================
+        // 4. KEYBOARD SHORTCUTS
+        // ====================================================================
+        document.addEventListener('keydown', function(event) {
+            // Ctrl/Cmd + Enter to submit (alternative shortcut)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                loginForm.requestSubmit();
+            }
+
+            // Escape to clear form
+            if (event.key === 'Escape') {
+                document.getElementById('username').value = '';
+                passwordField.value = '';
+                document.getElementById('username').focus();
+            }
+        });
+
+        // ====================================================================
+        // 5. FAILED LOGIN COUNTER (Client-side tracking)
+        // ====================================================================
+        const failedLoginAlert = document.getElementById('failed-login-alert');
+        const failedAttemptsSpan = document.getElementById('failed-attempts');
+
+        // Check if there's an error message (indicating failed login)
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' and 'Invalid username or password' in message.message %}
+                    // Increment failed login counter in localStorage
+                    let failedAttempts = parseInt(localStorage.getItem('failedLoginAttempts') || '0');
+                    failedAttempts++;
+                    localStorage.setItem('failedLoginAttempts', failedAttempts);
+
+                    // Show alert if failed attempts > 0
+                    if (failedAttempts > 0) {
+                        failedLoginAlert.classList.remove('hidden');
+                        failedLoginAlert.classList.add('fade-in');
+                        failedAttemptsSpan.textContent = failedAttempts;
+
+                        // Shake the login card
+                        document.getElementById('login-card').classList.add('shake');
+                        setTimeout(() => {
+                            document.getElementById('login-card').classList.remove('shake');
+                        }, 500);
+                    }
+
+                    // Lock account after 5 failed attempts
+                    if (failedAttempts >= 5) {
+                        failedLoginAlert.innerHTML = `
+                            <p class="text-sm font-medium">
+                                Too many failed attempts. Please wait 5 minutes before trying again.
+                            </p>
+                        `;
+                        failedLoginAlert.classList.remove('bg-orange-50', 'border-orange-500', 'text-orange-700');
+                        failedLoginAlert.classList.add('bg-red-50', 'border-red-500', 'text-red-700');
+
+                        // Disable form for 5 minutes
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                        setTimeout(() => {
+                            localStorage.removeItem('failedLoginAttempts');
+                            location.reload();
+                        }, 300000); // 5 minutes
+                    }
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        // Clear failed attempts on successful page load (when there's no error)
+        {% if not messages or messages|length == 0 %}
+            localStorage.removeItem('failedLoginAttempts');
+        {% endif %}
+
+        // ====================================================================
+        // 6. BROWSER AUTOFILL SUPPORT
+        // ====================================================================
+        // Already handled via autocomplete attributes in HTML
+        // Additional: Detect autofill and style accordingly
+        passwordField.addEventListener('animationstart', function(event) {
+            if (event.animationName === 'onAutoFillStart') {
+                passwordField.classList.add('bg-yellow-50');
+            }
+        });
+
+        // ====================================================================
+        // 7. FOCUS MANAGEMENT
+        // ====================================================================
+        // Auto-focus username field on page load
+        window.addEventListener('load', function() {
+            document.getElementById('username').focus();
+        });
+    </script>
+
+</body>
+</html>

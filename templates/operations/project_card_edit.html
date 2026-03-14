@@ -1,0 +1,879 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Project Card - {{ project_card.project.project_code }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Edit Project Card</h1>
+                <p class="text-gray-600 mt-1">
+                    <a href="{% url 'projects:project_detail' project_card.project.project_id %}"
+                       class="text-blue-600 hover:text-blue-800 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        {{ project_card.project.project_code }}
+                    </a>
+                </p>
+            </div>
+            <a href="{% url 'projects:project_detail' project_card.project.project_id %}"
+               class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Detail
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" id="projectCardForm">
+        {% csrf_token %}
+
+        <!-- Hidden field to preserve return URL -->
+        {% if return_url %}
+        <input type="hidden" name="return_url" value="{{ return_url }}">
+        {% endif %}
+
+        <!-- Agreement Details -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border-b-4 border-blue-500">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-blue-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Agreement Details
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Project (Read-only) -->
+                <div class="lg:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                    <input type="text" value="{{ project_card.project.project_code }}"
+                           disabled class="w-full border border-gray-300 bg-gray-100 rounded-lg px-4 py-2">
+                    <input type="hidden" name="project" value="{{ project_card.project.project_id }}">
+                </div>
+
+                <!-- Agreement Dates -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Agreement Start <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="agreement_start_date" required
+                           value="{{ project_card.agreement_start_date|date:'Y-m-d' }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Agreement End <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="agreement_end_date" required
+                           value="{{ project_card.agreement_end_date|date:'Y-m-d' }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escalation Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="yearly_escalation_date" required
+                           value="{{ project_card.yearly_escalation_date|date:'Y-m-d' }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Escalation & Security -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escalation % <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="has_fixed_escalation" id="hasFixedEscalation"
+                               {% if project_card.has_fixed_escalation %}checked{% endif %}
+                               class="w-4 h-4">
+                        <input type="number" step="0.01" name="annual_escalation_percent" id="escalationPercent"
+                               value="{{ project_card.annual_escalation_percent }}"
+                               {% if not project_card.has_fixed_escalation %}disabled{% endif %}
+                               placeholder="e.g., 5.00"
+                               class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-500">%</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Security Deposit (₹) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" step="0.01" name="security_deposit" required
+                           value="{{ project_card.security_deposit }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Operation Start <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="date" name="operation_start_date"
+                           value="{% if project_card.operation_start_date %}{{ project_card.operation_start_date|date:'Y-m-d' }}{% endif %}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Billing Start <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="date" name="billing_start_date"
+                           value="{% if project_card.billing_start_date %}{{ project_card.billing_start_date|date:'Y-m-d' }}{% endif %}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Payment Terms -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Storage Payment (days) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="number" name="storage_payment_days" min="0" max="365"
+                           value="{{ project_card.storage_payment_days }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Handling Payment (days) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="number" name="handling_payment_days" min="0" max="365"
+                           value="{{ project_card.handling_payment_days }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">General Notes</label>
+                <textarea name="notes" rows="3"
+                          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                          placeholder="General notes about this project card...">{{ project_card.notes }}</textarea>
+            </div>
+        </div>
+
+        <!-- CLIENT/VENDOR TABS -->
+        <div class="bg-white rounded-lg shadow-sm mb-6">
+            <!-- Tab Headers -->
+            <div class="border-b border-gray-200">
+                <nav class="flex">
+                    <button type="button" onclick="switchTab('client')" id="clientTab"
+                            class="inline-flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 border-blue-600 text-blue-600">
+                        <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Client Rates
+                    </button>
+                    <button type="button" onclick="switchTab('vendor')" id="vendorTab"
+                            class="inline-flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Vendor Rates
+                    </button>
+                </nav>
+            </div>
+
+            <!-- CLIENT TAB CONTENT -->
+            <div id="clientContent" class="p-6">
+
+                <!-- Storage Rates -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                            </svg>
+                            Storage Rates (Client)
+                        </h3>
+                    </div>
+                    <div id="clientStorageRates" class="space-y-4 mb-4">
+                        <!-- Existing storage rates will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addStorageRate('client')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add Storage Rate
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Storage Notes (Client)</label>
+                        <textarea name="storage_notes_client" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about client storage rates..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Handling Rates -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                            Handling Rates (Client)
+                        </h3>
+                    </div>
+                    <div id="clientHandlingRates" class="space-y-4 mb-4">
+                        <!-- Existing handling rates will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addHandlingRate('client')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add Handling Rate
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Handling Notes (Client)</label>
+                        <textarea name="handling_notes_client" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about client handling rates..."></textarea>
+                    </div>
+                </div>
+
+                <!-- VAS -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Value Added Services (Client)
+                        </h3>
+                    </div>
+                    <div id="clientVAS" class="space-y-4 mb-4">
+                        <!-- Existing VAS will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addVAS('client')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add VAS
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">VAS Notes (Client)</label>
+                        <textarea name="vas_notes_client" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about client VAS..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Infrastructure -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V9m6 12V9m-3-8v4"/>
+                            </svg>
+                            Infrastructure Costs (Client)
+                        </h3>
+                    </div>
+                    <div id="clientInfra" class="space-y-4 mb-4">
+                        <!-- Existing infrastructure will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addInfra('client')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add Infrastructure
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Infrastructure Notes (Client)</label>
+                        <textarea name="infra_notes_client" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about client infrastructure..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Client Tab Actions -->
+                <div class="flex justify-end gap-3 pt-6 border-t">
+                    <button type="button" onclick="switchTab('vendor')"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                        Next: Vendor Rates
+                        <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VENDOR TAB CONTENT -->
+            <div id="vendorContent" class="p-6 hidden">
+
+                <!-- Storage Rates -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                            </svg>
+                            Storage Rates (Vendor)
+                        </h3>
+                    </div>
+                    <div id="vendorStorageRates" class="space-y-4 mb-4">
+                        <!-- Existing storage rates will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addStorageRate('vendor')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add Storage Rate
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Storage Notes (Vendor)</label>
+                        <textarea name="storage_notes_vendor" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about vendor storage rates..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Handling Rates -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                            Handling Rates (Vendor)
+                        </h3>
+                    </div>
+                    <div id="vendorHandlingRates" class="space-y-4 mb-4">
+                        <!-- Existing handling rates will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addHandlingRate('vendor')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add Handling Rate
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Handling Notes (Vendor)</label>
+                        <textarea name="handling_notes_vendor" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about vendor handling rates..."></textarea>
+                    </div>
+                </div>
+
+                <!-- VAS -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Value Added Services (Vendor)
+                        </h3>
+                    </div>
+                    <div id="vendorVAS" class="space-y-4 mb-4">
+                        <!-- Existing VAS will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addVAS('vendor')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add VAS
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">VAS Notes (Vendor)</label>
+                        <textarea name="vas_notes_vendor" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about vendor VAS..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Infrastructure -->
+                <div class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V9m6 12V9m-3-8v4"/>
+                            </svg>
+                            Infrastructure Costs (Vendor)
+                        </h3>
+                    </div>
+                    <div id="vendorInfra" class="space-y-4 mb-4">
+                        <!-- Existing infrastructure will be populated by JS -->
+                    </div>
+                    <div class="mb-4">
+                        <button type="button" onclick="addInfra('vendor')"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                            + Add Infrastructure
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Infrastructure Notes (Vendor)</label>
+                        <textarea name="infra_notes_vendor" rows="2"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Additional notes about vendor infrastructure..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Vendor Tab Actions -->
+                <div class="flex justify-start pt-6 border-t">
+                    <button type="button" onclick="switchTab('client')"
+                            class="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                        <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Client Rates
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="flex justify-between items-center bg-white border-t border-gray-200 p-4 shadow-lg rounded-lg">
+            <a href="{% if return_url %}{{ return_url }}{% else %}{% url 'projects:project_detail' project_id=project_card.project.project_id %}{% endif %}"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                Cancel
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Save Changes
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+// ========== MODEL CHOICES FROM BACKEND ==========
+const CHOICES = {
+    storage: {
+        space_type: {{ storage_space_type_choices|safe }},
+    },
+    handling: {
+        direction: {{ handling_direction_choices|safe }},
+        channel: {{ handling_channel_choices|safe }},
+        base_type: {{ handling_base_type_choices|safe }},
+    },
+    vas: {
+        service_type: {{ vas_service_type_choices|safe }},
+        unit: {{ vas_unit_choices|safe }},
+    },
+    infra: {
+        cost_type: {{ infra_cost_type_choices|safe }},
+    }
+};
+
+// ========== EXISTING DATA FROM BACKEND ==========
+const EXISTING_DATA = {
+    storage_rates: [
+        {% for rate in storage_rates %}
+        {
+            rate_for: '{{ rate.rate_for }}',
+            space_type: '{{ rate.space_type }}',
+            min_billable: {{ rate.minimum_billable_area|default:"null" }},
+            rate_per_unit: {{ rate.flat_rate_per_unit|default:"null" }},
+            monthly_amount: {{ rate.monthly_billable_amount|default:"null" }},
+            saas_charge: {{ rate.saas_monthly_charge|default:"null" }},
+        },
+        {% endfor %}
+    ],
+    handling_rates: [
+        {% for rate in handling_rates %}
+        {
+            rate_for: '{{ rate.rate_for }}',
+            direction: '{{ rate.direction }}',
+            channel: '{{ rate.channel }}',
+            base_type: '{{ rate.base_type }}',
+            min_weight: {{ rate.min_weight_kg|default:"null" }},
+            max_weight: {{ rate.max_weight_kg|default:"null" }},
+            rate: {{ rate.rate|default:"null" }},
+            remarks: '{{ rate.remarks|escapejs }}',
+        },
+        {% endfor %}
+    ],
+    vas_services: [
+        {% for service in vas_services %}
+        {
+            rate_for: '{{ service.rate_for }}',
+            service_type: '{{ service.service_type }}',
+            unit: '{{ service.unit }}',
+            description: '{{ service.service_description|escapejs }}',
+            rate: {{ service.rate|default:"null" }},
+        },
+        {% endfor %}
+    ],
+    infrastructure_costs: [
+        {% for cost in infrastructure_costs %}
+        {
+            rate_for: '{{ cost.rate_for }}',
+            cost_type: '{{ cost.cost_type }}',
+            description: '{{ cost.description|escapejs }}',
+            amount: {{ cost.amount|default:"null" }},
+            is_at_actual: {{ cost.is_at_actual|yesno:"true,false" }},
+        },
+        {% endfor %}
+    ]
+};
+
+// ========== TAB SWITCHING ==========
+function switchTab(tab) {
+    const clientTab = document.getElementById('clientTab');
+    const vendorTab = document.getElementById('vendorTab');
+    const clientContent = document.getElementById('clientContent');
+    const vendorContent = document.getElementById('vendorContent');
+
+    if (tab === 'client') {
+        clientTab.classList.add('border-blue-600', 'text-blue-600');
+        clientTab.classList.remove('border-transparent', 'text-gray-500');
+        vendorTab.classList.remove('border-blue-600', 'text-blue-600');
+        vendorTab.classList.add('border-transparent', 'text-gray-500');
+        clientContent.classList.remove('hidden');
+        vendorContent.classList.add('hidden');
+    } else {
+        vendorTab.classList.add('border-blue-600', 'text-blue-600');
+        vendorTab.classList.remove('border-transparent', 'text-gray-500');
+        clientTab.classList.remove('border-blue-600', 'text-blue-600');
+        clientTab.classList.add('border-transparent', 'text-gray-500');
+        vendorContent.classList.remove('hidden');
+        clientContent.classList.add('hidden');
+    }
+}
+
+// ========== AUTO-ENABLE ESCALATION ==========
+document.getElementById('hasFixedEscalation').addEventListener('change', function() {
+    document.getElementById('escalationPercent').disabled = !this.checked;
+});
+
+// ========== COUNTERS ==========
+let storageCount = 0;
+let handlingCount = 0;
+let vasCount = 0;
+let infraCount = 0;
+
+// ========== HELPER: BUILD OPTIONS FROM CHOICES ==========
+function buildOptions(choices, selectedValue = '') {
+    return choices.map(([value, label]) =>
+        `<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${label}</option>`
+    ).join('');
+}
+
+// ========== SMART 3-FIELD CALCULATOR FOR STORAGE ==========
+function smartCalculate(rowId) {
+    const minBillable = parseFloat(document.querySelector(`#${rowId} input[name*="min_billable"]`).value) || 0;
+    const rate = parseFloat(document.querySelector(`#${rowId} input[name*="rate_per_unit"]`).value) || 0;
+    const monthly = parseFloat(document.querySelector(`#${rowId} input[name*="monthly_amount"]`).value) || 0;
+
+    const filled = [minBillable > 0, rate > 0, monthly > 0].filter(Boolean).length;
+
+    if (filled === 2) {
+        const minInput = document.querySelector(`#${rowId} input[name*="min_billable"]`);
+        const rateInput = document.querySelector(`#${rowId} input[name*="rate_per_unit"]`);
+        const monthlyInput = document.querySelector(`#${rowId} input[name*="monthly_amount"]`);
+
+        if (!minBillable && rate && monthly) {
+            minInput.value = (monthly / rate).toFixed(2);
+            flashGreen(minInput);
+        } else if (!rate && minBillable && monthly) {
+            rateInput.value = (monthly / minBillable).toFixed(2);
+            flashGreen(rateInput);
+        } else if (!monthly && minBillable && rate) {
+            monthlyInput.value = (minBillable * rate).toFixed(2);
+            flashGreen(monthlyInput);
+        }
+    }
+}
+
+function flashGreen(element) {
+    element.classList.add('bg-green-100', 'border-green-500');
+    setTimeout(() => {
+        element.classList.remove('bg-green-100', 'border-green-500');
+    }, 1000);
+}
+
+// ========== ADD STORAGE RATE ==========
+function addStorageRate(rateFor, existingData = null) {
+    storageCount++;
+    const rowId = `storage_${rateFor}_${storageCount}`;
+    const container = document.getElementById(`${rateFor}StorageRates`);
+
+    const card = document.createElement('div');
+    card.id = rowId;
+    card.className = 'bg-blue-50 border-2 border-blue-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Storage Rate #${storageCount}</h4>
+            <button type="button" onclick="this.closest('.bg-blue-50').remove()"
+                    class="text-red-600 hover:text-red-800 font-bold">&#x2715;</button>
+        </div>
+
+        <input type="hidden" name="storage_rate_for_${storageCount}" value="${rateFor}">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Space Type *</label>
+                <select name="storage_space_type_${storageCount}" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.storage.space_type, existingData?.space_type || '')}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Min Billable
+                    <span class="text-xs text-yellow-600">(Fill any 2)</span>
+                </label>
+                <input type="number" step="0.01" name="storage_min_billable_${storageCount}"
+                       value="${existingData?.min_billable || ''}"
+                       onchange="smartCalculate('${rowId}')"
+                       class="w-full border-2 border-yellow-300 rounded-lg px-3 py-2">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Rate/Unit (&#8377;)
+                    <span class="text-xs text-yellow-600">(Fill any 2)</span>
+                </label>
+                <input type="number" step="0.01" name="storage_rate_per_unit_${storageCount}"
+                       value="${existingData?.rate_per_unit || ''}"
+                       onchange="smartCalculate('${rowId}')"
+                       class="w-full border-2 border-yellow-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Monthly Amount (&#8377;)
+                    <span class="text-xs text-yellow-600">(Fill any 2)</span>
+                </label>
+                <input type="number" step="0.01" name="storage_monthly_amount_${storageCount}"
+                       value="${existingData?.monthly_amount || ''}"
+                       onchange="smartCalculate('${rowId}')"
+                       class="w-full border-2 border-yellow-300 rounded-lg px-3 py-2">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">SAAS Charge (&#8377;) <span class="text-gray-500">(Optional)</span></label>
+                <input type="number" step="0.01" name="storage_saas_${storageCount}"
+                       value="${existingData?.saas_charge || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+
+        <div class="mt-3 bg-yellow-50 border border-yellow-200 rounded p-2">
+            <p class="text-xs text-yellow-800"><strong>Smart Calculator:</strong> Fill any 2 fields, the 3rd will auto-calculate!</p>
+        </div>
+    `;
+
+    container.appendChild(card);
+}
+
+// ========== ADD HANDLING RATE ==========
+function addHandlingRate(rateFor, existingData = null) {
+    handlingCount++;
+    const container = document.getElementById(`${rateFor}HandlingRates`);
+
+    const card = document.createElement('div');
+    card.className = 'bg-green-50 border-2 border-green-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Handling Rate #${handlingCount}</h4>
+            <button type="button" onclick="this.closest('.bg-green-50').remove()"
+                    class="text-red-600 hover:text-red-800 font-bold">&#x2715;</button>
+        </div>
+
+        <input type="hidden" name="handling_rate_for_${handlingCount}" value="${rateFor}">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Direction *</label>
+                <select name="handling_direction_${handlingCount}" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.handling.direction, existingData?.direction || '')}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Channel</label>
+                <select name="handling_channel_${handlingCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.handling.channel, existingData?.channel || '')}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Base Type *</label>
+                <select name="handling_base_type_${handlingCount}" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.handling.base_type, existingData?.base_type || '')}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rate (&#8377;) *</label>
+                <input type="number" step="0.01" name="handling_rate_${handlingCount}" required
+                       value="${existingData?.rate || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Min Weight (kg)</label>
+                <input type="number" step="0.01" name="handling_min_weight_${handlingCount}"
+                       value="${existingData?.min_weight || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Max Weight (kg)</label>
+                <input type="number" step="0.01" name="handling_max_weight_${handlingCount}"
+                       value="${existingData?.max_weight || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <input type="text" name="handling_remarks_${handlingCount}"
+                   value="${existingData?.remarks || ''}"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2">
+        </div>
+    `;
+
+    container.appendChild(card);
+}
+
+// ========== ADD VAS ==========
+function addVAS(rateFor, existingData = null) {
+    vasCount++;
+    const container = document.getElementById(`${rateFor}VAS`);
+
+    const card = document.createElement('div');
+    card.className = 'bg-purple-50 border-2 border-purple-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">VAS #${vasCount}</h4>
+            <button type="button" onclick="this.closest('.bg-purple-50').remove()"
+                    class="text-red-600 hover:text-red-800 font-bold">&#x2715;</button>
+        </div>
+
+        <input type="hidden" name="vas_rate_for_${vasCount}" value="${rateFor}">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Service Type *</label>
+                <select name="vas_service_type_${vasCount}" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.vas.service_type, existingData?.service_type || '')}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                <select name="vas_unit_${vasCount}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.vas.unit, existingData?.unit || '')}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input type="text" name="vas_description_${vasCount}"
+                       value="${existingData?.description || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rate (&#8377;)</label>
+                <input type="number" step="0.01" name="vas_rate_${vasCount}"
+                       value="${existingData?.rate || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+    `;
+
+    container.appendChild(card);
+}
+
+// ========== ADD INFRASTRUCTURE ==========
+function addInfra(rateFor, existingData = null) {
+    infraCount++;
+    const container = document.getElementById(`${rateFor}Infra`);
+
+    const card = document.createElement('div');
+    card.className = 'bg-orange-50 border-2 border-orange-200 rounded-lg p-4';
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <h4 class="font-semibold text-gray-900">Infrastructure #${infraCount}</h4>
+            <button type="button" onclick="this.closest('.bg-orange-50').remove()"
+                    class="text-red-600 hover:text-red-800 font-bold">&#x2715;</button>
+        </div>
+
+        <input type="hidden" name="infra_rate_for_${infraCount}" value="${rateFor}">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cost Type *</label>
+                <select name="infra_cost_type_${infraCount}" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    ${buildOptions(CHOICES.infra.cost_type, existingData?.cost_type || '')}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Amount (&#8377;)</label>
+                <input type="number" step="0.01" name="infra_amount_${infraCount}"
+                       value="${existingData?.amount || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input type="text" name="infra_description_${infraCount}"
+                       value="${existingData?.description || ''}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" name="infra_at_actual_${infraCount}"
+                       ${existingData?.is_at_actual ? 'checked' : ''}
+                       class="w-4 h-4 mr-2">
+                <label class="text-sm text-gray-700">At Actual</label>
+            </div>
+        </div>
+    `;
+
+    container.appendChild(card);
+}
+
+// ========== LOAD EXISTING DATA ON PAGE LOAD ==========
+window.addEventListener('load', function() {
+    // Load existing storage rates
+    EXISTING_DATA.storage_rates.forEach(rate => {
+        addStorageRate(rate.rate_for, rate);
+    });
+
+    // Load existing handling rates
+    EXISTING_DATA.handling_rates.forEach(rate => {
+        addHandlingRate(rate.rate_for, rate);
+    });
+
+    // Load existing VAS
+    EXISTING_DATA.vas_services.forEach(service => {
+        addVAS(service.rate_for, service);
+    });
+
+    // Load existing infrastructure
+    EXISTING_DATA.infrastructure_costs.forEach(cost => {
+        addInfra(cost.rate_for, cost);
+    });
+});
+</script>
+
+{% endblock %}

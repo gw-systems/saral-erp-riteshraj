@@ -1,0 +1,1159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Agreement - E-Signature{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+<style>
+/* Choices.js Theme */
+.choices__inner {
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.625rem 0.875rem !important;
+    min-height: 42px !important;
+}
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+}
+.choices__input { background-color: transparent !important; font-size: 0.875rem !important; }
+.choices__list--dropdown { z-index: 100 !important; border: 1px solid #d1d5db !important; border-radius: 0.375rem !important; }
+
+/* PDF Viewer */
+#pdf-container { border: 2px solid #e5e7eb; border-radius: 12px; overflow: auto; max-height: 800px; background: #f9fafb; text-align: center; }
+#pdf-canvas-wrapper { position: relative; display: inline-block; }
+#pdf-canvas { display: block; }
+
+/* Signature field boxes */
+.signature-field-box { position: absolute; border: 3px solid #3b82f6; background: rgba(59, 130, 246, 0.15); cursor: move; border-radius: 6px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); }
+.signature-field-box:hover { background: rgba(59, 130, 246, 0.25); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+.signature-field-label { position: absolute; top: -28px; left: 0; background: #3b82f6; color: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+.signature-field-box.director { border-color: #10b981; background: rgba(16, 185, 129, 0.15); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+.signature-field-box.director .signature-field-label { background: #10b981; }
+.signature-field-box.client { border-color: #f59e0b; background: rgba(245, 158, 11, 0.15); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); }
+.signature-field-box.client .signature-field-label { background: #f59e0b; }
+.resize-handle { position: absolute; width: 12px; height: 12px; background: white; border: 2px solid #3b82f6; border-radius: 50%; right: -6px; bottom: -6px; cursor: nwse-resize; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); }
+.delete-field { position: absolute; top: -28px; right: 0; background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+.delete-field:hover { background: #dc2626; }
+
+/* Field tools */
+.field-tools { margin-bottom: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.field-tool-btn { padding: 0.75rem 1.25rem; border: 2px solid #d1d5db; background: white; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.field-tool-btn:hover { background: #f3f4f6; border-color: #9ca3af; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
+.field-tool-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3); }
+.page-nav { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+
+/* Drop zone */
+#drop-zone { transition: all 0.2s; }
+#drop-zone.drag-active { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.05) !important; }
+
+/* Submit disabled */
+#submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Page indicator dots */
+#page-fields-indicator button { transition: all 0.15s; }
+#page-fields-indicator button:hover { transform: scale(1.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto" style="max-width: 1600px;">
+    <div class="mb-8">
+        <a href="{% url 'adobe_sign:dashboard' %}"
+           class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 mb-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+            <svg class="w-5 h-5 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Dashboard
+        </a>
+        <div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Add E-Signature Agreement</h1>
+            <p class="mt-2 text-sm text-gray-600">Upload your document and place signature blocks where needed</p>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        {% for error in form.non_field_errors %}
+        <p class="text-sm text-red-800">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="agreement-form">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left Sidebar: Agreement Details (4 columns) -->
+            <div class="lg:col-span-4">
+                <div class="bg-white rounded-xl shadow-md p-6 sticky top-4">
+                    <h2 class="text-xl font-semibold mb-5 pb-3 border-b">Agreement Details</h2>
+
+                    <!-- Project Selection (Optional) -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Select Project
+                        </label>
+                        {{ form.project }}
+                        <p class="text-xs text-gray-500 mt-1">Select project to auto-fill client details</p>
+                        {% if form.project.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.project.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Vendor Selection (Optional) -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Vendor Name
+                        </label>
+                        {{ form.vendor }}
+                        <p class="text-xs text-gray-500 mt-1">Select vendor if this is a vendor agreement</p>
+                        {% if form.vendor.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.vendor.errors.0 }}</p>
+                        {% endif %}
+                        <p id="project-vendor-hint" class="text-xs text-blue-600 mt-1 hidden">Select at least one: Project or Vendor</p>
+                    </div>
+
+                    <!-- Auto-Generated Agreement Name (Read-Only Display) -->
+                    <div class="mb-5" id="agreement-name-preview" style="display: none;">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Agreement Name (Auto-Generated)
+                        </label>
+                        <div class="px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-sm font-medium text-blue-900" id="agreement-name-display">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Document Upload - Drag & Drop -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Upload Document <span class="text-red-500">*</span>
+                        </label>
+                        <div id="drop-zone"
+                             class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30"
+                             tabindex="0" role="button" aria-label="Upload PDF document">
+                            <div id="drop-zone-content">
+                                <svg class="mx-auto h-10 w-10 text-gray-400 mb-3" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <p class="text-sm font-semibold text-gray-700">Drag & drop your PDF here</p>
+                                <p class="text-xs text-gray-500 mt-1">or click to browse (PDF only, max 10MB)</p>
+                            </div>
+                            <div id="drop-zone-file" class="hidden">
+                                <svg class="mx-auto h-8 w-8 text-green-500 mb-2" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-sm font-semibold text-green-700" id="drop-zone-filename">-</p>
+                                <p class="text-xs text-gray-500 mt-1" id="drop-zone-filesize">-</p>
+                                <button type="button" id="drop-zone-clear" class="mt-2 text-xs text-red-600 hover:text-red-800 font-semibold underline">Remove file</button>
+                            </div>
+                        </div>
+                        <div class="hidden">{{ form.file }}</div>
+                        {% if form.file.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.file.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-t pt-5 mb-5">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Agreement Tracking</h3>
+
+                        <!-- Agreement Type (Mandatory) -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Agreement Type <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.agreement_type }}
+                            {% if form.agreement_type.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.agreement_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Agreement Category (Mandatory) -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                New or Renewal <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.agreement_category }}
+                            {% if form.agreement_category.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.agreement_category.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Auto-filled Fields Preview -->
+                        <div id="auto-fields-preview" class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200" style="display: none;">
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Auto-Filled Project Details:</p>
+                            <div class="space-y-1 text-xs text-gray-700">
+                                <div id="preview-area" class="hidden"><strong>Minimum Billable Area:</strong> <span id="preview-min-area">-</span></div>
+                                <div id="preview-amount" class="hidden"><strong>Monthly Billable Amount:</strong> <span id="preview-monthly-amount">-</span></div>
+                                <div id="preview-location" class="hidden"><strong>Location:</strong> <span id="preview-location-text">-</span></div>
+                                <div id="preview-sales" class="hidden"><strong>Sales Person:</strong> <span id="preview-sales-person">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-5 mb-5">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Client / Vendor Information</h3>
+
+                        <!-- Client Email -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Client/Vendor Email <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.client_email }}
+                            <p class="text-xs text-gray-500 mt-1">Recipient will get the signing link at this email</p>
+                            {% if form.client_email.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.client_email.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- CC Emails -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                CC Emails (Optional)
+                            </label>
+                            {{ form.cc_emails }}
+                            <p class="text-xs text-gray-500 mt-1">Separate multiple emails with commas</p>
+                            {% if form.cc_emails.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.cc_emails.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-5 mb-5">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Signing Settings</h3>
+
+                        <!-- Signing Flow -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Who signs? <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.flow_type }}
+                            {% if form.flow_type.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.flow_type.errors.0 }}</p>
+                            {% endif %}
+                            <!-- Director email warning -->
+                            <div id="director-email-warning" class="hidden mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p class="text-xs text-amber-800 font-semibold flex items-center">
+                                    <svg class="h-4 w-4 mr-1 flex-shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    Director email not configured. Configure in Adobe Sign Settings first.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Expiration -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Expires in (Days)</label>
+                            {{ form.days_until_signing_deadline }}
+                            <p class="text-xs text-gray-500 mt-1">Default: 30 days</p>
+                            {% if form.days_until_signing_deadline.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.days_until_signing_deadline.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Message -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Message to Signers (Optional)</label>
+                            {{ form.agreement_message }}
+                            {% if form.agreement_message.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.agreement_message.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Hidden field for signature field data -->
+                    <input type="hidden" name="signature_fields" id="signature-fields-data">
+
+                    <!-- Action Buttons -->
+                    <div class="border-t pt-5 space-y-3">
+                        <!-- Pre-submission summary (hidden by default) -->
+                        <div id="submit-summary" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
+                            <h4 class="text-sm font-semibold text-blue-900 mb-2">Review before creating:</h4>
+                            <div class="text-xs text-blue-800 space-y-1" id="submit-summary-content"></div>
+                            <div class="flex gap-2 mt-3">
+                                <button type="button" id="confirm-submit-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 text-sm transition">
+                                    Confirm & Create
+                                </button>
+                                <button type="button" id="cancel-submit-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 text-sm transition">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="button" class="w-full inline-flex items-center justify-center px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" id="submit-btn" disabled>
+                            <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Create & Send for Approval
+                        </button>
+                        <p class="text-xs text-gray-600 text-center">
+                            Place signature blocks, then create and send for director approval
+                        </p>
+                        <button type="button" onclick="window.location.href='{% url 'adobe_sign:dashboard' %}'" class="w-full inline-flex items-center justify-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition border-2 border-gray-200">
+                            <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: PDF Viewer & Signature Placement (8 columns) -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-5 pb-3 border-b flex items-center">
+                        <svg class="h-6 w-6 mr-2 text-blue-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Document Preview & Signature Placement
+                    </h2>
+
+                    <div id="no-pdf-message" class="text-center py-24 text-gray-500">
+                        <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p class="text-xl mb-2">Upload a PDF document to get started</p>
+                        <p class="text-sm">Drag & drop or click the upload area on the left</p>
+                    </div>
+
+                    <div id="pdf-viewer-section" style="display: none;">
+                        <!-- Instructions -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-r-lg p-4 mb-5">
+                            <h3 class="font-semibold text-blue-900 mb-2 flex items-center">
+                                <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                How to Place Signature Blocks
+                            </h3>
+                            <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                                <li>Click a signature block button below (Director or Client)</li>
+                                <li>Click on the document where you want the signature</li>
+                                <li>Drag the block to reposition, drag bottom-right corner to resize</li>
+                                <li>Click the x button to remove a block</li>
+                            </ol>
+                        </div>
+
+                        <!-- Field Placement Tools -->
+                        <div class="field-tools">
+                            <button type="button" class="field-tool-btn director-tool-btn" data-field-type="director_signature_company" data-seal-type="company">
+                                <svg class="inline-block w-4 h-4 mr-1 text-green-600" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg> Director Sign (Company Seal)
+                            </button>
+                            <button type="button" class="field-tool-btn director-tool-btn" data-field-type="director_signature_director" data-seal-type="director">
+                                <svg class="inline-block w-4 h-4 mr-1 text-blue-600" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg> Director Sign (Director Seal)
+                            </button>
+                            <button type="button" class="field-tool-btn" data-field-type="client_signature">
+                                <svg class="inline-block w-4 h-4 mr-1 text-orange-600" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg> Client Signature
+                            </button>
+                            <button type="button" class="field-tool-btn bg-red-50 hover:bg-red-100" id="clear-all-fields">
+                                <svg class="inline-block w-4 h-4 mr-1 text-red-600" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Clear All
+                            </button>
+
+                        </div>
+
+                        <!-- Page Navigation + Zoom (above PDF) -->
+                        <div class="page-nav">
+                            <button type="button" id="prev-page" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50" disabled aria-label="Previous page">
+                                <svg class="h-4 w-4 mr-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Previous
+                            </button>
+                            <span id="page-info" class="text-sm font-medium text-gray-700">
+                                Page <span id="page-num" class="font-bold">1</span> of <span id="page-count" class="font-bold">1</span>
+                                <span id="page-field-count" class="ml-2 text-xs text-blue-600 font-semibold"></span>
+                            </span>
+                            <button type="button" id="next-page" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50" disabled aria-label="Next page">
+                                Next
+                                <svg class="h-4 w-4 ml-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            <!-- Zoom Controls -->
+                            <div class="flex items-center gap-1 ml-2 border-l border-gray-300 pl-3">
+                                <button type="button" id="zoom-out" class="inline-flex items-center px-2 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition" aria-label="Zoom out">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                                    </svg>
+                                </button>
+                                <span id="zoom-level" class="text-sm font-medium text-gray-700 min-w-[48px] text-center">50%</span>
+                                <button type="button" id="zoom-in" class="inline-flex items-center px-2 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition" aria-label="Zoom in">
+                                    <svg class="h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Page indicator dots -->
+                        <div id="page-fields-indicator" class="flex justify-center gap-1 mt-2 mb-2"></div>
+
+                        <!-- PDF Container -->
+                        <div id="pdf-container">
+                            <div id="pdf-canvas-wrapper">
+                                <canvas id="pdf-canvas" role="img" aria-label="PDF document for signature placement"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Placed Fields Summary -->
+                        <div class="mt-5 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                            <h3 class="font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Signature Blocks Placed:
+                            </h3>
+                            <div id="fields-summary" class="text-sm text-gray-600">
+                                No signature blocks placed yet
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                At least one signature field is required before creating the agreement.
+                            </p>
+
+                            <!-- Validation Message (Non-blocking) -->
+                            <div id="validation-message" class="mt-3 hidden">
+                                <p class="text-xs text-blue-600 flex items-start">
+                                    <svg class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span id="validation-text"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// ============================================================================
+// TOAST NOTIFICATION SYSTEM
+// ============================================================================
+function showToast(message, type = 'info', duration = 5000) {
+    const colors = { success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-amber-600', info: 'bg-blue-600' };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+    };
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed top-4 right-4 z-[9999] space-y-2';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `flex items-center gap-3 px-5 py-3 rounded-lg shadow-xl text-white text-sm font-medium ${colors[type]} transform translate-x-full transition-transform duration-300`;
+    toast.style.maxWidth = '400px';
+    toast.innerHTML = `<svg width="20" height="20" aria-hidden="true" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">${icons[type]}</svg><span class="flex-1">${message}</span><button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white font-bold text-lg leading-none">&times;</button>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => { toast.classList.remove('translate-x-full'); toast.classList.add('translate-x-0'); });
+    setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-full'); setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+// ============================================================================
+// FORM DIRTY TRACKING
+// ============================================================================
+let formDirty = false;
+let formSubmitting = false;
+document.getElementById('agreement-form').addEventListener('change', () => { formDirty = true; });
+document.getElementById('agreement-form').addEventListener('input', () => { formDirty = true; });
+window.addEventListener('beforeunload', function(e) {
+    if (formDirty && !formSubmitting) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ============================================================================
+// PDF.js SETUP
+// ============================================================================
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let pdfDoc = null;
+let currentPage = 1;
+let pageRendering = false;
+let pageNumPending = null;
+let scale = 1.0;
+let signatureFields = [];
+let activeFieldType = null;
+let draggedField = null;
+let dragOffset = {x: 0, y: 0};
+let resizing = false;
+
+// Unscaled PDF page heights (PDF points) keyed by 1-based page number.
+// Populated as each page is rendered so coordinate conversion is correct
+// even for fields on pages that aren't the currently visible page.
+const pageHeights = {};
+
+const canvas = document.getElementById('pdf-canvas');
+const ctx = canvas.getContext('2d');
+const container = document.getElementById('pdf-container');
+const canvasWrapper = document.getElementById('pdf-canvas-wrapper');
+
+// Width/height in PDF points (scale-independent).
+// All director fields use SIGNATURE — Adobe REST API v6 converts INITIALS to DATA (text box).
+const fieldConfig = {
+    'director_signature_company': { label: 'Director (Company Seal)', type: 'SIGNATURE', signer: 0, class: 'director', width: 120, height: 80, sealType: 'company' },
+    'director_signature_director': { label: 'Director (Director Seal)', type: 'SIGNATURE', signer: 1, class: 'director', width: 120, height: 80, sealType: 'director' },
+    'client_signature': { label: 'Client Signature', type: 'SIGNATURE', signer: 2, class: 'client', width: 120, height: 80 }
+};
+
+// ============================================================================
+// DRAG & DROP FILE UPLOAD
+// ============================================================================
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.querySelector('input[name="file"]');
+const dropContent = document.getElementById('drop-zone-content');
+const dropFile = document.getElementById('drop-zone-file');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+
+['dragenter', 'dragover'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.classList.add('drag-active'); });
+});
+['dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.classList.remove('drag-active'); });
+});
+
+dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.type === 'application/pdf') {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            showToast('Please upload a PDF file only.', 'error');
+        }
+    }
+});
+
+function updateDropZoneDisplay(file) {
+    if (file) {
+        document.getElementById('drop-zone-filename').textContent = file.name;
+        document.getElementById('drop-zone-filesize').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        dropContent.classList.add('hidden');
+        dropFile.classList.remove('hidden');
+    } else {
+        dropContent.classList.remove('hidden');
+        dropFile.classList.add('hidden');
+    }
+}
+
+document.getElementById('drop-zone-clear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    fileInput.value = '';
+    updateDropZoneDisplay(null);
+    document.getElementById('pdf-viewer-section').style.display = 'none';
+    document.getElementById('no-pdf-message').style.display = 'block';
+    signatureFields = [];
+    pdfDoc = null;
+    updateFieldsSummary();
+    updateSubmitButton();
+});
+
+// File input change handler
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+        updateDropZoneDisplay(file);
+        // Clear existing fields on re-upload
+        if (signatureFields.length > 0) {
+            signatureFields = [];
+            renderSignatureFields();
+            updateFieldsSummary();
+            updateSubmitButton();
+            showToast('Previous signature fields cleared for new document.', 'info');
+        }
+        loadPDF(file);
+        formDirty = true;
+    } else if (file && file.type !== 'application/pdf') {
+        showToast('Please upload a PDF file only.', 'error');
+        this.value = '';
+        updateDropZoneDisplay(null);
+    }
+});
+
+// ============================================================================
+// PDF VIEWER
+// ============================================================================
+function loadPDF(file) {
+    const fileReader = new FileReader();
+    fileReader.onload = function() {
+        const typedarray = new Uint8Array(this.result);
+        pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+            pdfDoc = pdf;
+            currentPage = 1;
+            document.getElementById('page-count').textContent = pdf.numPages;
+            document.getElementById('no-pdf-message').style.display = 'none';
+            document.getElementById('pdf-viewer-section').style.display = 'block';
+            updateZoomLevel();
+            renderPage(1);
+            updatePageNav();
+            updatePageFieldCount();
+
+            // Pre-fetch heights for all pages at scale=1 so coordinate conversions
+            // are correct for fields placed on pages that haven't been rendered yet.
+            for (let p = 1; p <= pdf.numPages; p++) {
+                (function(pageNum) {
+                    pdf.getPage(pageNum).then(function(page) {
+                        const vp = page.getViewport({scale: 1.0});
+                        pageHeights[pageNum] = vp.height;
+                    });
+                })(p);
+            }
+        }).catch(function(error) {
+            showToast('Error loading PDF: ' + error.message, 'error');
+        });
+    };
+    fileReader.readAsArrayBuffer(file);
+}
+
+function renderPage(num) {
+    pageRendering = true;
+    pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({scale: scale});
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        // Store unscaled page height for coordinate conversion
+        pageHeights[num] = viewport.height / scale;
+        const renderTask = page.render({ canvasContext: ctx, viewport: viewport });
+        renderTask.promise.then(function() {
+            pageRendering = false;
+            if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
+            renderSignatureFields();
+            updatePageFieldCount();
+        });
+    });
+    document.getElementById('page-num').textContent = num;
+}
+
+function queueRenderPage(num) {
+    if (pageRendering) { pageNumPending = num; } else { renderPage(num); }
+}
+
+function goToPage(pageNum) {
+    if (!pdfDoc || pageNum < 1 || pageNum > pdfDoc.numPages || pageNum === currentPage) return;
+    currentPage = pageNum;
+    queueRenderPage(currentPage);
+    updatePageNav();
+}
+
+// Page navigation
+document.getElementById('prev-page').addEventListener('click', function() {
+    if (currentPage <= 1) return;
+    currentPage--;
+    queueRenderPage(currentPage);
+    updatePageNav();
+});
+
+document.getElementById('next-page').addEventListener('click', function() {
+    if (currentPage >= pdfDoc.numPages) return;
+    currentPage++;
+    queueRenderPage(currentPage);
+    updatePageNav();
+});
+
+function updatePageNav() {
+    document.getElementById('prev-page').disabled = currentPage <= 1;
+    document.getElementById('next-page').disabled = !pdfDoc || currentPage >= pdfDoc.numPages;
+}
+
+// Zoom controls
+document.getElementById('zoom-in').addEventListener('click', function() {
+    if (scale < 3.0) { scale += 0.25; updateZoomLevel(); queueRenderPage(currentPage); }
+});
+document.getElementById('zoom-out').addEventListener('click', function() {
+    if (scale > 0.5) { scale -= 0.25; updateZoomLevel(); queueRenderPage(currentPage); }
+});
+function updateZoomLevel() {
+    document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+}
+
+// Page field count indicator
+function updatePageFieldCount() {
+    const countEl = document.getElementById('page-field-count');
+    if (!countEl || !pdfDoc) return;
+    const fieldsOnPage = signatureFields.filter(f => f.page === currentPage).length;
+    countEl.textContent = fieldsOnPage > 0 ? `(${fieldsOnPage} field${fieldsOnPage > 1 ? 's' : ''} on this page)` : '';
+
+    // Page dots
+    const indicator = document.getElementById('page-fields-indicator');
+    if (indicator && pdfDoc && pdfDoc.numPages > 1) {
+        let html = '';
+        for (let p = 1; p <= pdfDoc.numPages; p++) {
+            const count = signatureFields.filter(f => f.page === p).length;
+            const isActive = p === currentPage;
+            const hasFields = count > 0;
+            html += `<button type="button" class="w-7 h-7 text-xs rounded-full font-semibold ${isActive ? 'ring-2 ring-blue-500 ring-offset-1' : ''} ${hasFields ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 text-gray-500 border border-gray-200'}" onclick="goToPage(${p})" title="Page ${p}: ${count} field${count !== 1 ? 's' : ''}">${p}</button>`;
+        }
+        indicator.innerHTML = html;
+    } else if (indicator) {
+        indicator.innerHTML = '';
+    }
+}
+
+// ============================================================================
+// FLOW TYPE AWARENESS
+// ============================================================================
+const flowTypeSelect = document.querySelector('[name="flow_type"]');
+const directorButtons = document.querySelectorAll('.director-tool-btn');
+const directorEmail = '{{ director_email }}';
+
+function updateDirectorButtonVisibility() {
+    const isClientOnly = flowTypeSelect.value === 'client_only';
+    directorButtons.forEach(btn => {
+        btn.style.display = isClientOnly ? 'none' : '';
+        if (isClientOnly) btn.classList.remove('active');
+    });
+    // Remove director fields if switching to client_only
+    if (isClientOnly) {
+        const hadDirectorFields = signatureFields.some(f => f.type.startsWith('director_signature'));
+        signatureFields = signatureFields.filter(f => !f.type.startsWith('director_signature'));
+        if (hadDirectorFields) {
+            renderSignatureFields();
+            updateFieldsSummary();
+            updateSubmitButton();
+            updatePageFieldCount();
+            showToast('Director signature fields removed (Client Only flow selected)', 'info');
+        }
+    }
+    // Director email warning
+    const warning = document.getElementById('director-email-warning');
+    if (warning) {
+        warning.classList.toggle('hidden', isClientOnly || !!directorEmail);
+    }
+}
+flowTypeSelect.addEventListener('change', updateDirectorButtonVisibility);
+updateDirectorButtonVisibility();
+
+// ============================================================================
+// SIGNATURE FIELD PLACEMENT
+// ============================================================================
+document.querySelectorAll('.field-tool-btn[data-field-type]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.field-tool-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        activeFieldType = this.dataset.fieldType;
+        canvasWrapper.style.cursor = 'crosshair';
+    });
+});
+
+document.getElementById('clear-all-fields').addEventListener('click', function() {
+    if (signatureFields.length === 0) { showToast('No signature blocks to clear.', 'info'); return; }
+    if (confirm('Are you sure you want to remove all signature blocks?')) {
+        signatureFields = [];
+        renderSignatureFields();
+        updateFieldsSummary();
+        updateSubmitButton();
+        updatePageFieldCount();
+    }
+});
+
+canvas.addEventListener('click', function(e) {
+    if (!activeFieldType) return;
+    const rect = canvas.getBoundingClientRect();
+    const config = fieldConfig[activeFieldType];
+    // Store in PDF units (divide screen pixels by scale).
+    // width/height are already in PDF points — no scale division needed.
+    const field = {
+        id: Date.now(),
+        type: activeFieldType,
+        page: currentPage,
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale,
+        width: config.width,
+        height: config.height,
+        label: config.label,
+        fieldType: config.type,
+        signer: config.signer,
+        class: config.class,
+        sealType: config.sealType || null
+    };
+    signatureFields.push(field);
+    formDirty = true;
+    renderSignatureFields();
+    updateFieldsSummary();
+    updateSubmitButton();
+    updatePageFieldCount();
+    // Deactivate tool
+    activeFieldType = null;
+    document.querySelectorAll('.field-tool-btn').forEach(b => b.classList.remove('active'));
+    canvasWrapper.style.cursor = 'default';
+});
+
+function renderSignatureFields() {
+    // All field coordinates are stored in PDF units (unscaled).
+    // Multiply by current scale to get screen pixels.
+    document.querySelectorAll('.signature-field-box').forEach(el => el.remove());
+    const currentPageFields = signatureFields.filter(f => f.page === currentPage);
+    currentPageFields.forEach(field => {
+        const fieldBox = document.createElement('div');
+        fieldBox.className = `signature-field-box ${field.class}`;
+        fieldBox.dataset.fieldId = field.id;
+        fieldBox.style.left = (field.x * scale) + 'px';
+        fieldBox.style.top = (field.y * scale) + 'px';
+        fieldBox.style.width = (field.width * scale) + 'px';
+        fieldBox.style.height = (field.height * scale) + 'px';
+
+        const label = document.createElement('div');
+        label.className = 'signature-field-label';
+        label.textContent = field.label;
+        fieldBox.appendChild(label);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-field';
+        deleteBtn.textContent = '\u00d7';
+        deleteBtn.onclick = () => deleteField(field.id);
+        fieldBox.appendChild(deleteBtn);
+
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle';
+        fieldBox.appendChild(resizeHandle);
+
+        fieldBox.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('resize-handle')) { resizing = true; draggedField = field; }
+            else if (!e.target.classList.contains('delete-field')) {
+                draggedField = field;
+                const r = fieldBox.getBoundingClientRect();
+                // Store offset in PDF units (divide screen offset by scale)
+                dragOffset = { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
+            }
+        });
+        canvasWrapper.appendChild(fieldBox);
+    });
+}
+
+document.addEventListener('mousemove', function(e) {
+    if (!draggedField) return;
+    const rect = canvas.getBoundingClientRect();
+    // Convert screen pixels to PDF units
+    const pdfX = (e.clientX - rect.left) / scale;
+    const pdfY = (e.clientY - rect.top) / scale;
+    if (resizing) {
+        draggedField.width = Math.max(50, pdfX - draggedField.x);
+        draggedField.height = Math.max(20, pdfY - draggedField.y);
+    } else {
+        draggedField.x = pdfX - dragOffset.x;
+        draggedField.y = pdfY - dragOffset.y;
+    }
+    renderSignatureFields();
+});
+
+document.addEventListener('mouseup', function() { draggedField = null; resizing = false; });
+
+function deleteField(fieldId) {
+    signatureFields = signatureFields.filter(f => f.id !== fieldId);
+    renderSignatureFields();
+    updateFieldsSummary();
+    updateSubmitButton();
+    updatePageFieldCount();
+}
+
+// ============================================================================
+// FIELDS SUMMARY & VALIDATION
+// ============================================================================
+function updateFieldsSummary() {
+    const summary = document.getElementById('fields-summary');
+    if (signatureFields.length === 0) {
+        summary.innerHTML = '<span class="text-gray-500">No signature blocks placed yet</span>';
+        return;
+    }
+    const grouped = {};
+    signatureFields.forEach(f => { grouped[f.label] = (grouped[f.label] || 0) + 1; });
+    summary.innerHTML = Object.entries(grouped)
+        .map(([label, count]) => `<span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold mr-2 mb-1">${label} (${count})</span>`)
+        .join('');
+    validateClientSignatures();
+}
+
+function validateClientSignatures() {
+    const validationMsg = document.getElementById('validation-message');
+    const validationText = document.getElementById('validation-text');
+    if (!pdfDoc) { validationMsg.classList.add('hidden'); return; }
+    const totalPages = pdfDoc.numPages;
+    const clientSigCount = signatureFields.filter(f => f.type === 'client_signature').length;
+    if (clientSigCount === 0) { validationMsg.classList.add('hidden'); return; }
+    validationMsg.classList.remove('hidden');
+    const msgEl = validationText.parentElement;
+    if (clientSigCount !== totalPages) {
+        validationText.textContent = `Recommendation: Document has ${totalPages} page${totalPages > 1 ? 's' : ''}, but ${clientSigCount} client signature block${clientSigCount > 1 ? 's' : ''} placed.`;
+        msgEl.classList.remove('text-green-600');
+        msgEl.classList.add('text-blue-600');
+    } else {
+        validationText.textContent = `Good: ${clientSigCount} client signature block${clientSigCount > 1 ? 's' : ''} matching ${totalPages} page${totalPages > 1 ? 's' : ''}.`;
+        msgEl.classList.remove('text-blue-600');
+        msgEl.classList.add('text-green-600');
+    }
+}
+
+function updateSubmitButton() {
+    const btn = document.getElementById('submit-btn');
+    if (!btn) return;
+    btn.disabled = signatureFields.length === 0;
+}
+
+// ============================================================================
+// REAL-TIME FIELD VALIDATION
+// ============================================================================
+function showFieldError(fieldName, message) {
+    clearFieldError(fieldName);
+    const field = document.querySelector(`[name="${fieldName}"]`);
+    if (!field) return;
+    const errorEl = document.createElement('p');
+    errorEl.className = 'text-red-600 text-sm mt-1 field-error';
+    errorEl.dataset.field = fieldName;
+    errorEl.textContent = message;
+    const cont = field.closest('.mb-5') || field.closest('.mb-4') || field.parentElement;
+    cont.appendChild(errorEl);
+    field.classList.add('border-red-500');
+}
+function clearFieldError(fieldName) {
+    document.querySelectorAll(`.field-error[data-field="${fieldName}"]`).forEach(el => el.remove());
+    const field = document.querySelector(`[name="${fieldName}"]`);
+    if (field) field.classList.remove('border-red-500');
+}
+function clearAllFieldErrors() {
+    document.querySelectorAll('.field-error').forEach(el => el.remove());
+    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+}
+
+const clientEmailInput = document.getElementById('client-email');
+if (clientEmailInput) {
+    clientEmailInput.addEventListener('blur', function() {
+        clearFieldError('client_email');
+        const val = this.value.trim();
+        if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+            showFieldError('client_email', 'Please enter a valid email address.');
+        }
+    });
+    clientEmailInput.addEventListener('input', function() { clearFieldError('client_email'); });
+}
+
+const ccEmailsInput = document.querySelector('[name="cc_emails"]');
+if (ccEmailsInput) {
+    ccEmailsInput.addEventListener('blur', function() {
+        clearFieldError('cc_emails');
+        const val = this.value.trim();
+        if (val) {
+            const emails = val.split(',').map(e => e.trim()).filter(Boolean);
+            for (const email of emails) {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showFieldError('cc_emails', `Invalid email format: ${email}`);
+                    return;
+                }
+            }
+            if (new Set(emails.map(e => e.toLowerCase())).size !== emails.length) {
+                showFieldError('cc_emails', 'Duplicate email addresses found.');
+            }
+        }
+    });
+}
+
+// ============================================================================
+// CONFIRMATION & AJAX FORM SUBMISSION
+// ============================================================================
+function getCsrfToken() {
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+    return cookie ? cookie.split('=')[1] : '';
+}
+
+// Show confirmation summary before submit
+const mainSubmitBtn = document.getElementById('submit-btn');
+const summaryDiv = document.getElementById('submit-summary');
+const summaryContent = document.getElementById('submit-summary-content');
+const confirmBtn = document.getElementById('confirm-submit-btn');
+const cancelSummaryBtn = document.getElementById('cancel-submit-btn');
+
+mainSubmitBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const projectSelect = document.querySelector('[name="project"]');
+    const vendorSelect = document.querySelector('[name="vendor"]');
+    const projectText = projectSelect.options[projectSelect.selectedIndex]?.text || 'None';
+    const vendorText = vendorSelect.options[vendorSelect.selectedIndex]?.text || 'None';
+    const clientEmail = document.getElementById('client-email').value || 'Not set';
+    const flowType = flowTypeSelect.value === 'client_only' ? 'Client Only' : 'Director signs first, then Client';
+    const fieldCount = signatureFields.length;
+    const pageCount = pdfDoc ? pdfDoc.numPages : 0;
+
+    summaryContent.innerHTML = `
+        <div><strong>Project:</strong> ${projectText.startsWith('--') ? 'None' : projectText}</div>
+        <div><strong>Vendor:</strong> ${vendorText.startsWith('--') ? 'None' : vendorText}</div>
+        <div><strong>Client/Vendor Email:</strong> ${clientEmail}</div>
+        <div><strong>Signing Flow:</strong> ${flowType}</div>
+        <div><strong>Signature Fields:</strong> ${fieldCount} field${fieldCount !== 1 ? 's' : ''} across ${pageCount} page${pageCount !== 1 ? 's' : ''}</div>
+    `;
+    summaryDiv.classList.remove('hidden');
+    summaryDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+cancelSummaryBtn.addEventListener('click', function() { summaryDiv.classList.add('hidden'); });
+
+confirmBtn.addEventListener('click', function() {
+    summaryDiv.classList.add('hidden');
+    document.getElementById('agreement-form').requestSubmit();
+});
+
+// AJAX form submission
+document.getElementById('agreement-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Convert PDF-space coordinates to Adobe format.
+    // Adobe Sign uses top-left origin: top = distance from top of page (same as canvas).
+    // No coordinate flip needed — field.y is already the distance from the page top.
+    // Use per-page heights from pageHeights dict so multi-page docs work correctly.
+    const adobeFields = signatureFields.map((field, index) => {
+        return {
+            name: `${field.label.replace(/\s/g, '_')}_${index}`,
+            inputType: field.fieldType,
+            contentType: field.fieldType,
+            required: true,
+            recipientIndex: field.signer,
+            coord_version: 2,   // v2 = top-left origin (correct); absent/v1 = bottom-left (legacy)
+            locations: [{
+                pageNumber: field.page,
+                top: Math.max(0, field.y),
+                left: Math.max(0, field.x),
+                width: field.width,
+                height: field.height
+            }]
+        };
+    });
+    document.getElementById('signature-fields-data').value = JSON.stringify(adobeFields);
+
+    // Show loading state
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating in Adobe Sign...';
+    formSubmitting = true;
+
+    const formData = new FormData(this);
+    fetch(this.action || window.location.href, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrfToken() },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Agreement created successfully!', 'success');
+            setTimeout(() => { window.location.href = data.redirect_url; }, 800);
+        } else {
+            if (data.errors) {
+                clearAllFieldErrors();
+                Object.entries(data.errors).forEach(([field, msgs]) => { showFieldError(field, msgs[0]); });
+            }
+            showToast(data.message || 'Please correct the errors below.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHTML;
+            formSubmitting = false;
+            updateSubmitButton();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network error. Please check your connection and try again.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+        formSubmitting = false;
+        updateSubmitButton();
+    });
+});
+
+// ============================================================================
+// PROJECT & VENDOR DROPDOWN INITIALIZATION
+// ============================================================================
+const projectsData = JSON.parse('{{ projects_data|escapejs }}');
+const vendorsData = JSON.parse('{{ vendors_data|escapejs }}');
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Choices.js on all searchable-select elements
+    const selectElements = document.querySelectorAll('.searchable-select');
+    const choicesInstances = {};
+
+    selectElements.forEach(sel => {
+        const id = sel.id;
+        const placeholder = id === 'project-select' ? 'Search projects...' : 'Search vendors...';
+        choicesInstances[id] = new Choices(sel, {
+            searchEnabled: true,
+            searchPlaceholderValue: placeholder,
+            noResultsText: id === 'project-select' ? 'No projects found' : 'No vendors found',
+            itemSelectText: 'Click to select',
+            shouldSort: false,
+            removeItemButton: false,
+        });
+    });
+
+    const projectSelect = document.getElementById('project-select');
+    const vendorSelect = document.getElementById('vendor-select');
+    const previewContainer = document.getElementById('agreement-name-preview');
+    const previewDisplay = document.getElementById('agreement-name-display');
+    const autoFieldsPreview = document.getElementById('auto-fields-preview');
+
+    function updateAgreementPreview() {
+        const projectId = projectSelect ? projectSelect.value : '';
+        const vendorCode = vendorSelect ? vendorSelect.value : '';
+
+        // Show/hide project-vendor hint
+        const hint = document.getElementById('project-vendor-hint');
+        if (hint) { hint.classList.toggle('hidden', !!(projectId || vendorCode)); }
+
+        if (projectId) {
+            const projectData = projectsData.find(p => p.project_id === projectId);
+            if (projectData && projectData.code && projectData.client_name) {
+                previewDisplay.textContent = `${projectData.code} - ${projectData.client_name}`;
+                previewContainer.style.display = 'block';
+                autoFieldsPreview.style.display = 'block';
+
+                // Update preview fields
+                const fields = [
+                    { id: 'preview-area', el: 'preview-min-area', val: projectData.minimum_billable_area, suffix: ' sq ft' },
+                    { id: 'preview-amount', el: 'preview-monthly-amount', val: projectData.monthly_billable_amount, prefix: '\u20b9 ' },
+                    { id: 'preview-location', el: 'preview-location-text', val: projectData.location },
+                    { id: 'preview-sales', el: 'preview-sales-person', val: projectData.sales_person },
+                ];
+                fields.forEach(f => {
+                    const div = document.getElementById(f.id);
+                    if (f.val) {
+                        document.getElementById(f.el).textContent = (f.prefix || '') + f.val + (f.suffix || '');
+                        div.classList.remove('hidden');
+                    } else {
+                        div.classList.add('hidden');
+                    }
+                });
+            }
+        } else if (vendorCode) {
+            const vendorData = vendorsData.find(v => v.vendor_code === vendorCode);
+            if (vendorData) {
+                previewDisplay.textContent = `${vendorData.vendor_legal_name} - Agreement`;
+                previewContainer.style.display = 'block';
+            }
+            autoFieldsPreview.style.display = 'none';
+        } else {
+            previewContainer.style.display = 'none';
+            autoFieldsPreview.style.display = 'none';
+        }
+    }
+
+    if (projectSelect) projectSelect.addEventListener('change', updateAgreementPreview);
+    if (vendorSelect) vendorSelect.addEventListener('change', updateAgreementPreview);
+
+    // Initial state
+    updateSubmitButton();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Entries - {{ today|date:"M d, Y" }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Pending Entries Breakdown</h1>
+            <p class="mt-1 text-sm text-gray-600">{{ today|date:"l, F j, Y" }}</p>
+        </div>
+        <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Pending Entries Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Coordinators with Pending Entries</h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coordinator</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Projects</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entries Today</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pending</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Compliance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in pending_data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-semibold">
+                                        {{ item.coordinator.first_name|first }}{{ item.coordinator.last_name|first }}
+                                    </span>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.coordinator.get_full_name }}</div>
+                                    <div class="text-xs text-gray-500">{{ item.coordinator.get_role_display }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-lg font-bold text-gray-900">{{ item.total_projects }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-lg font-bold text-blue-600">{{ item.entries_today }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 text-lg font-bold rounded-full bg-yellow-100 text-yellow-800">
+                                {{ item.pending_count }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-lg font-bold {% if item.compliance >= 90 %}text-green-600{% elif item.compliance >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                {{ item.compliance }}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'operations:coordinator_detail' item.coordinator.id %}" 
+                               class="text-blue-600 hover:text-blue-800 font-medium">
+                                View Details →
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <svg width="48" height="48" aria-hidden="true" class="mx-auto h-12 w-12 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="mt-2 text-sm font-medium text-gray-900">All coordinators have completed their entries!</p>
+                            <p class="mt-1 text-sm text-gray-500">No pending entries for today</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

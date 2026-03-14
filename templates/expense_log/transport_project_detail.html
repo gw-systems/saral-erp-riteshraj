@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ project_code }} - Transport Expenses{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">🚚 {{ project_code }}</h1>
+            <p class="text-gray-600 mt-1">Transport Expense Details</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'expense_log:transport_projectwise' %}?month={{ month_filter }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Projects
+            </a>
+        </div>
+    </div>
+
+    <!-- Project Info Card -->
+    {% if project %}
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <div class="text-sm font-medium text-gray-500">Project Code</div>
+                <div class="text-lg font-bold text-gray-900 mt-1">{{ project.code }}</div>
+            </div>
+            <div>
+                <div class="text-sm font-medium text-gray-500">Sales Manager</div>
+                <div class="text-lg font-semibold text-teal-700 mt-1">{{ project.sales_manager|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="text-sm font-medium text-gray-500">Operation Coordinator</div>
+                <div class="text-lg font-semibold text-teal-700 mt-1">{{ project.operation_coordinator|default:"-" }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Service Month</label>
+                <select name="month" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">All Months</option>
+                    {% for month in distinct_months %}
+                    <option value="{{ month }}" {% if month == month_filter %}selected{% endif %}>{{ month }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">All Status</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+
+            <button type="submit" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium">
+                Apply Filters
+            </button>
+
+            {% if status_filter %}
+            <a href="?month={{ current_month }}" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition font-medium">
+                Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Expenses List -->
+    {% if expenses %}
+    <div class="space-y-6">
+        {% for expense in expenses %}
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <h3 class="text-lg font-bold text-white">{{ expense.unique_expense_number }}</h3>
+                        <span class="text-sm text-teal-100">{{ expense.timestamp|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        {% if expense.charges_at_client or expense.charges_at_gw %}
+                        <div class="flex items-stretch">
+                            {% if expense.charges_at_gw %}
+                            <div class="text-right pr-4">
+                                <div class="text-xs font-semibold text-white opacity-70 uppercase tracking-wider mb-1">GW</div>
+                                <div class="text-xl font-extrabold text-white">₹{{ expense.charges_at_gw|floatformat:0|intcomma }}</div>
+                            </div>
+                            {% endif %}
+                            {% if expense.charges_at_client %}
+                            <div class="border-l-2 border-white border-opacity-30 pl-4">
+                                <div class="text-xs font-semibold text-white opacity-70 uppercase tracking-wider mb-1">Client</div>
+                                <div class="text-xl font-extrabold text-white">₹{{ expense.charges_at_client|floatformat:0|intcomma }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if expense.approval_status == 'Approved' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Approved</span>
+                        {% elif expense.approval_status == 'Rejected' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">Rejected</span>
+                        {% else %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Info -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">📋 Basic Information</h4>
+                        <div class="space-y-2">
+                            {% if expense.submitted_by %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Submitted By:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.submitted_by }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.service_month %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Service Month:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.service_month }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.payment_method %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Payment Method:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.payment_method }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.expenses_borne_by %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Expenses Borne By:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.expenses_borne_by }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Transport Type & Transporter -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">🚚 Transport Info</h4>
+                        <div class="space-y-2">
+                            {% if expense.transport_type %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Transport Type:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.transport_type }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.transporter_name %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Transporter:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.transporter_name }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.vehicle_no %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Vehicle No:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.vehicle_no }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.invoice_no %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Invoice No:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.invoice_no }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Route Information -->
+                    {% if expense.from_address or expense.to_address %}
+                    <div class="md:col-span-2">
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">🗺️ Route</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% if expense.from_address %}
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase">From:</span>
+                                <p class="text-sm text-gray-900 mt-1">{{ expense.from_address }}</p>
+                            </div>
+                            {% endif %}
+                            {% if expense.to_address %}
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase">To:</span>
+                                <p class="text-sm text-gray-900 mt-1">{{ expense.to_address }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Charges -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">💰 Charges (GW)</h4>
+                        <div class="space-y-2">
+                            {% if expense.charges_at_gw %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Charges @ GW:</span>
+                                <span class="text-sm font-semibold text-teal-700">₹{{ expense.charges_at_gw|floatformat:2|intcomma }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.charges_at_client %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Charges @ Client:</span>
+                                <span class="text-sm font-semibold text-teal-700">₹{{ expense.charges_at_client|floatformat:2|intcomma }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Additional Charges -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">💵 Additional Charges</h4>
+                        <div class="space-y-2">
+                            {% if expense.unloading_box_expense %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Unloading Box Expense:</span>
+                                <span class="text-sm font-semibold text-gray-900">₹{{ expense.unloading_box_expense|floatformat:2|intcomma }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.warai_charges %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Warai Charges:</span>
+                                <span class="text-sm font-semibold text-gray-900">₹{{ expense.warai_charges|floatformat:2|intcomma }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.labour_charges %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Labour Charges:</span>
+                                <span class="text-sm font-semibold text-gray-900">₹{{ expense.labour_charges|floatformat:2|intcomma }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.box_count %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Box Count:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.box_count }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- POD & Payment Info -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">📄 Document & Payment</h4>
+                        <div class="space-y-2">
+                            {% if expense.pod_hard_copy %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">POD Hard Copy:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.pod_hard_copy }}</span>
+                            </div>
+                            {% endif %}
+                            {% if expense.expense_paid_by_transport %}
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Paid By:</span>
+                                <span class="text-sm font-medium text-gray-900">{{ expense.expense_paid_by_transport }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Remarks -->
+                    {% if expense.mention_other_transport %}
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">📝 Transport Remarks</h4>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-sm text-gray-900">{{ expense.mention_other_transport }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if expense.remark %}
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">📌 General Remarks</h4>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-sm text-gray-900">{{ expense.remark }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Attachments -->
+                    {% if expense.transport_bill or expense.upload_invoice_transport_2 or expense.payment_summary_invoice %}
+                    <div class="md:col-span-2">
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 border-b pb-2">📎 Attachments</h4>
+                        <div class="flex flex-wrap gap-2">
+                            {% if expense.transport_bill %}
+                            <a href="{{ expense.transport_bill }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition">
+                                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Transport Bill
+                            </a>
+                            {% endif %}
+                            {% if expense.upload_invoice_transport_2 %}
+                            <a href="{{ expense.upload_invoice_transport_2 }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition">
+                                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Transport Invoice 2
+                            </a>
+                            {% endif %}
+                            {% if expense.payment_summary_invoice %}
+                            <a href="{{ expense.payment_summary_invoice }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition">
+                                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Payment Summary Invoice
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+        <svg width="64" height="64" aria-hidden="true" class="h-16 w-16 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1-1V4a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6 0a1 1 0 001 1h2a1 1 0 001-1m0 0h2a2 2 0 002-2v-3m-4 5V9h3"/>
+        </svg>
+        <p class="text-gray-600 font-medium mb-2">No expenses found for this project</p>
+        <p class="text-sm text-gray-500">Try adjusting your filters or check back later.</p>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Turnover - {{ selected_date|date:"M d, Y" }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <a href="{% url 'accounts:operation_controller_dashboard' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 flex items-center mb-2 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Inventory Turnover</h1>
+                    <p class="text-gray-600 mt-1">Inventory change analysis for {{ selected_date|date:"l, F d, Y" }}</p>
+                </div>
+
+                <!-- Filters -->
+                <form method="get" class="flex items-center space-x-2">
+                    <label for="coordinator" class="text-sm text-gray-600">Coordinator:</label>
+                    <select
+                        id="coordinator"
+                        name="coordinator"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                        <option value="">All Coordinators</option>
+                        {% for coord in all_coordinators %}
+                        <option value="{{ coord }}" {% if coord == selected_coordinator %}selected{% endif %}>{{ coord }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="selected_date" class="text-sm text-gray-600 ml-4">Date:</label>
+                    <input
+                        type="date"
+                        id="selected_date"
+                        name="selected_date"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        max="{{ today|date:'Y-m-d' }}"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('selected_date').value='{{ today|date:'Y-m-d' }}'; this.form.submit();" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Today
+                    </button>
+                </form>
+            </div>
+
+            <!-- Info Note -->
+            {% if previous_date %}
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700">
+                            Comparing with <strong>{{ previous_date|date:"l, M d, Y" }}</strong> (most recent data within last 7 days)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Summary Card -->
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Previous Inventory</p>
+                        {% if previous_date %}
+                        <p class="text-xs text-gray-500 mb-1">{{ previous_date|date:"M d, Y" }}</p>
+                        <p class="text-2xl font-bold text-gray-900">₹{{ previous_inventory|floatformat:2 }} Cr</p>
+                        {% else %}
+                        <p class="text-sm text-gray-500">No previous data</p>
+                        {% endif %}
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-2">Overall Change</p>
+                        <p class="text-4xl font-bold {% if inventory_turnover_pct > 0 %}text-green-600{% elif inventory_turnover_pct < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                            {% if inventory_turnover_pct > 0 %}+{% endif %}{{ inventory_turnover_pct }}%
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            {% if inventory_change > 0 %}+{% endif %}₹{{ inventory_change|floatformat:2 }} Cr
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600 mb-2">Current Inventory</p>
+                        <p class="text-xs text-gray-500 mb-1">{{ selected_date|date:"M d, Y" }}</p>
+                        <p class="text-2xl font-bold text-purple-600">₹{{ today_inventory|floatformat:2 }} Cr</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project-wise Breakdown Table -->
+        {% if projects_data %}
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Project-wise Inventory Changes</h2>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Code</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Previous Inventory</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Current Inventory</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Change %</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Direction</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for data in projects_data %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ data.project.project_code }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm text-gray-900">₹{{ data.previous_inventory|floatformat:2 }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-medium text-gray-900">₹{{ data.today_inventory|floatformat:2 }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold {% if data.change > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if data.change > 0 %}+{% endif %}₹{{ data.change|floatformat:2 }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold {% if data.change_pct > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if data.change_pct > 0 %}+{% endif %}{{ data.change_pct }}%
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full {% if data.change_direction == 'increase' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if data.change_direction == 'increase' %}
+                                    <svg aria-hidden="true" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                    </svg>
+                                    Increase
+                                    {% else %}
+                                    <svg aria-hidden="true" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                    Decrease
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+            <svg aria-hidden="true" width="64" height="64" class="mx-auto h-16 w-16 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <p class="text-gray-500 text-lg">No inventory turnover data available</p>
+            {% if not previous_date %}
+            <p class="text-sm text-gray-500 mt-2">No previous date found within last 7 days</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

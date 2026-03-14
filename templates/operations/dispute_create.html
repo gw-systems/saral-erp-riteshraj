@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Raise Dispute{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Raise New Dispute</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Report an issue or dispute for a project
+            </p>
+        </div>
+        <a href="{% url 'operations:dispute_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+            Back to List
+        </a>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-900">Dispute Guidelines</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Provide clear and detailed description of the issue</li>
+                        <li>Select appropriate priority based on impact</li>
+                        <li>Include any relevant dates, amounts, or documentation details</li>
+                        <li>Your manager will be notified automatically</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Form -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Dispute Details</h2>
+        </div>
+        <form method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- Project Selection -->
+            <div>
+                <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    Select Project <span class="text-red-500">*</span>
+                </label>
+                <select id="project_id" 
+                        name="project_id" 
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Select a Project --</option>
+                    {% for project in projects %}
+                    <option value="{{ project.project_id }}">
+                        {{ project }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Choose the project this dispute relates to</p>
+            </div>
+
+            <!-- Title (Dropdown) -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                    Dispute Title <span class="text-red-500">*</span>
+                </label>
+                <select id="title"
+                        name="title"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Select Dispute Type --</option>
+                    <option value="Storage Space">Storage Space</option>
+                    <option value="Handling">Handling</option>
+                    <option value="Manpower/OT">Manpower/OT</option>
+                    <option value="Operations">Operations</option>
+                    <option value="MIS / Stock Issue">MIS / Stock Issue</option>
+                    <option value="Billing Issue">Billing Issue</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Select the type of dispute</p>
+            </div>
+
+            <!-- Priority -->
+            <div>
+                <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">
+                    Priority Level <span class="text-red-500">*</span>
+                </label>
+                <select id="priority" 
+                        name="priority" 
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Select Priority --</option>
+                    <option value="low">Low - Minor issue, can wait</option>
+                    <option value="medium" selected>Medium - Normal priority</option>
+                    <option value="high">High - Needs attention soon</option>
+                    <option value="critical">Critical - Urgent, blocking operations</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Select based on impact and urgency</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Detailed Description <span class="text-red-500">*</span>
+                </label>
+                <textarea id="description" 
+                          name="description" 
+                          rows="6"
+                          required
+                          placeholder="Provide a detailed explanation of the dispute, including:
+- What happened?
+- When did it occur?
+- What is the expected vs actual situation?
+- Any relevant amounts, dates, or references
+- Impact on operations"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Be as detailed as possible to help resolve the issue faster</p>
+            </div>
+
+            <!-- Disputed Amount (Optional) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="disputed_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                        Disputed Amount (₹) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-500 text-sm">₹</span>
+                        <input type="number" 
+                               id="disputed_amount" 
+                               name="disputed_amount" 
+                               step="0.01"
+                               min="0"
+                               placeholder="0.00"
+                               class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">If applicable, enter the amount in dispute</p>
+                </div>
+
+                <div>
+                    <label for="dispute_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Dispute Date <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input type="date" 
+                           id="dispute_date" 
+                           name="dispute_date" 
+                           max="{{ today|date:'Y-m-d' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="mt-1 text-xs text-gray-500">When did the issue occur?</p>
+                </div>
+            </div>
+
+            <!-- Assigned To (Manager/Controller only) -->
+            {% if user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' %}
+            <div>
+                <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">
+                    Assign To <span class="text-gray-500">(Optional)</span>
+                </label>
+                <select id="assigned_to" 
+                        name="assigned_to" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Leave Unassigned --</option>
+                    {% for user_option in users %}
+                    <option value="{{ user_option.id }}">
+                        {{ user_option.get_full_name }} ({{ user_option.get_role_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Assign to a team member to handle this dispute</p>
+            </div>
+            {% endif %}
+
+            <!-- Warning Box -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-900">Important</h3>
+                        <p class="mt-1 text-sm text-yellow-700">
+                            This dispute will be visible to your manager and the operations team. All updates and comments will be tracked for audit purposes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <a href="{% url 'operations:dispute_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition shadow-sm">
+                    <svg width="20" height="20" aria-hidden="true" class="inline h-5 w-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    Raise Dispute
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const prioritySelect = document.getElementById('priority');
+    const form = document.querySelector('form');
+
+    // Add visual feedback for priority selection
+    prioritySelect.addEventListener('change', function() {
+        const priority = this.value;
+        this.classList.remove('border-yellow-400', 'border-orange-400', 'border-red-400');
+        
+        if (priority === 'high') {
+            this.classList.add('border-orange-400');
+        } else if (priority === 'critical') {
+            this.classList.add('border-red-400');
+        } else if (priority === 'medium') {
+            this.classList.add('border-yellow-400');
+        }
+    });
+
+    // Confirm before submitting critical disputes
+    form.addEventListener('submit', function(e) {
+        const priority = prioritySelect.value;
+        if (priority === 'critical') {
+            if (!confirm('You are raising a CRITICAL priority dispute. This will notify management immediately. Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

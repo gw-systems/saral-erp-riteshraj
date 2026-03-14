@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block title %}Dispute Analysis by Project{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dispute Analysis by Project</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                View dispute percentage and metrics for each project
+            </p>
+        </div>
+    </div>
+
+    <!-- Analytics Grid - 7x7 Compact Layout (14 cards in 2 rows) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+        <!-- Card 1: This Month Raised -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-blue-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">This Month</p>
+                <p class="text-base font-bold text-blue-600">{{ disputes_this_month }}</p>
+                {% if month_over_month_raised != 0 %}
+                <p class="text-[9px] font-medium {% if month_over_month_raised > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                    {% if month_over_month_raised > 0 %}↑{% else %}↓{% endif %}{{ month_over_month_raised|floatformat:1|cut:"-" }}%
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card 2: Last Month Raised -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-gray-400 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Last Month</p>
+                <p class="text-base font-bold text-gray-600">{{ disputes_last_month }}</p>
+            </div>
+        </div>
+
+        <!-- Card 3: This Month Resolved -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-green-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Resolved</p>
+                <p class="text-base font-bold text-green-600">{{ resolved_this_month }}</p>
+                {% if month_over_month_resolved != 0 %}
+                <p class="text-[9px] font-medium {% if month_over_month_resolved > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if month_over_month_resolved > 0 %}↑{% else %}↓{% endif %}{{ month_over_month_resolved|floatformat:1|cut:"-" }}%
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card 4: Last Month Resolved -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-gray-400 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Last Resolved</p>
+                <p class="text-base font-bold text-gray-600">{{ resolved_last_month }}</p>
+            </div>
+        </div>
+
+        <!-- Card 5: Average TAT -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="{% if avg_tat_days <= 3 %}bg-green-500{% elif avg_tat_days <= 7 %}bg-yellow-500{% else %}bg-red-500{% endif %} rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Avg TAT</p>
+                <p class="text-base font-bold {% if avg_tat_days <= 3 %}text-green-600{% elif avg_tat_days <= 7 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                    {{ avg_tat_days }}d
+                </p>
+            </div>
+        </div>
+
+        <!-- Card 6: On-Time Resolution -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="{% if on_time_resolution_rate >= 90 %}bg-green-500{% elif on_time_resolution_rate >= 70 %}bg-yellow-500{% else %}bg-red-500{% endif %} rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">On-Time</p>
+                <p class="text-base font-bold {% if on_time_resolution_rate >= 90 %}text-green-600{% elif on_time_resolution_rate >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                    {{ on_time_resolution_rate }}%
+                </p>
+            </div>
+        </div>
+
+        <!-- Card 7: Overdue -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-red-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Overdue</p>
+                <p class="text-base font-bold text-red-600">{{ overdue_disputes }}</p>
+            </div>
+        </div>
+
+        <!-- Row 2 starts here -->
+
+        <!-- Card 8: Critical Priority -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-orange-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Critical</p>
+                <p class="text-base font-bold text-orange-600">{{ critical_high_disputes }}</p>
+            </div>
+        </div>
+
+        <!-- Card 9: Total Amount -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-amber-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Total Amt</p>
+                <p class="text-base font-bold text-amber-600">₹{{ total_disputed_amount_lakhs }}L</p>
+            </div>
+        </div>
+
+        <!-- Card 10: Avg Amount -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-purple-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Avg Amt</p>
+                <p class="text-base font-bold text-purple-600">₹{{ avg_disputed_amount_lakhs }}L</p>
+            </div>
+        </div>
+
+        <!-- Card 11: Top Category -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-indigo-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Top Type</p>
+                <p class="text-xs font-bold text-indigo-600 truncate px-1">{{ top_category_name }}</p>
+            </div>
+        </div>
+
+        <!-- Card 12: Projects with Disputes -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-red-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Projects</p>
+                <p class="text-base font-bold text-red-600">{{ projects_with_disputes }}</p>
+            </div>
+        </div>
+
+        <!-- Card 13: Overall % -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-orange-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Overall %</p>
+                <p class="text-base font-bold text-orange-600">{{ overall_dispute_percentage }}%</p>
+            </div>
+        </div>
+
+        <!-- Card 14: Total Disputes -->
+        <div class="bg-white rounded shadow-sm p-2">
+            <div class="text-center">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-purple-500 rounded p-1.5">
+                        <svg width="12" height="12" aria-hidden="true" class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-medium text-gray-500 mb-0.5">Total</p>
+                <p class="text-base font-bold text-purple-600">{{ total_disputes }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <form method="GET" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label for="sort_filter" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                <select name="sort" id="sort_filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="dispute_percentage" {% if request.GET.sort == 'dispute_percentage' or not request.GET.sort %}selected{% endif %}>Dispute % (High to Low)</option>
+                    <option value="total_disputes" {% if request.GET.sort == 'total_disputes' %}selected{% endif %}>Total Disputes (High to Low)</option>
+                    <option value="project_code" {% if request.GET.sort == 'project_code' %}selected{% endif %}>Project Code (A-Z)</option>
+                </select>
+            </div>
+
+            <div class="flex-1 min-w-[200px]">
+                <label for="search_filter" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input type="text" name="search" id="search_filter" value="{{ request.GET.search }}" placeholder="Search project code or client..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    Apply
+                </button>
+                <a href="{% url 'operations:dispute_analysis' %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Project Dispute Analysis</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Common Title</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Disputes</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Open</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Dispute %</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in projects %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'operations:dispute_list' %}?search={{ project.project_code }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                {{ project.project_code }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-xs font-medium text-gray-700">{{ project.common_title }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="text-sm font-semibold text-gray-900">{{ project.total_disputes }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {{ project.open_disputes }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ project.in_progress_disputes }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ project.resolved_disputes }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center">
+                                <div class="flex-1 max-w-xs">
+                                    <div class="flex items-center">
+                                        <div class="flex-1">
+                                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div class="h-full
+                                                    {% if project.dispute_percentage >= 50 %}bg-red-500
+                                                    {% elif project.dispute_percentage >= 25 %}bg-orange-500
+                                                    {% elif project.dispute_percentage >= 10 %}bg-yellow-500
+                                                    {% else %}bg-green-500{% endif %}"
+                                                    style="width: {{ project.dispute_percentage }}%"></div>
+                                            </div>
+                                        </div>
+                                        <span class="ml-2 text-sm font-semibold
+                                            {% if project.dispute_percentage >= 50 %}text-red-600
+                                            {% elif project.dispute_percentage >= 25 %}text-orange-600
+                                            {% elif project.dispute_percentage >= 10 %}text-yellow-600
+                                            {% else %}text-green-600{% endif %}">
+                                            {{ project.dispute_percentage }}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <svg width="48" height="48" aria-hidden="true" class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p class="mt-2 text-sm font-medium">No projects with disputes found</p>
+                            <p class="mt-1 text-sm">All projects are dispute-free.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

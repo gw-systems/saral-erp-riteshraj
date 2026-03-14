@@ -1,0 +1,92 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+*.egg-info/
+
+# Django
+*.sqlite3
+*.log
+db.sqlite3
+media/
+staticfiles/
+.env
+
+# Secrets
+*.env
+credentials.json
+*.pem
+
+# Node / Tailwind build
+node_modules/
+static/css/tailwind.min.css
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Celery (Legacy - removed but keeping ignore rule)
+celerybeat-schedule*
+
+# Backups
+*.backup*
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Pytest cache
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+
+# Schema analysis files (generated, not committed)
+schema_*.txt
+schema_*.json
+*_schema.txt
+*_schema.json
+db_schema_*.json
+
+# Data
+*.csv
+query_attachments/*
+!query_attachments/.gitkeep
+
+# Test
+test.py
+cleanup_*.sh
+
+# Integrations - Work in Progress (keep code, ignore configs)
+integrations/bigin/credentials.json
+integrations/*/tokens/
+integrations/*/*.env
+
+# Data files (never commit to git)
+data/
+*.csv.env
+*.env
+
+# Analysis / research dumps (never commit)
+zoho_analysis/
+"Zoho ERP - Core - Overview.mp4"
+*.mp4
+
+# Media files (user uploads)
+media/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.doc
+*.docx
+!LR.docx
+
+# But track the media directory structure
+!media/.gitkeep
+
+# Ignore all files in media subdirectories
+media/client_documents/**/*
+media/warehouse_documents/**/*

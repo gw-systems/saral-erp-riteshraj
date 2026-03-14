@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_create %}Create{% else %}Edit{% endif %} Template - E-Signature{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{% url 'adobe_sign:template_list' %}"
+               class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 mb-4 transition-colors">
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Templates
+            </a>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                        {% if is_create %}Create New Template{% else %}Edit Template{% endif %}
+                    </h1>
+                    <p class="mt-2 text-sm text-gray-600">
+                        {% if is_create %}Set up a reusable document template{% else %}Update template: {{ template.name }}{% endif %}
+                    </p>
+                </div>
+                <div class="flex-shrink-0 h-14 w-14 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
+                    <svg width="28" height="28" aria-hidden="true" class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Main Form Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                <div class="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+                    <h2 class="text-lg font-bold text-gray-900">Template Details</h2>
+                </div>
+                <div class="p-6 space-y-5">
+                    <!-- Template Name -->
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-900 mb-2">
+                            Template Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="{{ form.name.html_name }}" id="{{ form.name.id_for_label }}"
+                               value="{{ form.name.value|default:'' }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition text-gray-900 placeholder-gray-400"
+                               placeholder="e.g. Standard Client Agreement" required>
+                        {% if form.name.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ form.name.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Template Type -->
+                    <div>
+                        <label for="{{ form.template_type.id_for_label }}" class="block text-sm font-semibold text-gray-900 mb-2">
+                            Template Type <span class="text-red-500">*</span>
+                        </label>
+                        <select name="{{ form.template_type.html_name }}" id="{{ form.template_type.id_for_label }}"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition text-gray-900 bg-white" required>
+                            {% for value, label in form.template_type.field.choices %}
+                            <option value="{{ value }}" {% if form.template_type.value == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.template_type.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ form.template_type.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-gray-900 mb-2">
+                            Description
+                            <span class="ml-1 text-xs font-normal text-gray-500">(Optional)</span>
+                        </label>
+                        <textarea name="{{ form.description.html_name }}" id="{{ form.description.id_for_label }}" rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition text-gray-900 placeholder-gray-400"
+                                  placeholder="Brief description of what this template is used for...">{{ form.description.value|default:'' }}</textarea>
+                        <p class="mt-1.5 text-xs text-gray-500">Helps backoffice identify the right template when creating agreements.</p>
+                        {% if form.description.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ form.description.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- File Upload (create only) -->
+                    {% if is_create %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                            Template File (PDF) <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-purple-400 transition-colors bg-gray-50">
+                            <div class="space-y-2 text-center">
+                                <svg width="48" height="48" aria-hidden="true" class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <div class="flex text-sm text-gray-600 justify-center">
+                                    <label for="id_template_file" class="relative cursor-pointer rounded-md font-semibold text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                        <span>Upload a file</span>
+                                        <input type="file" name="{{ form.template_file.html_name }}" id="id_template_file" class="sr-only" accept=".pdf">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PDF up to 10MB</p>
+                            </div>
+                        </div>
+                        <p id="file-name-display" class="mt-2 text-sm text-gray-600 hidden"></p>
+                        {% if form.template_file.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ form.template_file.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <!-- Existing file info for edit mode -->
+                    {% if template.template_file %}
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-red-100">
+                                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">Current template file</p>
+                                <p class="text-xs text-gray-500">Uploaded {{ template.created_at|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    <!-- Active Toggle -->
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">Active Status</p>
+                            <p class="text-xs text-gray-500">When active, this template is available for agreement creation</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="{{ form.is_active.html_name }}"
+                                   {% if form.is_active.value %}checked{% endif %}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-indigo-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-r-xl p-5 shadow-sm">
+                <div class="flex items-start">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-bold text-blue-900 mb-1">About Templates</h3>
+                        <p class="text-sm text-blue-800">
+                            Templates help standardize your agreements. When creating an agreement, backoffice can select a template as a starting point. Signature block placement is done per-agreement during creation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button type="submit"
+                        class="flex-1 inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if is_create %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        {% endif %}
+                    </svg>
+                    {% if is_create %}Create Template{% else %}Save Changes{% endif %}
+                </button>
+                <a href="{% url 'adobe_sign:template_list' %}"
+                   class="flex-1 inline-flex items-center justify-center px-6 py-4 bg-white text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition border-2 border-gray-200">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// File upload display
+const fileInput = document.getElementById('id_template_file');
+const fileDisplay = document.getElementById('file-name-display');
+if (fileInput) {
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileDisplay.textContent = 'Selected: ' + this.files[0].name;
+            fileDisplay.classList.remove('hidden');
+        }
+    });
+}
+</script>
+{% endblock %}

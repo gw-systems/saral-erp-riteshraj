@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Porter Invoice Editor{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Porter Invoice Editor</h1>
+            <p class="text-sm text-gray-500 mt-1">Batch and single invoice editing for Porter invoices</p>
+        </div>
+        <div class="flex gap-3 mt-4 sm:mt-0">
+            <a href="{% url 'operations:porter_invoice_batch' %}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Batch Process
+            </a>
+            <a href="{% url 'operations:porter_invoice_single' %}"
+               class="inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Single Edit
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border p-4">
+            <p class="text-sm text-gray-500">Total Sessions</p>
+            <p class="text-2xl font-bold text-gray-900">{{ total_sessions }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-4">
+            <p class="text-sm text-gray-500">Files Processed Successfully</p>
+            <p class="text-2xl font-bold text-green-600">{{ total_files_processed }}</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" class="flex flex-wrap gap-3 mb-4">
+        <select name="type" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            <option value="">All Types</option>
+            <option value="batch" {% if session_type == 'batch' %}selected{% endif %}>Batch</option>
+            <option value="single" {% if session_type == 'single' %}selected{% endif %}>Single</option>
+        </select>
+        <select name="status" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            <option value="">All Status</option>
+            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="processing" {% if status_filter == 'processing' %}selected{% endif %}>Processing</option>
+            <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+        </select>
+    </form>
+
+    <!-- Sessions Table -->
+    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Files</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for session in page_obj %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900">{{ session.created_at|date:"d M Y H:i" }}</td>
+                    <td class="px-4 py-3 text-sm">
+                        {% if session.session_type == 'batch' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Batch</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Single</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ session.created_by.get_full_name }}</td>
+                    <td class="px-4 py-3 text-sm text-center">
+                        <span class="text-green-600">{{ session.success_count }}</span>
+                        {% if session.error_count %}<span class="text-red-600 ml-1">/ {{ session.error_count }} err</span>{% endif %}
+                        {% if session.skipped_count %}<span class="text-yellow-600 ml-1">/ {{ session.skipped_count }} skip</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-center">
+                        {% if session.status == 'completed' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Completed</span>
+                        {% elif session.status == 'processing' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Processing</span>
+                        {% elif session.status == 'failed' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Failed</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">{{ session.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-center">
+                        <a href="{% url 'operations:porter_invoice_detail' session.id %}"
+                           class="text-blue-600 hover:text-blue-800 font-medium">View</a>
+                        {% if session.result_zip and session.result_zip.name %}
+                        <a href="{% url 'operations:porter_invoice_download_zip' session.id %}"
+                           class="text-green-600 hover:text-green-800 font-medium ml-3">ZIP</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">No sessions yet. Start by uploading invoices.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-4 gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&type={{ session_type }}&status={{ status_filter }}"
+           class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Previous</a>
+        {% endif %}
+        <span class="px-3 py-1 text-sm text-gray-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&type={{ session_type }}&status={{ status_filter }}"
+           class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

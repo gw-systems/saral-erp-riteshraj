@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quotation.quotation_number }} - Quotation Detail{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 space-y-6">
+
+    <!-- Header with Actions -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-5">
+        <div class="flex items-center justify-between gap-4">
+            <!-- Left: title + meta -->
+            <div class="min-w-0">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">{{ quotation.quotation_number }}</h1>
+                    <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full
+                        {% if quotation.status == 'draft' %}bg-gray-100 text-gray-700
+                        {% elif quotation.status == 'pending_approval' %}bg-yellow-100 text-yellow-800
+                        {% elif quotation.status == 'sent' %}bg-blue-100 text-blue-800
+                        {% elif quotation.status == 'accepted' %}bg-green-100 text-green-800
+                        {% elif quotation.status == 'rejected' %}bg-red-100 text-red-800
+                        {% elif quotation.status == 'voided' %}bg-gray-800 text-white
+                        {% elif quotation.status == 'expired' %}bg-orange-100 text-orange-800
+                        {% else %}bg-gray-100 text-gray-700{% endif %}">
+                        {{ quotation.get_status_display }}
+                    </span>
+                </div>
+                <p class="mt-1 text-sm text-gray-500">
+                    Created by <span class="font-medium text-gray-700">{{ quotation.created_by.get_full_name }}</span>
+                    &middot; {{ quotation.date|date:"d M Y" }}
+                    &middot; {{ quotation.client_company }}
+                </p>
+            </div>
+
+            <!-- Right: actions -->
+            <div class="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                <!-- Secondary: Back, Edit, Clone -->
+                <a href="{% url 'projects:quotation_list' %}" class="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Back
+                </a>
+                <a href="{% url 'projects:quotation_edit' quotation.quotation_id %}" class="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Edit
+                </a>
+                <form method="POST" action="{% url 'projects:quotation_clone' quotation.quotation_id %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('Clone this quotation into a new draft?')"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Clone
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="w-px h-7 bg-gray-200 mx-1"></div>
+
+                <!-- Primary: Download DOCX, PDF -->
+                <a href="{% url 'projects:quotation_download_docx' quotation.quotation_id %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+                    DOCX
+                </a>
+                <a href="{% url 'projects:quotation_download_pdf' quotation.quotation_id %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+                    PDF
+                </a>
+
+                <!-- Send Email -->
+                {% if has_gmail_accounts %}
+                {% if quotation.status == 'pending_approval' %}
+                <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed" title="Pending director approval">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    Send
+                </span>
+                {% else %}
+                <a href="{% url 'projects:quotation_send_email' quotation.quotation_id %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    Send Email
+                </a>
+                {% endif %}
+                {% endif %}
+
+                <!-- Client Acceptance Link (sent only) -->
+                {% if quotation.status == 'sent' %}
+                <form method="POST" action="{% url 'projects:quotation_acceptance_link' quotation.quotation_id %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        Acceptance Link
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Transition Buttons -->
+    {% if quotation.status == 'sent' %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 items-center">
+        <span class="text-sm font-medium text-blue-800">Quotation has been sent — awaiting client response:</span>
+        <form method="POST" action="{% url 'projects:quotation_transition' quotation.quotation_id %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="accepted">
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm transition">
+                ✓ Mark Accepted
+            </button>
+        </form>
+        <form method="POST" action="{% url 'projects:quotation_transition' quotation.quotation_id %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="rejected">
+            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition">
+                ✗ Mark Rejected
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if quotation.status == 'accepted' or quotation.status == 'rejected' %}
+    {% if is_director %}
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex gap-3 items-center">
+        <span class="text-sm font-medium text-gray-700">Director actions:</span>
+        <form method="POST" action="{% url 'projects:quotation_transition' quotation.quotation_id %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="draft">
+            <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium text-sm transition">
+                ↩ Reopen as Draft
+            </button>
+        </form>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if quotation.status == 'draft' %}
+    {% if is_director %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3 items-center">
+        <span class="text-sm font-medium text-red-700">Director actions:</span>
+        <form method="POST" action="{% url 'projects:quotation_transition' quotation.quotation_id %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="voided">
+            <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium text-sm transition"
+                    onclick="return confirm('Void this quotation? This cannot be undone.')">
+                🚫 Void Quotation
+            </button>
+        </form>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if quotation.status == 'expired' %}
+    <div class="bg-orange-50 border border-orange-300 rounded-lg p-4">
+        <p class="text-sm font-semibold text-orange-800">
+            ⚠ This quotation expired on {{ quotation.validity_date|date:"d M Y" }} ({{ quotation.validity_period }} day validity).
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Client Information -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Client Information</h2>
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Company Name</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.client_company }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Contact Person</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.client_name }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Email</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.client_email }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Phone</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.client_phone|default:"—" }}</p>
+            </div>
+            <div class="col-span-2">
+                <label class="block text-sm font-medium text-gray-500">Address</label>
+                <p class="mt-1 text-sm text-gray-900 whitespace-pre-line">{{ quotation.billing_address|default:"—" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">GST Number</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.client_gst_number|default:"—" }}</p>
+            </div>
+            {% if quotation.point_of_contact %}
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Point of Contact</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.point_of_contact }}{% if quotation.poc_phone %} ({{ quotation.poc_phone }}){% endif %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quotation Details -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quotation Details</h2>
+        <div class="grid grid-cols-4 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Date</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.date|date:"d M Y" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Valid Until</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.validity_date|date:"d M Y" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Validity Period</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.validity_period }} days</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">GST Rate</label>
+                <p class="mt-1 text-sm text-gray-900">{{ quotation.gst_rate }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Summary -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Pricing Summary</h2>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                <span class="text-sm font-medium text-gray-700">Subtotal</span>
+                <span class="text-sm text-gray-900">₹{{ quotation.subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                <span class="text-sm font-medium text-gray-700">GST ({{ quotation.gst_rate }}%)</span>
+                <span class="text-sm text-gray-900">₹{{ quotation.gst_amount|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center py-2">
+                <span class="text-lg font-bold text-gray-900">Grand Total</span>
+                <span class="text-lg font-bold text-blue-600">₹{{ quotation.grand_total|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Margin & Director Approval Panel -->
+    {% with margin=quotation.margin_pct %}
+    {% if margin is not None %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Commercial Margin
+        </h2>
+        <div class="grid grid-cols-3 gap-6 mb-4">
+            <div class="text-center bg-blue-50 rounded-lg p-4">
+                <p class="text-sm font-medium text-blue-600 mb-1">Client Total</p>
+                <p class="text-xl font-bold text-blue-700">₹{{ quotation.subtotal|floatformat:2 }}</p>
+            </div>
+            <div class="text-center bg-orange-50 rounded-lg p-4">
+                <p class="text-sm font-medium text-orange-600 mb-1">Vendor Total</p>
+                <p class="text-xl font-bold text-orange-700">₹{{ quotation.vendor_subtotal|floatformat:2 }}</p>
+            </div>
+            <div class="text-center rounded-lg p-4 {% if margin >= 22 %}bg-green-50{% else %}bg-red-50{% endif %}">
+                <p class="text-sm font-medium {% if margin >= 22 %}text-green-600{% else %}text-red-600{% endif %} mb-1">Gross Margin</p>
+                <p class="text-xl font-bold {% if margin >= 22 %}text-green-700{% else %}text-red-700{% endif %}">{{ margin|floatformat:1 }}%</p>
+            </div>
+        </div>
+
+        <!-- Pending Approval: director action buttons -->
+        {% if quotation.status == 'pending_approval' and quotation.margin_override_requested %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <div class="flex items-start">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="ml-3">
+                    <h3 class="text-sm font-semibold text-yellow-800">Awaiting Director Approval</h3>
+                    <p class="mt-1 text-sm text-yellow-700">
+                        The margin ({{ margin|floatformat:1 }}%) is below the 22% minimum. A director must approve this exception before the quotation can be sent to the client.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% if is_director %}
+        <div class="flex gap-3">
+            <form method="POST" action="{% url 'projects:quotation_approve_margin' quotation.quotation_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition shadow-sm">
+                    Approve Margin Exception
+                </button>
+            </form>
+            <form method="POST" action="{% url 'projects:quotation_approve_margin' quotation.quotation_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject">
+                <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition shadow-sm">
+                    Reject — Ask to Revise
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-500 italic">Waiting for a director to review and approve this exception.</p>
+        {% endif %}
+        {% endif %}
+
+        <!-- Already approved -->
+        {% if quotation.margin_override_approved %}
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-green-800">
+                    Margin exception approved by {{ quotation.margin_override_approved_by.get_full_name }}
+                    on {{ quotation.margin_override_approved_at|date:"d M Y, h:i A" }}.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Operational Scope of Service -->
+    {% with products=quotation.products.all %}
+    {% if products or quotation.operational_total_boxes %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Operational Scope of Service</h2>
+
+        <!-- Configuration summary -->
+        <div class="grid grid-cols-3 gap-4 mb-4 p-3 bg-blue-50 rounded-lg text-sm">
+            <div>
+                <span class="text-gray-500">Total Boxes:</span>
+                <span class="font-semibold ml-1">{{ quotation.operational_total_boxes|default:"—" }}</span>
+            </div>
+            <div>
+                <span class="text-gray-500">Variance:</span>
+                <span class="font-semibold ml-1">{{ quotation.operational_variance_pct }}%</span>
+            </div>
+            <div>
+                <span class="text-gray-500">Pallet Dims (ft):</span>
+                <span class="font-semibold ml-1">{{ quotation.operational_pallet_l }} x {{ quotation.operational_pallet_w }} x {{ quotation.operational_pallet_h }}</span>
+            </div>
+        </div>
+
+        <!-- Product rows -->
+        {% if products %}
+        <table class="min-w-full divide-y divide-gray-200 mb-4">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Business</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Operation</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Packaging</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Share %</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Pallets</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for product in products %}
+                <tr>
+                    <td class="px-3 py-2 text-sm font-medium text-gray-900">{{ product.product_name }}</td>
+                    <td class="px-3 py-2 text-sm text-gray-500">{{ product.type_of_business }}</td>
+                    <td class="px-3 py-2 text-sm text-gray-500">{{ product.get_type_of_operation_display }}</td>
+                    <td class="px-3 py-2 text-sm text-gray-500">{{ product.packaging_type|default:"—" }}</td>
+                    <td class="px-3 py-2 text-sm text-gray-900 text-right">{{ product.share_pct }}%</td>
+                    <td class="px-3 py-2 text-sm font-semibold text-gray-900 text-right">
+                        {% if product.num_pallets %}{{ product.num_pallets|floatformat:1 }}{% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <!-- Summary -->
+        {% if quotation.billable_storage_area_sqft %}
+        <div class="grid grid-cols-3 gap-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-center">
+            <div>
+                <p class="text-xs text-gray-500">Total Pallets</p>
+                <p class="text-lg font-bold text-gray-800">{{ quotation.total_pallets_required|floatformat:1|default:"—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Actual Pallets (with {{ quotation.operational_variance_pct }}% buffer)</p>
+                <p class="text-lg font-bold text-blue-700">{{ quotation.actual_pallets_required|floatformat:1|default:"—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Billable Storage Area</p>
+                <p class="text-xl font-bold text-green-700">{{ quotation.billable_storage_area_sqft|floatformat:0 }} sq.ft</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Locations & Items -->
+    {% if quotation.locations.all %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Location Breakdown</h2>
+        {% for location in quotation.locations.all %}
+        <div class="mb-6 last:mb-0">
+            <h3 class="text-md font-semibold text-gray-800 mb-3">{{ location.location_name }}</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in location.items.all %}
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ item.get_item_description_display }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ item.custom_description|default:"—" }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ item.display_unit_cost }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ item.display_quantity }}</td>
+                            <td class="px-4 py-3 text-sm font-semibold text-gray-900 text-right">{{ item.display_total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-3 text-sm text-gray-500 text-center">No items added</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr>
+                            <td colspan="4" class="px-4 py-2 text-sm font-semibold text-gray-700 text-right">Location Subtotal:</td>
+                            <td class="px-4 py-2 text-sm font-bold text-gray-900 text-right">₹{{ location.subtotal|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Terms & Conditions -->
+    {% if quotation.payment_terms or quotation.sla_terms or quotation.contract_terms or quotation.liability_terms %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Terms & Conditions</h2>
+        <div class="space-y-4">
+            {% if quotation.payment_terms %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-1">Payment Terms</h3>
+                <p class="text-sm text-gray-600 whitespace-pre-line">{{ quotation.payment_terms }}</p>
+            </div>
+            {% endif %}
+            {% if quotation.sla_terms %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-1">SLA & Service Commitments</h3>
+                <p class="text-sm text-gray-600 whitespace-pre-line">{{ quotation.sla_terms }}</p>
+            </div>
+            {% endif %}
+            {% if quotation.contract_terms %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-1">Contract Terms</h3>
+                <p class="text-sm text-gray-600 whitespace-pre-line">{{ quotation.contract_terms }}</p>
+            </div>
+            {% endif %}
+            {% if quotation.liability_terms %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-1">Liability & Compliance</h3>
+                <p class="text-sm text-gray-600 whitespace-pre-line">{{ quotation.liability_terms }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Signature Block -->
+    {% if quotation.for_godamwale_signatory %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-end">
+            <div class="text-center">
+                <p class="text-sm font-semibold text-gray-700">For Godamwale</p>
+                <div class="mt-8 border-t border-gray-300 pt-2">
+                    <p class="text-sm text-gray-900">{{ quotation.for_godamwale_signatory }}</p>
+                    <p class="text-xs text-gray-500">Authorized Signatory</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Audit Trail -->
+    {% if audit_logs %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Activity History</h2>
+        <div class="space-y-3">
+            {% for log in audit_logs %}
+            <div class="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg width="16" height="16" aria-hidden="true" class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900">
+                        <span class="font-medium">{{ log.user.get_full_name|default:"System" }}</span>
+                        <span class="text-gray-600">{{ log.get_action_display|lower }}</span>
+                    </p>
+                    <p class="text-xs text-gray-500">{{ log.timestamp|date:"d M Y, h:i A" }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Revision History -->
+    {% if revisions %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Revision History</h2>
+        <div class="space-y-2">
+            {% for rev in revisions %}
+            <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div>
+                    <span class="text-sm font-medium text-gray-800">Rev {{ rev.revision_number }}</span>
+                    <span class="mx-2 text-gray-400">—</span>
+                    <span class="text-sm text-gray-600">{{ rev.created_at|date:"d M Y, h:i A" }}</span>
+                    {% if rev.created_by %}
+                    <span class="text-sm text-gray-500">by {{ rev.created_by.get_full_name }}</span>
+                    {% endif %}
+                    {% if rev.reason %}
+                    <span class="text-sm text-gray-500">— "{{ rev.reason }}"</span>
+                    {% endif %}
+                </div>
+                <a href="{% url 'projects:quotation_revision_view' quotation.quotation_id rev.revision_number %}"
+                   class="text-xs text-blue-600 hover:underline">View</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,480 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supply Analytics - Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Supply Analytics</h1>
+            <p class="mt-2 text-sm text-gray-600">Warehouse portfolio insights and trends</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+
+            <!-- Total Warehouses -->
+            <div class="bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-teal-50 uppercase">Total</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ total_warehouses }}</p>
+                    <p class="text-xs text-teal-50 mt-1">Warehouses</p>
+                </div>
+            </div>
+
+            <!-- Total Capacity -->
+            <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-blue-50 uppercase">Capacity</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ total_capacity_sqft|floatformat:0 }}</p>
+                    <p class="text-xs text-blue-50 mt-1">sqft</p>
+                </div>
+            </div>
+
+            <!-- Available Capacity -->
+            <div class="bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-green-50 uppercase">Available</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ total_available_capacity|floatformat:0 }}</p>
+                    <p class="text-xs text-green-50 mt-1">sqft Available</p>
+                </div>
+            </div>
+
+            <!-- Utilization Rate -->
+            <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-purple-50 uppercase">Utilization</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ utilization_rate }}%</p>
+                    <p class="text-xs text-purple-50 mt-1">Rate</p>
+                </div>
+            </div>
+
+            <!-- SLA Signed -->
+            <div class="bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl shadow-md p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-indigo-50 uppercase">SLA Signed</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold">{{ sla_signed_count }}</p>
+                    <p class="text-xs text-indigo-50 mt-1">Agreements</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+
+            <!-- Capacity by City -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-teal-500 to-teal-600 border-b border-teal-600">
+                    <h3 class="text-lg font-bold text-white">Capacity by City (Top 10)</h3>
+                </div>
+                <div class="p-6">
+                    <div class="h-80">
+                        <canvas id="capacityByCityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grade Distribution -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 border-b border-blue-600">
+                    <h3 class="text-lg font-bold text-white">Warehouse Grade Distribution</h3>
+                </div>
+                <div class="p-6">
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="gradeDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+
+            <!-- SLA Status Distribution -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 border-b border-purple-600">
+                    <h3 class="text-lg font-bold text-white">SLA Status Distribution</h3>
+                </div>
+                <div class="p-6">
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="slaDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State Distribution -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 border-b border-green-600">
+                    <h3 class="text-lg font-bold text-white">Warehouses by State (Top 10)</h3>
+                </div>
+                <div class="p-6">
+                    <div class="h-80">
+                        <canvas id="stateDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Charts Row 3 -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+
+            <!-- Vendor Distribution -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 border-b border-orange-600">
+                    <h3 class="text-lg font-bold text-white">Top 10 Vendors by Warehouse Count</h3>
+                </div>
+                <div class="p-6">
+                    <div class="h-80">
+                        <canvas id="vendorDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capacity Utilization -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 border-b border-indigo-600">
+                    <h3 class="text-lg font-bold text-white">Capacity Utilization by City</h3>
+                </div>
+                <div class="p-6">
+                    <div class="h-80">
+                        <canvas id="utilizationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Property Type Distribution -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-pink-500 to-pink-600 border-b border-pink-600">
+                <h3 class="text-lg font-bold text-white">Property Type Distribution</h3>
+            </div>
+            <div class="p-6">
+                <div class="h-80">
+                    <canvas id="propertyTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Color palette
+const colors = {
+    teal: 'rgb(20, 184, 166)',
+    blue: 'rgb(59, 130, 246)',
+    purple: 'rgb(168, 85, 247)',
+    green: 'rgb(34, 197, 94)',
+    orange: 'rgb(249, 115, 22)',
+    red: 'rgb(239, 68, 68)',
+    yellow: 'rgb(234, 179, 8)',
+    indigo: 'rgb(99, 102, 241)',
+    pink: 'rgb(236, 72, 153)',
+    cyan: 'rgb(6, 182, 212)'
+};
+
+const colorPalette = [
+    colors.teal, colors.blue, colors.purple, colors.green, colors.orange,
+    colors.red, colors.yellow, colors.indigo, colors.pink, colors.cyan
+];
+
+// Chart 1: Capacity by City (Bar Chart)
+const capacityByCityCtx = document.getElementById('capacityByCityChart').getContext('2d');
+new Chart(capacityByCityCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ city_labels|safe }},
+        datasets: [{
+            label: 'Capacity (sqft)',
+            data: {{ city_capacity|safe }},
+            backgroundColor: colors.teal,
+            borderColor: colors.teal,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Capacity: ' + context.parsed.y.toLocaleString() + ' sqft';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return (value / 1000).toFixed(0) + 'K';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Chart 2: Grade Distribution (Pie Chart)
+const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+new Chart(gradeCtx, {
+    type: 'pie',
+    data: {
+        labels: {{ grade_labels|safe }},
+        datasets: [{
+            data: {{ grade_counts|safe }},
+            backgroundColor: colorPalette,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                        return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Chart 3: SLA Status Distribution (Doughnut Chart)
+const slaCtx = document.getElementById('slaDistributionChart').getContext('2d');
+new Chart(slaCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ sla_labels|safe }},
+        datasets: [{
+            data: {{ sla_counts|safe }},
+            backgroundColor: colorPalette,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                        return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Chart 4: State Distribution (Bar Chart)
+const stateCtx = document.getElementById('stateDistributionChart').getContext('2d');
+new Chart(stateCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ state_labels|safe }},
+        datasets: [{
+            label: 'Warehouse Count',
+            data: {{ state_counts|safe }},
+            backgroundColor: colors.green,
+            borderColor: colors.green,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Chart 5: Vendor Distribution (Horizontal Bar Chart)
+const vendorCtx = document.getElementById('vendorDistributionChart').getContext('2d');
+new Chart(vendorCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ vendor_labels|safe }},
+        datasets: [{
+            label: 'Warehouse Count',
+            data: {{ vendor_counts|safe }},
+            backgroundColor: colors.orange,
+            borderColor: colors.orange,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Chart 6: Capacity Utilization (Line Chart)
+const utilizationCtx = document.getElementById('utilizationChart').getContext('2d');
+new Chart(utilizationCtx, {
+    type: 'line',
+    data: {
+        labels: {{ utilization_labels|safe }},
+        datasets: [{
+            label: 'Utilization %',
+            data: {{ utilization_percentages|safe }},
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: colors.indigo,
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Utilization: ' + context.parsed.y + '%';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Chart 7: Property Type Distribution (Bar Chart)
+const propertyCtx = document.getElementById('propertyTypeChart').getContext('2d');
+new Chart(propertyCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ property_labels|safe }},
+        datasets: [{
+            label: 'Warehouse Count',
+            data: {{ property_counts|safe }},
+            backgroundColor: colors.pink,
+            borderColor: colors.pink,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

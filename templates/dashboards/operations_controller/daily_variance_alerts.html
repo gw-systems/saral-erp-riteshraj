@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Variance Alerts - {{ selected_date|date:"M d, Y" }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <a href="{% url 'accounts:operation_controller_dashboard' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 flex items-center mb-2 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Space Variance Alerts</h1>
+                    <p class="text-gray-600 mt-1">Projects with &gt;30% space change on {{ selected_date|date:"l, F d, Y" }}</p>
+                </div>
+
+                <!-- Filters -->
+                <form method="get" class="flex items-center space-x-2">
+                    <label for="coordinator" class="text-sm text-gray-600">Coordinator:</label>
+                    <select
+                        id="coordinator"
+                        name="coordinator"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                        <option value="">All Coordinators</option>
+                        {% for coord in all_coordinators %}
+                        <option value="{{ coord }}" {% if coord == selected_coordinator %}selected{% endif %}>{{ coord }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="selected_date" class="text-sm text-gray-600 ml-4">Date:</label>
+                    <input
+                        type="date"
+                        id="selected_date"
+                        name="selected_date"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        max="{{ today|date:'Y-m-d' }}"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('selected_date').value='{{ today|date:'Y-m-d' }}'; this.form.submit();" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Today
+                    </button>
+                </form>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Variance Alerts</p>
+                        <p class="text-4xl font-bold text-orange-600">{{ total_alerts }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Projects with &gt;30% space change</p>
+                    </div>
+                    <div class="bg-orange-500 p-4 rounded-full">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Cards Grid -->
+        {% if variance_projects %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for data in variance_projects %}
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {% if data.abs_change_pct > 50 %}border-red-500{% else %}border-orange-500{% endif %} hover:shadow-xl transition-shadow">
+                <!-- Project Info -->
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">{{ data.project.project_code }}</h3>
+                </div>
+
+                <!-- Coordinator -->
+                <div class="mb-4">
+                    <p class="text-xs text-gray-500">Coordinator</p>
+                    {% if data.project.operation_coordinator %}
+                    <p class="text-sm font-medium text-gray-900">{{ data.project.operation_coordinator }}</p>
+                    {% else %}
+                    <p class="text-xs text-red-600">Not Assigned</p>
+                    {% endif %}
+                </div>
+
+                <!-- Space Comparison -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-xs text-gray-500">Previous Space</p>
+                        <p class="text-sm font-semibold text-gray-900">{{ data.previous_space|floatformat:0 }} sq ft</p>
+                        <p class="text-xs text-gray-500">{{ data.previous_date|date:"M d, Y" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Current Space</p>
+                        <p class="text-sm font-semibold text-gray-900">{{ data.today_space|floatformat:0 }} sq ft</p>
+                        <p class="text-xs text-gray-500">{{ selected_date|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+
+                <!-- Change Indicator -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <span class="text-2xl font-bold {% if data.change_direction == 'increase' %}text-green-600{% else %}text-red-600{% endif %}">
+                        {% if data.change_pct > 0 %}+{% endif %}{{ data.change_pct }}%
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full {% if data.change_direction == 'increase' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {% if data.change_direction == 'increase' %}
+                        <svg aria-hidden="true" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                        </svg>
+                        Increase
+                        {% else %}
+                        <svg aria-hidden="true" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                        Decrease
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+            <svg aria-hidden="true" width="64" height="64" class="mx-auto h-16 w-16 text-green-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-gray-500 text-lg">No significant variance alerts for this date</p>
+            <p class="text-sm text-gray-500 mt-2">All projects within normal variation range (&plusmn;30%)</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

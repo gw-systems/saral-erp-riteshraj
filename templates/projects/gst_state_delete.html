@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete GST State{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-6">
+            <svg width="48" height="48" aria-hidden="true" class="h-12 w-12 text-red-600 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <h1 class="text-2xl font-bold text-gray-900">Deactivate GST State</h1>
+        </div>
+
+        <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6">
+            <p class="text-red-800">
+                Are you sure you want to deactivate <strong>{{ state.state_name }} ({{ state.state_code }})</strong>?
+            </p>
+            <p class="text-red-600 text-sm mt-2">
+                GST Number: <span class="font-mono">{{ state.gst_number }}</span>
+            </p>
+            <p class="text-red-600 text-sm mt-3">
+                ⚠️ The state will be deactivated, not deleted. You can reactivate it later by editing.
+            </p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="flex space-x-3">
+                <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
+                    Yes, Deactivate
+                </button>
+                <a href="{% url 'projects:gst_state_list' %}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

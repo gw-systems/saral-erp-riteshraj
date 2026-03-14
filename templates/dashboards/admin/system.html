@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Hub - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">System Hub</h1>
+                <p class="text-gray-600 mt-2">System health, configuration, and master data management</p>
+            </div>
+            <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                <svg aria-hidden="true" width="16" height="16" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Integrations Hub
+            </a>
+        </div>
+
+        <!-- System Health Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gradient-to-br {% if db_healthy %}from-green-400 to-green-500{% else %}from-red-400 to-red-500{% endif %} rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-green-50 uppercase">System Status</p>
+                <p class="text-3xl font-bold mt-2">{{ system_status }}</p>
+                <p class="text-xs text-green-50 mt-1">{{ uptime }} uptime</p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-blue-50 uppercase">Background Jobs</p>
+                <p class="text-3xl font-bold mt-2">{{ active_jobs }}</p>
+                <p class="text-xs text-blue-50 mt-1">Active syncs running</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-purple-50 uppercase">API Health</p>
+                <p class="text-3xl font-bold mt-2">{{ api_health }}%</p>
+                <p class="text-xs text-purple-50 mt-1">Sync success rate</p>
+            </div>
+            <div class="bg-gradient-to-br {% if critical_errors > 0 %}from-red-400 to-red-500{% else %}from-orange-400 to-orange-500{% endif %} rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-orange-50 uppercase">Unresolved Errors</p>
+                <p class="text-3xl font-bold mt-2">{{ critical_errors }}</p>
+                <p class="text-xs text-orange-50 mt-1">{{ warnings }} logged today</p>
+            </div>
+        </div>
+
+        <!-- Master Data & File Management Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- Master Data Management -->
+            <a href="{% url 'dropdown_master_data:master_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-white rounded-xl shadow-md hover:shadow-2xl transition duration-300 overflow-hidden transform hover:-translate-y-1">
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
+                                <svg aria-hidden="true" width="40" height="40" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">Master Data Management</h2>
+                        <p class="text-indigo-100 mt-2 text-sm">Configure dropdown options, categories, and system settings</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Total Entries</span>
+                                <span class="text-sm font-bold text-indigo-600">{{ total_masters }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Active Entries</span>
+                                <span class="text-sm font-bold text-purple-600">{{ active_master_entries }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Last Updated</span>
+                                <span class="text-sm font-bold text-blue-600">{{ master_last_updated }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-indigo-600 font-semibold text-sm group-hover:text-indigo-700">
+                            <span>Open Master Data Manager</span>
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- File Manager / GCS Storage -->
+            <a href="{% url 'accounts:admin_file_manager' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-white rounded-xl shadow-md hover:shadow-2xl transition duration-300 overflow-hidden transform hover:-translate-y-1">
+                    <div class="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
+                                <svg aria-hidden="true" width="40" height="40" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                </svg>
+                            </div>
+                            {% if gcs_bucket_name %}
+                            <span class="bg-white bg-opacity-20 text-white text-xs font-semibold px-2 py-1 rounded-full">GCS Live</span>
+                            {% endif %}
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">File Manager</h2>
+                        <p class="text-teal-100 mt-2 text-sm">
+                            {% if gcs_bucket_name %}{{ gcs_bucket_name }}{% else %}Local storage{% endif %}
+                        </p>
+                    </div>
+                    <div class="p-6">
+                        {% if gcs_error and gcs_error != 'local' %}
+                        <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                            GCS unavailable: {{ gcs_error|truncatechars:60 }}
+                        </div>
+                        {% endif %}
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center justify-between p-3 bg-teal-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Total Files</span>
+                                <span class="text-sm font-bold text-teal-600">{{ total_files }}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-cyan-50 rounded-lg">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700">Storage Used</span>
+                                    <p class="text-xs text-gray-500">No cap &mdash; pay-as-you-go</p>
+                                </div>
+                                <span class="text-sm font-bold text-cyan-600">{{ gcs_used_display|default:storage_used }}</span>
+                            </div>
+                            {% if gcs_bucket_location %}
+                            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Region</span>
+                                <span class="text-sm font-bold text-blue-600">{{ gcs_bucket_location }}</span>
+                            </div>
+                            {% endif %}
+                            {% if gcs_storage_class %}
+                            <div class="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Storage Class</span>
+                                <span class="text-sm font-bold text-indigo-600">{{ gcs_storage_class }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center justify-between text-teal-600 font-semibold text-sm group-hover:text-teal-700">
+                            <span>Open File Manager</span>
+                            <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Sync Activity & Error Logs -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- Recent Sync Activity -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white">Recent Sync Activity</h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-blue-100">{{ total_records_synced|default:0 }} records total</span>
+                        <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="text-xs bg-white text-blue-600 font-semibold px-3 py-1 rounded-full hover:bg-blue-50 transition">View All</a>
+                    </div>
+                </div>
+                <div class="p-4">
+                    {% if recent_syncs %}
+                        <div class="space-y-2">
+                            {% for sync in recent_syncs %}
+                            <div class="flex items-center justify-between p-3 rounded-lg border {% if sync.status == 'completed' %}bg-green-50 border-green-200{% elif sync.status == 'failed' %}bg-red-50 border-red-200{% elif sync.status == 'running' %}bg-blue-50 border-blue-200{% else %}bg-gray-50 border-gray-200{% endif %}">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800">{{ sync.get_integration_display }}</p>
+                                    <p class="text-xs text-gray-500">{{ sync.started_at|date:"M d, H:i" }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full {% if sync.status == 'completed' %}bg-green-100 text-green-700{% elif sync.status == 'failed' %}bg-red-100 text-red-700{% elif sync.status == 'running' %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                                        {{ sync.status|capfirst }}
+                                    </span>
+                                    {% if sync.total_records_synced %}
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ sync.total_records_synced }} records</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 text-gray-500">
+                            <svg aria-hidden="true" width="40" height="40" class="h-10 w-10 mx-auto mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <p class="text-sm">No sync activity yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Error Logs -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white">Error Logs</h3>
+                    {% if critical_errors > 0 %}
+                    <span class="bg-white text-red-600 font-bold text-xs px-2.5 py-1 rounded-full">{{ critical_errors }} unresolved</span>
+                    {% endif %}
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3 mb-4">
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Unresolved</p>
+                                <p class="text-xs text-gray-500">Pending review</p>
+                            </div>
+                            <span class="text-2xl font-bold text-red-600">{{ critical_errors }}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Today</p>
+                                <p class="text-xs text-gray-500">Errors logged today</p>
+                            </div>
+                            <span class="text-2xl font-bold text-orange-600">{{ warnings }}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Total</p>
+                                <p class="text-xs text-gray-500">All time</p>
+                            </div>
+                            <span class="text-2xl font-bold text-blue-600">{{ info_logs }}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <a href="{% url 'accounts:error_list' %}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium">
+                            View Error Log
+                        </a>
+                        {% if critical_errors > 0 %}
+                        <a href="{% url 'accounts:error_list' %}?resolved=false" class="inline-flex items-center px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition text-sm font-medium">
+                            {{ critical_errors }} Unresolved
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- System Monitoring (Cloud Run) -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    System Monitoring
+                </h2>
+                <span class="text-xs text-purple-200 italic">Hosted on Cloud Run &mdash; metrics via Cloud Console</span>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-medium text-green-700">DB Connection</p>
+                            <span class="h-3 w-3 {% if db_healthy %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full animate-pulse"></span>
+                        </div>
+                        <p class="text-2xl font-bold text-green-900">{% if db_healthy %}OK{% else %}Error{% endif %}</p>
+                        <p class="text-xs text-green-600 mt-1">{{ system_status }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <p class="text-xs font-medium text-blue-700">CPU Usage</p>
+                        <p class="text-2xl font-bold text-blue-900">{{ cpu_usage }}</p>
+                        <p class="text-xs text-blue-600 mt-1">Cloud Run managed</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                        <p class="text-xs font-medium text-purple-700">Memory</p>
+                        <p class="text-2xl font-bold text-purple-900">{{ memory_usage }}</p>
+                        <p class="text-xs text-purple-600 mt-1">Cloud Run managed</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-4 border border-teal-200">
+                        <p class="text-xs font-medium text-teal-700">Database</p>
+                        <p class="text-2xl font-bold text-teal-900">Cloud SQL</p>
+                        <p class="text-xs text-teal-600 mt-1">Auto-managed backups</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backups & Maintenance Section -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-4">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    Backups &amp; Maintenance
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                        <p class="text-xs font-medium text-green-700">Last Backup</p>
+                        <p class="text-lg font-bold text-green-900">{{ last_backup_time }}</p>
+                        <p class="text-xs text-green-600 mt-1">{{ last_backup_size }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <p class="text-xs font-medium text-blue-700">Backup Frequency</p>
+                        <p class="text-2xl font-bold text-blue-900">{{ backup_frequency }}</p>
+                        <p class="text-xs text-blue-600 mt-1">Automated schedule</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                        <p class="text-xs font-medium text-purple-700">Backup Retention</p>
+                        <p class="text-2xl font-bold text-purple-900">{{ backup_retention }}</p>
+                        <p class="text-xs text-purple-600 mt-1">Cloud SQL policy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Tasks -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-4">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Maintenance Tasks
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <a href="{% url 'dropdown_master_data:master_list' %}" class="block p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:border-blue-300 transition text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 mx-auto mb-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-900">Master Data</p>
+                        <p class="text-xs text-gray-500 mt-1">Manage dropdown config</p>
+                    </a>
+                    <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="block p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 hover:border-green-300 transition text-center outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 mx-auto mb-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-900">Integrations</p>
+                        <p class="text-xs text-gray-500 mt-1">Manage API credentials</p>
+                    </a>
+                    <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="block p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 hover:border-purple-300 transition text-center outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 mx-auto mb-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-900">Sync Monitor</p>
+                        <p class="text-xs text-gray-500 mt-1">Review sync history</p>
+                    </a>
+                    <a href="{% url 'accounts:error_list' %}" class="block p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200 hover:border-orange-300 transition text-center outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 mx-auto mb-2 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-900">Error Logs</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ critical_errors }} unresolved</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'dropdown_master_data:master_list' %}" class="block bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                <p class="text-xs font-semibold text-indigo-50 uppercase">Master Data</p>
+                <p class="text-2xl font-bold mt-2">Manage</p>
+                <p class="text-xs text-indigo-50 mt-1">Dropdown config</p>
+            </a>
+
+            <a href="{% url 'accounts:admin_file_manager' %}" class="block bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                <p class="text-xs font-semibold text-teal-50 uppercase">File Manager</p>
+                <p class="text-2xl font-bold mt-2">Files</p>
+                <p class="text-xs text-teal-50 mt-1">Manage uploads</p>
+            </a>
+
+            <a href="{% url 'accounts:admin_dashboard_integrations' %}" class="block bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                <p class="text-xs font-semibold text-amber-50 uppercase">Integrations</p>
+                <p class="text-2xl font-bold mt-2">Configure</p>
+                <p class="text-xs text-amber-50 mt-1">API credentials</p>
+            </a>
+
+            <a href="{% url 'accounts:error_list' %}" class="block bg-gradient-to-br from-red-400 to-pink-500 rounded-xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                <p class="text-xs font-semibold text-red-50 uppercase">Error Logs</p>
+                <p class="text-2xl font-bold mt-2">View All</p>
+                <p class="text-xs text-red-50 mt-1">{{ info_logs }} total</p>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

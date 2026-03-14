@@ -1,0 +1,340 @@
+{% load static %}
+
+<!-- PDF Viewer with Signature Field Overlay Component -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-bold text-gray-900">Document Preview with Signature Fields</h2>
+            <p class="text-sm text-gray-600 mt-1">Signature locations are highlighted in blue</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="zoom-out-btn" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                </svg>
+            </button>
+            <span id="zoom-level" class="text-sm font-semibold text-gray-700 min-w-[60px] text-center">100%</span>
+            <button id="zoom-in-btn" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- PDF Canvas Container -->
+    <div class="p-6 bg-gray-100">
+        <div class="relative overflow-auto max-h-[800px] border border-gray-300 rounded-lg bg-gray-200" id="pdf-container">
+            <div id="pdf-canvas-wrapper" class="relative inline-block">
+                <canvas id="pdf-canvas" class="shadow-2xl"></canvas>
+                <!-- Signature field overlays will be added dynamically here -->
+                <div id="signature-overlays"></div>
+            </div>
+        </div>
+
+        <!-- Page Navigation -->
+        <div class="flex items-center justify-between mt-4 bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+            <button id="prev-page-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous
+            </button>
+
+            <span id="page-info" class="text-sm font-semibold text-gray-700">
+                Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+            </span>
+
+            <button id="next-page-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Next
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-semibold text-blue-900 mb-2">Legend</h4>
+                    <div class="flex flex-wrap gap-4 text-sm text-blue-800">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-6 bg-blue-500 bg-opacity-30 border-2 border-blue-600 rounded"></div>
+                            <span>Director Signature</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-6 bg-green-500 bg-opacity-30 border-2 border-green-600 rounded"></div>
+                            <span>Client Signature</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script>
+// PDF Viewer with Signature Overlay Script
+(function() {
+    'use strict';
+
+    // Configuration
+    const PDF_URL = "{{ pdf_url }}";
+    const SIGNATURE_FIELDS = {{ signature_fields_json|safe }};
+
+    // State
+    let pdfDoc = null;
+    let currentPage = 1;
+    let pageRendering = false;
+    let pageNumPending = null;
+    let scale = 1.5;
+
+    // Elements
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const pdfContainer = document.getElementById('pdf-container');
+    const canvasWrapper = document.getElementById('pdf-canvas-wrapper');
+    const overlaysContainer = document.getElementById('signature-overlays');
+
+    // Configure PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    /**
+     * Render a page of the PDF
+     */
+    function renderPage(num) {
+        pageRendering = true;
+
+        pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({ scale: scale });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            // Update wrapper dimensions for absolute positioning of overlays
+            canvasWrapper.style.width = viewport.width + 'px';
+            canvasWrapper.style.height = viewport.height + 'px';
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+
+            const renderTask = page.render(renderContext);
+
+            renderTask.promise.then(function() {
+                pageRendering = false;
+
+                // Render signature field overlays for this page
+                renderSignatureOverlays(num, viewport.width, viewport.height);
+
+                if (pageNumPending !== null) {
+                    renderPage(pageNumPending);
+                    pageNumPending = null;
+                }
+            });
+        });
+
+        // Update page info
+        document.getElementById('current-page').textContent = num;
+    }
+
+    /**
+     * Queue page rendering if another page is being rendered
+     */
+    function queueRenderPage(num) {
+        if (pageRendering) {
+            pageNumPending = num;
+        } else {
+            renderPage(num);
+        }
+    }
+
+    /**
+     * Navigate to previous page
+     */
+    function onPrevPage() {
+        if (currentPage <= 1) {
+            return;
+        }
+        currentPage--;
+        queueRenderPage(currentPage);
+        updateNavigationButtons();
+    }
+
+    /**
+     * Navigate to next page
+     */
+    function onNextPage() {
+        if (currentPage >= pdfDoc.numPages) {
+            return;
+        }
+        currentPage++;
+        queueRenderPage(currentPage);
+        updateNavigationButtons();
+    }
+
+    /**
+     * Update navigation button states
+     */
+    function updateNavigationButtons() {
+        document.getElementById('prev-page-btn').disabled = currentPage <= 1;
+        document.getElementById('next-page-btn').disabled = currentPage >= pdfDoc.numPages;
+    }
+
+    /**
+     * Zoom in
+     */
+    function zoomIn() {
+        scale = Math.min(scale + 0.25, 3.0);
+        document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+        queueRenderPage(currentPage);
+    }
+
+    /**
+     * Zoom out
+     */
+    function zoomOut() {
+        scale = Math.max(scale - 0.25, 0.5);
+        document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+        queueRenderPage(currentPage);
+    }
+
+    /**
+     * Render signature field overlays on the current page
+     */
+    function renderSignatureOverlays(pageNum, pageWidth, pageHeight) {
+        // Clear existing overlays
+        overlaysContainer.innerHTML = '';
+
+        // Filter signature fields for the current page
+        const fieldsOnPage = SIGNATURE_FIELDS.filter(field => {
+            return field.page === pageNum || field.page === pageNum - 1; // Adobe uses 0-indexed pages
+        });
+
+        fieldsOnPage.forEach(field => {
+            const overlay = document.createElement('div');
+            overlay.className = 'signature-field-overlay';
+
+            // Parse location data
+            const location = field.locations ? field.locations[0] : field;
+
+            // Calculate position (Adobe uses points, convert to pixels)
+            // Adobe coordinates: bottom-left origin, we need top-left
+            const left = (location.left / 100) * pageWidth;
+            const top = pageHeight - ((location.top / 100) * pageHeight) - ((location.height / 100) * pageHeight);
+            const width = (location.width / 100) * pageWidth;
+            const height = (location.height / 100) * pageHeight;
+
+            // Determine color based on recipient
+            let borderColor = 'border-blue-600';
+            let bgColor = 'bg-blue-500';
+            let label = 'Signature';
+
+            if (field.recipientIndex === 0 || field.name?.includes('director') || field.name?.includes('Director')) {
+                borderColor = 'border-blue-600';
+                bgColor = 'bg-blue-500';
+                label = 'Director Signature';
+            } else {
+                borderColor = 'border-green-600';
+                bgColor = 'bg-green-500';
+                label = 'Client Signature';
+            }
+
+            overlay.style.cssText = `
+                position: absolute;
+                left: ${left}px;
+                top: ${top}px;
+                width: ${width}px;
+                height: ${height}px;
+                border: 2px dashed;
+                background-color: rgba(59, 130, 246, 0.15);
+                border-radius: 4px;
+                pointer-events: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+
+            overlay.classList.add(borderColor);
+
+            // Add label inside the box
+            const labelDiv = document.createElement('div');
+            labelDiv.className = `text-xs font-bold ${bgColor} bg-opacity-80 text-white px-2 py-1 rounded shadow-sm`;
+            labelDiv.textContent = label;
+            overlay.appendChild(labelDiv);
+
+            overlaysContainer.appendChild(overlay);
+        });
+    }
+
+    /**
+     * Initialize PDF viewer
+     */
+    function init() {
+        // Load the PDF document
+        const loadingTask = pdfjsLib.getDocument(PDF_URL);
+
+        loadingTask.promise.then(function(pdf) {
+            pdfDoc = pdf;
+            document.getElementById('total-pages').textContent = pdf.numPages;
+
+            // Initial render
+            renderPage(currentPage);
+            updateNavigationButtons();
+        }).catch(function(error) {
+            console.error('Error loading PDF:', error);
+            pdfContainer.innerHTML = '<div class="p-8 text-center text-red-600"><p class="font-semibold">Failed to load PDF</p><p class="text-sm mt-2">' + error.message + '</p></div>';
+        });
+
+        // Event listeners
+        document.getElementById('prev-page-btn').addEventListener('click', onPrevPage);
+        document.getElementById('next-page-btn').addEventListener('click', onNextPage);
+        document.getElementById('zoom-in-btn').addEventListener('click', zoomIn);
+        document.getElementById('zoom-out-btn').addEventListener('click', zoomOut);
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+<style>
+#pdf-canvas-wrapper {
+    position: relative;
+    margin: 0 auto;
+    background: white;
+}
+
+#signature-overlays {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.signature-field-overlay {
+    animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+</style>

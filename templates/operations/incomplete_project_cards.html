@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Incomplete Project Cards - Saral ERP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Incomplete Project Cards ({{ total_count }})</h1>
+    </div>
+
+    <!-- Search & Filter Section -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search by Project Code -->
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Project Code</label>
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ search_query }}"
+                        placeholder="Enter project code..."
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+
+                <!-- Filter by Missing Item -->
+                <div>
+                    <label for="missing_item" class="block text-sm font-medium text-gray-700 mb-1">Filter by Missing Item</label>
+                    <select
+                        id="missing_item"
+                        name="missing_item"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">All Missing Items</option>
+                        {% for item in all_missing_items %}
+                        <option value="{{ item }}" {% if missing_item_filter == item %}selected{% endif %}>
+                            {{ item }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-end space-x-2">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    >
+                        <svg class="inline h-4 w-4 mr-1" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search
+                    </button>
+                    <a
+                        href="{% url 'projects:incomplete_project_cards' %}"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+                    >
+                        Clear
+                    </a>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            {% if search_query or missing_item_filter %}
+            <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                <span class="text-sm text-gray-600">Active filters:</span>
+                {% if search_query %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Project: "{{ search_query }}"
+                    <a href="?{% if missing_item_filter %}missing_item={{ missing_item_filter }}{% endif %}" class="ml-1 text-blue-600 hover:text-blue-800 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">&times;</a>
+                </span>
+                {% endif %}
+                {% if missing_item_filter %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    Missing: "{{ missing_item_filter }}"
+                    <a href="?{% if search_query %}search={{ search_query }}{% endif %}" class="ml-1 text-orange-600 hover:text-orange-800 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">&times;</a>
+                </span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Table -->
+    {% if incomplete_projects %}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Code</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Missing Items</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?sort=created_at" class="hover:text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                            Created Date
+                            <svg class="inline h-4 w-4 ml-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?sort=updated_at" class="hover:text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                            Modified Date
+                            <svg class="inline h-4 w-4 ml-0.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for item in incomplete_projects %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a href="{% url 'projects:project_detail' item.project.project_id %}"
+                           class="text-blue-600 hover:text-blue-800 font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                            {{ item.project.project_code }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-900">{{ item.missing_items|join:", " }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ item.project.created_at|date:"d M Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ item.project.updated_at|date:"d M Y" }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-500" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">All project cards are complete!</h3>
+        <p class="mt-1 text-sm text-gray-500">No incomplete projects found.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

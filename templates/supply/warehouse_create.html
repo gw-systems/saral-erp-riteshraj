@@ -1,0 +1,1474 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Warehouse{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                        Add New Warehouse
+                    </h1>
+                    <p class="mt-2 text-gray-600">Complete all sections to create warehouse</p>
+                </div>
+                <a href="{% url 'supply:warehouse_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Progress Summary (for new warehouses) -->
+        {% if not warehouse %}
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Warehouse Code Auto-Generated</h3>
+                        <p class="text-sm text-gray-600 mt-1">Format: <span class="font-mono font-semibold text-blue-600">STATE-CITY-LOCATION-NNN</span> (e.g., MH-MUM-Bhiwandi-001)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Main Form -->
+        <form method="post" enctype="multipart/form-data" id="warehouseForm" class="space-y-6">
+            {% csrf_token %}
+            {{ contact_formset.management_form }}
+
+            <!-- Error Messages -->
+            {% if form.non_field_errors or profile_form.non_field_errors or capacity_form.non_field_errors or commercial_form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                <div class="flex">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Please correct the errors below</h3>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <!-- Section 1: Identity & Location -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 border-b border-blue-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Identity & Location</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">Required</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Vendor -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.vendor_code.label }} <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.vendor_code }}
+                            {% if form.vendor_code.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.vendor_code.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Select the vendor who owns/operates this warehouse</p>
+                        </div>
+
+                        <!-- Warehouse Name -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.warehouse_name.label }}
+                            </label>
+                            {{ form.warehouse_name }}
+                            {% if form.warehouse_name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.warehouse_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Digipin -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.warehouse_digipin.label }}
+                            </label>
+                            {{ form.warehouse_digipin }}
+                            {% if form.warehouse_digipin.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.warehouse_digipin.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Digital pin code for location identification</p>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.warehouse_location_id.label }} <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.warehouse_location_id }}
+                            {% if form.warehouse_location_id.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.warehouse_location_id.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">City and state where warehouse is located</p>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.warehouse_address.label }} <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.warehouse_address }}
+                            {% if form.warehouse_address.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.warehouse_address.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Pincode -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.warehouse_pincode.label }}
+                            </label>
+                            {{ form.warehouse_pincode }}
+                            {% if form.warehouse_pincode.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.warehouse_pincode.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Google Maps Link -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.google_map_location.label }}
+                            </label>
+                            {{ form.google_map_location }}
+                            {% if form.google_map_location.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.google_map_location.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Paste Google Maps link for navigation</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Owner & Contact Information -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 border-b border-orange-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Owner & Contact Information</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">Optional</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <!-- Owner Details -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                            </svg>
+                            Warehouse Owner Details
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Owner Name -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    {{ form.warehouse_owner_name.label }}
+                                </label>
+                                {{ form.warehouse_owner_name }}
+                                {% if form.warehouse_owner_name.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.warehouse_owner_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Owner Contact -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    {{ form.warehouse_owner_contact.label }}
+                                </label>
+                                {{ form.warehouse_owner_contact }}
+                                {% if form.warehouse_owner_contact.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.warehouse_owner_contact.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Warehouse Contacts -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                                </svg>
+                                Warehouse Contacts
+                            </h3>
+                            <button type="button" onclick="addContactForm()" 
+                                    class="inline-flex items-center px-3 py-1.5 border border-orange-500 rounded-lg text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 transition">
+                                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Add Contact
+                            </button>
+                        </div>
+
+                        <div id="contact-formset" class="space-y-4">
+                            {% for form in contact_formset %}
+                            <div class="contact-form border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition relative">
+                                {{ form.id }}
+                                {% if form.DELETE %}
+                                    {{ form.DELETE }}
+                                {% endif %}
+                                
+                                <button type="button" onclick="removeContactForm(this)" 
+                                        class="absolute top-2 right-2 text-red-500 hover:text-red-700 transition">
+                                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                                        {{ form.warehouse_contact_person }}
+                                        {% if form.warehouse_contact_person.errors %}
+                                            <p class="mt-1 text-xs text-red-600">{{ form.warehouse_contact_person.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                                        {{ form.warehouse_contact_designation }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                                        {{ form.warehouse_contact_department }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        {{ form.warehouse_contact_phone }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        {{ form.warehouse_contact_email }}
+                                    </div>
+                                    <div class="flex items-center space-x-4 pt-6">
+                                        <label class="flex items-center">
+                                            {{ form.warehouse_contact_is_primary }}
+                                            <span class="ml-2 text-sm text-gray-700">Primary Contact</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            {{ form.warehouse_contact_is_active }}
+                                            <span class="ml-2 text-sm text-gray-700">Active</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <!-- Contact Empty Form Template -->
+                            <div class="contact-form empty-form hidden p-6 bg-white border-2 border-dashed border-gray-300 rounded-xl">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Person</label>
+                                        {{ contact_formset.empty_form.warehouse_contact_person }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Designation</label>
+                                        {{ contact_formset.empty_form.warehouse_contact_designation }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Department</label>
+                                        {{ contact_formset.empty_form.warehouse_contact_department }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                                        {{ contact_formset.empty_form.warehouse_contact_phone }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                        {{ contact_formset.empty_form.warehouse_contact_email }}
+                                    </div>
+                                    <div class="flex items-center space-x-4 pt-6">
+                                        <label class="flex items-center">
+                                            {{ contact_formset.empty_form.warehouse_contact_is_primary }}
+                                            <span class="ml-2 text-sm font-medium text-gray-700">Primary Contact</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            {{ contact_formset.empty_form.warehouse_contact_is_active }}
+                                            <span class="ml-2 text-sm font-medium text-gray-700">Active</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {{ contact_formset.empty_form.id }}
+                                <button type="button" onclick="removeContactForm(this)"
+                                        class="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm font-medium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Remove Contact
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Section 3: Profile & Classification -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 border-b border-purple-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Profile & Classification</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">Optional</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Warehouse Grade -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ profile_form.warehouse_grade.label }}
+                            </label>
+                            {{ profile_form.warehouse_grade }}
+                            {% if profile_form.warehouse_grade.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.warehouse_grade.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Property Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ profile_form.property_type.label }}
+                            </label>
+                            {{ profile_form.property_type }}
+                            {% if profile_form.property_type.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.property_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Business Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ profile_form.business_type.label }}
+                            </label>
+                            {{ profile_form.business_type }}
+                            {% if profile_form.business_type.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.business_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Fire Safety Checkbox -->
+                        <div class="flex items-center pt-6">
+                            {{ profile_form.fire_safety_compliant }}
+                            <label class="ml-2 text-sm font-medium text-gray-700">
+                                {{ profile_form.fire_safety_compliant.label }}
+                            </label>
+                        </div>
+
+                        <!-- Security Features -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ profile_form.security_features.label }}
+                            </label>
+                            {{ profile_form.security_features }}
+                            {% if profile_form.security_features.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.security_features.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">CCTV, guards, access control, perimeter fencing, etc.</p>
+                        </div>
+
+                        <!-- Certifications -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ profile_form.certifications.label }}
+                            </label>
+                            {{ profile_form.certifications }}
+                            {% if profile_form.certifications.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.certifications.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">ISO certifications, food safety, quality standards, etc.</p>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ profile_form.remarks.label }}
+                            </label>
+                            {{ profile_form.remarks }}
+                            {% if profile_form.remarks.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.remarks.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- Section 4: Capacity & Operations -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 border-b border-green-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Capacity & Operations</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">Optional</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        <!-- Total Area -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.total_area_sqft.label }}
+                            </label>
+                            <div class="relative">
+                                {{ capacity_form.total_area_sqft }}
+                                <span class="absolute right-3 top-2.5 text-sm text-gray-500">sqft</span>
+                            </div>
+                            {% if capacity_form.total_area_sqft.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.total_area_sqft.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Capacity Unit Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.capacity_unit_type.label }}
+                            </label>
+                            {{ capacity_form.capacity_unit_type }}
+                            {% if capacity_form.capacity_unit_type.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.capacity_unit_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Total Capacity -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.total_capacity.label }}
+                            </label>
+                            {{ capacity_form.total_capacity }}
+                            {% if capacity_form.total_capacity.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.total_capacity.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Available Capacity -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.available_capacity.label }}
+                            </label>
+                            {{ capacity_form.available_capacity }}
+                            {% if capacity_form.available_capacity.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.available_capacity.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Pallets Available -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.pallets_available.label }}
+                            </label>
+                            {{ capacity_form.pallets_available }}
+                            {% if capacity_form.pallets_available.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.pallets_available.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Forklifts Count -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.forklifts_count.label }}
+                            </label>
+                            {{ capacity_form.forklifts_count }}
+                            {% if capacity_form.forklifts_count.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.forklifts_count.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Loading Bays -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.loading_bays_count.label }}
+                            </label>
+                            {{ capacity_form.loading_bays_count }}
+                            {% if capacity_form.loading_bays_count.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.loading_bays_count.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Operating Hours -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.operating_hours.label }}
+                            </label>
+                            {{ capacity_form.operating_hours }}
+                            {% if capacity_form.operating_hours.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.operating_hours.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">e.g., 9:00 AM - 6:00 PM</p>
+                        </div>
+
+                        <!-- Operational Features -->
+                        <div class="md:col-span-3 bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Operational Features</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    {{ capacity_form.racking_available }}
+                                    <span class="text-sm text-gray-700">Racking Available</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    {{ capacity_form.is_24x7 }}
+                                    <span class="text-sm text-gray-700">24x7 Operations</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    {{ capacity_form.temperature_controlled }}
+                                    <span class="text-sm text-gray-700">Temperature Controlled</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    {{ capacity_form.hazmat_supported }}
+                                    <span class="text-sm text-gray-700">Hazmat Supported</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Racking Details -->
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ capacity_form.racking_details.label }}
+                            </label>
+                            {{ capacity_form.racking_details }}
+                            {% if capacity_form.racking_details.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ capacity_form.racking_details.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Type of racking, height, load capacity, etc.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Commercial & Contracts -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 border-b border-indigo-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Commercial & Contracts</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">Optional</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- SLA Status -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.sla_status.label }}
+                            </label>
+                            {{ commercial_form.sla_status }}
+                            {% if commercial_form.sla_status.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.sla_status.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Rate Unit Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.rate_unit_type.label }}
+                            </label>
+                            {{ commercial_form.rate_unit_type }}
+                            {% if commercial_form.rate_unit_type.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.rate_unit_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Indicative Rate -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.indicative_rate.label }}
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2.5 text-gray-500">₹</span>
+                                <div class="pl-6">
+                                    {{ commercial_form.indicative_rate }}
+                                </div>
+                            </div>
+                            {% if commercial_form.indicative_rate.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.indicative_rate.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Minimum Commitment -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.minimum_commitment_months.label }}
+                            </label>
+                            <div class="relative">
+                                {{ commercial_form.minimum_commitment_months }}
+                                <span class="absolute right-3 top-2.5 text-sm text-gray-500">months</span>
+                            </div>
+                            {% if commercial_form.minimum_commitment_months.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.minimum_commitment_months.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Security Deposit -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.security_deposit.label }}
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2.5 text-gray-500">₹</span>
+                                <div class="pl-6">
+                                    {{ commercial_form.security_deposit }}
+                                </div>
+                            </div>
+                            {% if commercial_form.security_deposit.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.security_deposit.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notice Period -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.notice_period_days.label }}
+                            </label>
+                            <div class="relative">
+                                {{ commercial_form.notice_period_days }}
+                                <span class="absolute right-3 top-2.5 text-sm text-gray-500">days</span>
+                            </div>
+                            {% if commercial_form.notice_period_days.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.notice_period_days.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contract Start Date -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.contract_start_date.label }}
+                            </label>
+                            {{ commercial_form.contract_start_date }}
+                            {% if commercial_form.contract_start_date.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.contract_start_date.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contract End Date -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.contract_end_date.label }}
+                            </label>
+                            {{ commercial_form.contract_end_date }}
+                            {% if commercial_form.contract_end_date.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.contract_end_date.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Escalation Percentage -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.escalation_percentage.label }}
+                            </label>
+                            <div class="relative">
+                                {{ commercial_form.escalation_percentage }}
+                                <span class="absolute right-3 top-2.5 text-sm text-gray-500">%</span>
+                            </div>
+                            {% if commercial_form.escalation_percentage.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.escalation_percentage.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Payment Terms -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.payment_terms.label }}
+                            </label>
+                            {{ commercial_form.payment_terms }}
+                            {% if commercial_form.payment_terms.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.payment_terms.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">e.g., Net 30, Advance payment, Monthly billing</p>
+                        </div>
+
+                        <!-- Escalation Terms -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ commercial_form.escalation_terms.label }}
+                            </label>
+                            {{ commercial_form.escalation_terms }}
+                            {% if commercial_form.escalation_terms.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.escalation_terms.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Terms and conditions for rate escalation</p>
+                        </div>
+
+                        <!-- Commercial Remarks -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Additional Remarks
+                            </label>
+                            {{ commercial_form.remarks }}
+                            {% if commercial_form.remarks.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ commercial_form.remarks.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- Section 6: Documents & Photos -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-teal-500 to-teal-600 border-b border-teal-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                                <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Documents & Photos</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">Optional</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    
+                    <!-- Documents Section -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                            </svg>
+                            Legal & Compliance Documents
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4">Upload warehouse legal documents (PDF, JPG, PNG - Max 5MB per file)</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Electricity Bill -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                                    </svg>
+                                    Electricity Bill
+                                </label>
+                                {{ document_form.warehouse_electricity_bill }}
+                                {% if warehouse and warehouse.documents.warehouse_electricity_bill %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Property Tax Receipt -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Property Tax Receipt
+                                </label>
+                                {{ document_form.warehouse_property_tax_receipt }}
+                                {% if warehouse and warehouse.documents.warehouse_property_tax_receipt %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- POC Aadhar -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    POC Aadhar Card
+                                </label>
+                                {{ document_form.warehouse_poc_aadhar }}
+                                {% if warehouse and warehouse.documents.warehouse_poc_aadhar %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- POC PAN -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    POC PAN Card
+                                </label>
+                                {{ document_form.warehouse_poc_pan }}
+                                {% if warehouse and warehouse.documents.warehouse_poc_pan %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- NOC from Owner -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
+                                    </svg>
+                                    NOC from Owner
+                                </label>
+                                {{ document_form.warehouse_noc_owner }}
+                                {% if warehouse and warehouse.documents.warehouse_noc_owner %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Owner PAN -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Owner PAN Card
+                                </label>
+                                {{ document_form.warehouse_owner_pan }}
+                                {% if warehouse and warehouse.documents.warehouse_owner_pan %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Owner Aadhar -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Owner Aadhar Card
+                                </label>
+                                {{ document_form.warehouse_owner_aadhar }}
+                                {% if warehouse and warehouse.documents.warehouse_owner_aadhar %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- NOC from Vendor -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
+                                    </svg>
+                                    NOC from Vendor
+                                </label>
+                                {{ document_form.warehouse_noc_vendor }}
+                                {% if warehouse and warehouse.documents.warehouse_noc_vendor %}
+                                    <p class="mt-1 text-xs text-green-600 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true" class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> File uploaded</p>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Legal & Compliance Documents Section -->
+                    <div class="border-t border-gray-200 pt-8">
+                        <div class="flex items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                </svg>
+                                Legal & Compliance Documents
+                            </h3>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-6">Upload multiple documents for each category (PDF, DOC, DOCX - Max 10MB per file)</p>
+
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- Rent Agreements (Owner & Vendor) -->
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Rent Agreement(s) between Owner & Vendor
+                                </label>
+                                <input
+                                    type="file"
+                                    name="rent_agreements"
+                                    id="rent_agreements"
+                                    multiple
+                                    accept=".pdf,.doc,.docx"
+                                    class="block w-full text-sm text-gray-900 border border-purple-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-purple-500 p-3"
+                                >
+                                <p class="mt-2 text-xs text-gray-600">Select multiple files if you have more than one agreement</p>
+                                <div id="rent-agreements-preview" class="mt-3 space-y-2 hidden"></div>
+                            </div>
+
+                            <!-- SLA Documents (Vendor & Godamwale) -->
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/>
+                                    </svg>
+                                    SLA Document(s) between Vendor & Godamwale
+                                </label>
+                                <input
+                                    type="file"
+                                    name="sla_documents"
+                                    id="sla_documents"
+                                    multiple
+                                    accept=".pdf,.doc,.docx"
+                                    class="block w-full text-sm text-gray-900 border border-purple-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-purple-500 p-3"
+                                >
+                                <p class="mt-2 text-xs text-gray-600">Upload service level agreement documents</p>
+                                <div id="sla-documents-preview" class="mt-3 space-y-2 hidden"></div>
+                            </div>
+
+                            <!-- Other Legal Documents -->
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                    <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Other Legal & Compliance Documents
+                                </label>
+                                <input
+                                    type="file"
+                                    name="other_legal_docs"
+                                    id="other_legal_docs"
+                                    multiple
+                                    accept=".pdf,.doc,.docx"
+                                    class="block w-full text-sm text-gray-900 border border-purple-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-purple-500 p-3"
+                                >
+                                <p class="mt-2 text-xs text-gray-600">Upload any other compliance or legal documents</p>
+                                <div id="other-legal-docs-preview" class="mt-3 space-y-2 hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photos & Videos Section -->
+                    <div class="border-t border-gray-200 pt-8">
+                        <div class="flex items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                </svg>
+                                Warehouse Photos & Videos
+                            </h3>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-4">Select multiple images (JPG, PNG) or videos (MP4) - Max 10MB per file</p>
+
+                        <!-- Multi-file Upload Input -->
+                        <div class="relative">
+                            <input
+                                type="file"
+                                name="warehouse_files"
+                                id="warehouse_files"
+                                multiple
+                                accept="image/*,video/*"
+                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-teal-500 p-3"
+                            >
+                            <p class="mt-2 text-xs text-gray-500">
+                                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                Hold Ctrl/Cmd to select multiple files at once (Optional - can also upload later)
+                            </p>
+                        </div>
+
+                        <!-- File Preview -->
+                        <div id="warehouse-file-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3 hidden"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Active Status -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div class="px-6 py-4 bg-gradient-to-r from-gray-700 to-gray-800 border-b border-gray-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                            <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Status</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <label class="flex items-center cursor-pointer">
+                        {{ form.warehouse_is_active }}
+                        <span class="ml-3 text-sm font-medium text-gray-700">{{ form.warehouse_is_active.label }}</span>
+                    </label>
+                    <p class="mt-2 text-sm text-gray-500">Inactive warehouses will not be available for new project assignments</p>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Fields marked with <span class="text-red-500">*</span> are required</span>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <a href="{% url 'supply:warehouse_list' %}" 
+                           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                            <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Cancel
+                        </a>
+                        
+                        <button type="submit" 
+                                class="inline-flex items-center px-8 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition transform hover:-translate-y-0.5">
+                            <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Create Warehouse
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<!-- JavaScript for Dynamic Forms -->
+<script>
+// Contact Formset Management
+let contactFormIndex = {{ contact_formset.total_form_count }};
+
+function addContactForm() {
+    const formsetContainer = document.getElementById('contact-formset');
+    const totalForms = document.getElementById('id_contacts-TOTAL_FORMS');
+    
+    if (!formsetContainer || !totalForms) {
+        console.error('Contact formset not found');
+        return;
+    }
+    
+    // Get the empty form template
+    const emptyForm = document.querySelector('.contact-form.empty-form');
+    if (!emptyForm) {
+        console.error('Empty form template not found');
+        return;
+    }
+    
+    // Clone and update
+    const newForm = emptyForm.cloneNode(true);
+    newForm.classList.remove('empty-form', 'hidden');
+    
+    // Replace __prefix__ with actual index
+    newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, contactFormIndex);
+    
+    // Append before the empty form
+    formsetContainer.insertBefore(newForm, emptyForm);
+    
+    // Update counters
+    contactFormIndex++;
+    totalForms.value = contactFormIndex;
+}
+
+function removeContactForm(button) {
+    const form = button.closest('.contact-form');
+    const formset = document.getElementById('contact-formset');
+    
+    if (!form || !formset) return;
+    
+    const totalForms = formset.querySelectorAll('.contact-form').length;
+    
+    if (totalForms <= 1) {
+        alert('At least one contact form must remain');
+        return;
+    }
+    
+    // Check if this is an existing contact (has ID)
+    const idInput = form.querySelector('input[name$="-id"]');
+    
+    if (idInput && idInput.value) {
+        // Mark for deletion
+        let deleteInput = form.querySelector('input[name$="-DELETE"]');
+        if (!deleteInput) {
+            deleteInput = document.createElement('input');
+            deleteInput.type = 'hidden';
+            deleteInput.name = idInput.name.replace('-id', '-DELETE');
+            form.appendChild(deleteInput);
+        }
+        deleteInput.value = '1';
+        form.style.display = 'none';
+    } else {
+        // Just remove it
+        form.remove();
+        
+        // Update TOTAL_FORMS
+        const totalFormsInput = document.querySelector('input[name="contacts-TOTAL_FORMS"]');
+        if (totalFormsInput) {
+            totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+        }
+    }
+}
+
+// Photo Formset Management
+// Warehouse file preview
+document.getElementById('warehouse_files').addEventListener('change', function(e) {
+    const preview = document.getElementById('warehouse-file-preview');
+    const files = e.target.files;
+
+    if (files.length === 0) {
+        preview.classList.add('hidden');
+        return;
+    }
+
+    preview.innerHTML = '';
+    preview.classList.remove('hidden');
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const div = document.createElement('div');
+        div.className = 'flex items-center space-x-2 p-3 bg-teal-50 rounded-lg border border-teal-200';
+
+        const icon = file.type.startsWith('image/') ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.361a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>';
+
+        div.innerHTML = `
+            <span class="flex-shrink-0">${icon}</span>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">${file.name}</p>
+                <p class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+            </div>
+        `;
+
+        preview.appendChild(div);
+    }
+});
+
+// Legal & Compliance Documents Preview
+function setupDocumentPreview(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+
+    if (!input || !preview) return;
+
+    input.addEventListener('change', function(e) {
+        const files = e.target.files;
+
+        if (files.length === 0) {
+            preview.classList.add('hidden');
+            preview.innerHTML = '';
+            return;
+        }
+
+        preview.innerHTML = '';
+        preview.classList.remove('hidden');
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2 p-2 bg-white rounded border border-purple-200';
+
+            // Determine file type icon
+            let icon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+            if (file.type === 'application/pdf') {
+                icon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>';
+            } else if (file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
+                icon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+            }
+
+            div.innerHTML = `
+                <span class="flex-shrink-0">${icon}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-medium text-gray-900 truncate">${file.name}</p>
+                    <p class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+            `;
+
+            preview.appendChild(div);
+        }
+    });
+}
+
+// Initialize all legal document previews
+setupDocumentPreview('rent_agreements', 'rent-agreements-preview');
+setupDocumentPreview('sla_documents', 'sla-documents-preview');
+setupDocumentPreview('other_legal_docs', 'other-legal-docs-preview');
+
+// Form Validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('warehouseForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('border-red-500');
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                alert('Please fill in all required fields marked with *');
+            }
+        });
+    }
+});
+</script>
+
+<!-- Styles -->
+<style>
+/* Form field styling */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="date"],
+input[type="file"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background-color: white;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    ring: 2px;
+    ring-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 0.25rem;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+input[type="file"] {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* File input custom styling */
+input[type="file"]::file-selector-button {
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: 0.75rem;
+    transition: all 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: linear-gradient(to right, #0f766e, #0d9488);
+    transform: translateY(-1px);
+}
+
+/* Modern file upload button for warehouse photos */
+input#warehouse_files::file-selector-button {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(to right, #14b8a6, #0d9488);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 0.75rem;
+    transition: all 0.2s;
+}
+
+input#warehouse_files::file-selector-button:hover {
+    background: linear-gradient(to right, #0f766e, #0d9488);
+    transform: translateY(-1px);
+}
+
+/* Legal document file inputs */
+input#rent_agreements::file-selector-button,
+input#sla_documents::file-selector-button,
+input#other_legal_docs::file-selector-button {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(to right, #9333ea, #a855f7);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 0.75rem;
+    transition: all 0.2s;
+}
+
+input#rent_agreements::file-selector-button:hover,
+input#sla_documents::file-selector-button:hover,
+input#other_legal_docs::file-selector-button:hover {
+    background: linear-gradient(to right, #7e22ce, #9333ea);
+    transform: translateY(-1px);
+}
+
+/* Error styling */
+.border-red-500 {
+    border-color: #ef4444 !important;
+}
+
+/* Animation for adding forms */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.contact-form,
+.photo-form {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading state */
+button[type="submit"]:active {
+    transform: scale(0.98);
+}
+</style>
+
+<!-- Choices.js: searchable dropdowns for Vendor and Location -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var vendorEl = document.getElementById('id_vendor_code');
+    if (vendorEl) {
+        new Choices(vendorEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Search vendor...',
+            itemSelectText: '',
+            shouldSort: false,
+            placeholder: true,
+            placeholderValue: 'Select Vendor'
+        });
+    }
+
+    var locationEl = document.getElementById('id_warehouse_location_id');
+    if (locationEl) {
+        new Choices(locationEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Search location...',
+            itemSelectText: '',
+            shouldSort: false,
+            placeholder: true,
+            placeholderValue: 'Select Location'
+        });
+    }
+});
+</script>
+<style>
+/* Choices.js overrides to match Tailwind form styling */
+.choices__inner {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    padding: 0.5rem 0.75rem;
+    min-height: 42px;
+    font-size: 0.875rem;
+}
+.choices__input {
+    background-color: #fff;
+    font-size: 0.875rem;
+}
+.choices__list--dropdown {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    z-index: 9999;
+}
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #eef2ff;
+    color: #1e40af;
+}
+.choices[data-type*=select-one] .choices__inner {
+    padding-bottom: 0.5rem;
+}
+.choices[data-type*=select-one]::after {
+    right: 12px;
+}
+</style>
+
+{% endblock %}

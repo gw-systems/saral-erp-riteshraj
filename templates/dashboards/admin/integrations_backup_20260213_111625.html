@@ -1,0 +1,1159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Integrations Hub - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2"><svg class="w-8 h-8" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg> Integrations Hub</h1>
+            <p class="text-gray-600 mt-1">Manage credentials, monitor health, and view sync activity across all integrations</p>
+        </div>
+        <a href="{% url 'accounts:admin_dashboard_home' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition">
+            ← Back to Admin
+        </a>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md p-4 text-white">
+            <p class="text-xs font-semibold text-blue-50 uppercase tracking-wide">Gmail Leads</p>
+            <p class="text-3xl font-bold mt-1">{{ gmail_leads_count }}</p>
+            <p class="text-xs text-blue-50 mt-1">{{ gmail_leads_status }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-md p-4 text-white">
+            <p class="text-xs font-semibold text-red-50 uppercase tracking-wide">Google Ads</p>
+            <p class="text-3xl font-bold mt-1">{{ google_ads_count }}</p>
+            <p class="text-xs text-red-50 mt-1">{{ google_ads_status }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl shadow-md p-4 text-white">
+            <p class="text-xs font-semibold text-orange-50 uppercase tracking-wide">Callyzer</p>
+            <p class="text-3xl font-bold mt-1">{{ callyzer_calls_count }}</p>
+            <p class="text-xs text-orange-50 mt-1">{{ callyzer_status }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl shadow-md p-4 text-white">
+            <p class="text-xs font-semibold text-indigo-50 uppercase tracking-wide">Bigin CRM</p>
+            <p class="text-3xl font-bold mt-1">{{ bigin_synced_count }}</p>
+            <p class="text-xs text-indigo-50 mt-1">{{ bigin_status }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-md p-4 text-white">
+            <p class="text-xs font-semibold text-green-50 uppercase tracking-wide">TallySync</p>
+            <p class="text-3xl font-bold mt-1">{{ tally_synced_count }}</p>
+            <p class="text-xs text-green-50 mt-1">{{ tally_status }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-4 text-white">
+            <p class="text-xs font-semibold text-purple-50 uppercase tracking-wide">Total Records</p>
+            <p class="text-3xl font-bold mt-1">{{ total_api_calls }}</p>
+            <p class="text-xs text-purple-50 mt-1">All Integrations</p>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6" x-data="{ activeTab: 'overview' }">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px overflow-x-auto">
+                <button @click="activeTab = 'overview'"
+                    :class="activeTab === 'overview' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Overview
+                </button>
+                <button @click="activeTab = 'credentials'"
+                    :class="activeTab === 'credentials' ? 'border-purple-500 text-purple-600 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg> Credentials
+                    <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-semibold">Admin</span>
+                </button>
+                <button @click="activeTab = 'sync_config'"
+                    :class="activeTab === 'sync_config' ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Sync Config
+                </button>
+                <button @click="activeTab = 'data_overview'"
+                    :class="activeTab === 'data_overview' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Data
+                </button>
+                <button @click="activeTab = 'sync'"
+                    :class="activeTab === 'sync' ? 'border-teal-500 text-teal-600 bg-teal-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Activity
+                </button>
+                <button @click="activeTab = 'health'"
+                    :class="activeTab === 'health' ? 'border-green-500 text-green-600 bg-green-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> API Health
+                </button>
+            </nav>
+        </div>
+
+        <!-- TAB 1: OVERVIEW -->
+        <div x-show="activeTab === 'overview'" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Gmail Leads -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ gmail_leads_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Gmail Leads</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-blue-50 rounded text-sm"><span class="text-gray-600">Total Leads</span><span class="font-bold text-blue-600">{{ gmail_leads_count }}</span></div>
+                        <div class="flex justify-between p-2 bg-cyan-50 rounded text-sm"><span class="text-gray-600">Unread</span><span class="font-bold text-cyan-600">{{ gmail_leads_unread }}</span></div>
+                        <div class="flex justify-between p-2 bg-sky-50 rounded text-sm"><span class="text-gray-600">Last Sync</span><span class="font-bold text-sky-600 text-xs">{{ gmail_leads_last_sync }}</span></div>
+                        {% if gmail_leads_settings %}<div class="flex justify-between p-2 rounded text-sm {% if gmail_leads_settings.get_credential_source == 'database' %}bg-green-50{% elif gmail_leads_settings.get_credential_source == 'environment' %}bg-yellow-50{% else %}bg-red-50{% endif %}"><span class="text-gray-600">Credentials</span><span class="font-semibold text-xs {% if gmail_leads_settings.get_credential_source == 'database' %}text-green-700{% elif gmail_leads_settings.get_credential_source == 'environment' %}text-yellow-700{% else %}text-red-700{% endif %}">{% if gmail_leads_settings.get_credential_source == 'database' %}✅ DB{% elif gmail_leads_settings.get_credential_source == 'environment' %}⚠️ Env{% else %}❌ Not Set{% endif %}</span></div>{% endif %}
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'gmail_leads:dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">Dashboard</a>
+                            <button @click="activeTab = 'credentials'" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Configure</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Google Ads -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-600 to-orange-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ google_ads_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Google Ads</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-red-50 rounded text-sm"><span class="text-gray-600">Campaigns</span><span class="font-bold text-red-600">{{ google_ads_count }}</span></div>
+                        <div class="flex justify-between p-2 bg-orange-50 rounded text-sm"><span class="text-gray-600">Active</span><span class="font-bold text-orange-600">{{ google_ads_active_campaigns }}</span></div>
+                        <div class="flex justify-between p-2 bg-amber-50 rounded text-sm"><span class="text-gray-600">Last Sync</span><span class="font-bold text-amber-600 text-xs">{{ google_ads_last_sync }}</span></div>
+                        {% if google_ads_settings %}<div class="flex justify-between p-2 rounded text-sm {% if google_ads_settings.get_credential_source == 'database' %}bg-green-50{% elif google_ads_settings.get_credential_source == 'environment' %}bg-yellow-50{% else %}bg-red-50{% endif %}"><span class="text-gray-600">Credentials</span><span class="font-semibold text-xs {% if google_ads_settings.get_credential_source == 'database' %}text-green-700{% elif google_ads_settings.get_credential_source == 'environment' %}text-yellow-700{% else %}text-red-700{% endif %}">{% if google_ads_settings.get_credential_source == 'database' %}✅ DB{% elif google_ads_settings.get_credential_source == 'environment' %}⚠️ Env{% else %}❌ Not Set{% endif %}</span></div>{% endif %}
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'google_ads:dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition">Dashboard</a>
+                            <button @click="activeTab = 'credentials'" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Configure</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Callyzer -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-orange-600 to-yellow-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ callyzer_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Callyzer</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-orange-50 rounded text-sm"><span class="text-gray-600">Total Calls</span><span class="font-bold text-orange-600">{{ callyzer_calls_count }}</span></div>
+                        <div class="flex justify-between p-2 bg-yellow-50 rounded text-sm"><span class="text-gray-600">Missed</span><span class="font-bold text-yellow-600">{{ callyzer_missed_calls }}</span></div>
+                        <div class="flex justify-between p-2 bg-amber-50 rounded text-sm"><span class="text-gray-600">Last Sync</span><span class="font-bold text-amber-600 text-xs">{{ callyzer_last_sync }}</span></div>
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'callyzer:dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700 transition">Dashboard</a>
+                            <a href="{% url 'callyzer:settings' %}" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Settings</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bigin CRM -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ bigin_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Bigin CRM</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-blue-50 rounded text-sm"><span class="text-gray-600">Contacts</span><span class="font-bold text-blue-600">{{ bigin_contacts }}</span></div>
+                        <div class="flex justify-between p-2 bg-indigo-50 rounded text-sm"><span class="text-gray-600">Deals</span><span class="font-bold text-indigo-600">{{ bigin_deals }}</span></div>
+                        <div class="flex justify-between p-2 bg-purple-50 rounded text-sm"><span class="text-gray-600">Last Sync</span><span class="font-bold text-purple-600 text-xs">{{ bigin_last_sync }}</span></div>
+                        {% if bigin_settings %}<div class="flex justify-between p-2 rounded text-sm {% if bigin_settings.get_credential_source == 'database' %}bg-green-50{% elif bigin_settings.get_credential_source == 'environment' %}bg-yellow-50{% else %}bg-red-50{% endif %}"><span class="text-gray-600">Credentials</span><span class="font-semibold text-xs {% if bigin_settings.get_credential_source == 'database' %}text-green-700{% elif bigin_settings.get_credential_source == 'environment' %}text-yellow-700{% else %}text-red-700{% endif %}">{% if bigin_settings.get_credential_source == 'database' %}✅ DB{% elif bigin_settings.get_credential_source == 'environment' %}⚠️ Env{% else %}❌ Not Set{% endif %}</span></div>{% endif %}
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'bigin:bigin_dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">Dashboard</a>
+                            <button @click="activeTab = 'credentials'" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Configure</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TallySync -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ tally_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">TallySync</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-green-50 rounded text-sm"><span class="text-gray-600">Invoices</span><span class="font-bold text-green-600">{{ tally_invoices }}</span></div>
+                        <div class="flex justify-between p-2 bg-emerald-50 rounded text-sm"><span class="text-gray-600">Payments</span><span class="font-bold text-emerald-600">{{ tally_payments }}</span></div>
+                        <div class="flex justify-between p-2 bg-teal-50 rounded text-sm"><span class="text-gray-600">Last Sync</span><span class="font-bold text-teal-600 text-xs">{{ tally_last_sync }}</span></div>
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'tallysync:reconciliation_dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition">Dashboard</a>
+                            <a href="{% url 'tallysync:settings' %}" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Settings</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adobe Sign -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-600 to-pink-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ adobe_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Adobe Sign</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-red-50 rounded text-sm"><span class="text-gray-600">Sent</span><span class="font-bold text-red-600">{{ adobe_sent }}</span></div>
+                        <div class="flex justify-between p-2 bg-pink-50 rounded text-sm"><span class="text-gray-600">Awaiting Sig.</span><span class="font-bold text-pink-600">{{ adobe_pending }}</span></div>
+                        <div class="flex justify-between p-2 bg-rose-50 rounded text-sm"><span class="text-gray-600">Completed</span><span class="font-bold text-rose-600">{{ adobe_completed }}</span></div>
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'adobe_sign:dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition">Dashboard</a>
+                            <button @click="activeTab = 'credentials'" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Configure</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quick Links -->
+            <div class="grid grid-cols-3 gap-4 mt-6">
+                <a href="{% url 'integrations:sync_audit' %}" class="block bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl p-5 text-white hover:shadow-xl transition transform hover:-translate-y-1">
+                    <p class="text-xs font-semibold text-indigo-50 uppercase">Sync Audit</p>
+                    <p class="text-xl font-bold mt-2">All Syncs</p>
+                    <p class="text-xs text-indigo-50 mt-1">Unified history</p>
+                </a>
+                <button @click="activeTab = 'credentials'" class="block text-left bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl p-5 text-white hover:shadow-xl transition transform hover:-translate-y-1">
+                    <p class="text-xs font-semibold text-purple-50 uppercase">Credentials</p>
+                    <p class="text-xl font-bold mt-2">Manage</p>
+                    <p class="text-xs text-purple-50 mt-1">OAuth & API keys</p>
+                </button>
+                <button @click="activeTab = 'health'" class="block text-left bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl p-5 text-white hover:shadow-xl transition transform hover:-translate-y-1">
+                    <p class="text-xs font-semibold text-teal-50 uppercase">API Health</p>
+                    <p class="text-xl font-bold mt-2">Monitor</p>
+                    <p class="text-xs text-teal-50 mt-1">Uptime & metrics</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: CREDENTIALS -->
+        <div x-show="activeTab === 'credentials'" class="p-6" x-data="{ openSection: 'google_ads' }">
+            <div class="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800">
+                <strong>Admin Only.</strong> Credentials saved here override environment variables. Leave secret fields blank to keep current value.
+                <strong>✅ DB</strong> = database | <strong>⚠️ Env</strong> = environment variable | <strong>❌ Not Set</strong> = not configured.
+            </div>
+
+            <!-- Google Ads -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSection = openSection === 'google_ads' ? '' : 'google_ads'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-red-100 rounded-lg flex items-center justify-center text-red-600 font-bold text-sm">GA</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Google Ads</p>
+                            <p class="text-xs text-gray-500">Client ID/Secret, Developer Token, Customer ID, API Version</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {% if google_ads_settings %}
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold {% if google_ads_settings.get_credential_source == 'database' %}bg-green-100 text-green-700{% elif google_ads_settings.get_credential_source == 'environment' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {% if google_ads_settings.get_credential_source == 'database' %}✅ DB{% elif google_ads_settings.get_credential_source == 'environment' %}⚠️ Env{% else %}❌ Not Set{% endif %}
+                        </span>
+                        {% if google_ads_settings.updated_by %}<span class="text-xs text-gray-500 hidden md:block">Updated by {{ google_ads_settings.updated_by.get_full_name|default:google_ads_settings.updated_by.username }}</span>{% endif %}
+                        {% endif %}
+                        <svg width="20" height="20" aria-hidden="true" :class="openSection === 'google_ads' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="openSection === 'google_ads'" class="p-6 bg-white border-t border-gray-100">
+                    <form method="POST" action="{% url 'accounts:admin_dashboard_integrations' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="integration" value="google_ads">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label><input type="text" name="client_id" value="{{ google_ads_settings.client_id|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="1073582072299-...apps.googleusercontent.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Client Secret <span class="text-gray-500 font-normal">(leave blank to keep current)</span></label><input type="password" name="client_secret" autocomplete="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="••••••••"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Developer Token <span class="text-gray-500 font-normal">(leave blank to keep current)</span></label><input type="password" name="developer_token" autocomplete="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="••••••••"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Customer ID</label><input type="text" name="customer_id" value="{{ google_ads_settings.customer_id|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="e.g. 3867069282"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">API Version</label><input type="text" name="api_version" value="{{ google_ads_settings.api_version|default:'v19' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="v19"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Redirect URI</label><input type="url" name="redirect_uri" value="{{ google_ads_settings.redirect_uri|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="https://domain.com/integrations/google-ads/oauth2callback/"></div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">💾 Save Google Ads Settings</button>
+                            <a href="{% url 'google_ads:settings' %}" class="text-sm text-gray-500 hover:text-gray-700">→ Full settings page</a>
+                        </div>
+                    </form>
+
+                    <!-- Connected Accounts -->
+                    {% if google_ads_tokens_list %}
+                    <div class="mt-6 pt-6 border-t">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="h-4 w-4 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Connected Accounts
+                        </h4>
+                        <div class="space-y-2">
+                            {% for token in google_ads_tokens_list %}
+                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 text-sm">{{ token.account_name }}</p>
+                                    <p class="text-xs text-gray-500">Customer ID: {{ token.customer_id }}</p>
+                                    <p class="text-xs text-gray-500">Last sync: {{ token.last_synced_at|date:"M d, g:i A"|default:"Never" }}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this Google Ads token? This cannot be undone.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="integration" value="google_ads">
+                                        <input type="hidden" name="action" value="delete_token">
+                                        <input type="hidden" name="token_id" value="{{ token.id }}">
+                                        <button type="submit" class="px-3 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200 transition">🗑️ Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Connect New Account -->
+                    <div class="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                        <p class="text-sm text-gray-700 mb-3"><strong>Need to connect a new account?</strong> Use the full settings page to initiate OAuth flow.</p>
+                        <a href="{% url 'google_ads:settings' %}" class="inline-block px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition">
+                            + Connect New Google Ads Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gmail Leads -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSection = openSection === 'gmail_leads' ? '' : 'gmail_leads'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm">GL</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Gmail Leads</p>
+                            <p class="text-xs text-gray-500">OAuth Client ID/Secret, Redirect URI</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {% if gmail_leads_settings %}<span class="px-2 py-1 rounded-full text-xs font-semibold {% if gmail_leads_settings.get_credential_source == 'database' %}bg-green-100 text-green-700{% elif gmail_leads_settings.get_credential_source == 'environment' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">{% if gmail_leads_settings.get_credential_source == 'database' %}✅ DB{% elif gmail_leads_settings.get_credential_source == 'environment' %}⚠️ Env{% else %}❌ Not Set{% endif %}</span>{% endif %}
+                        <svg width="20" height="20" aria-hidden="true" :class="openSection === 'gmail_leads' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="openSection === 'gmail_leads'" class="p-6 bg-white border-t border-gray-100">
+                    <form method="POST" action="{% url 'accounts:admin_dashboard_integrations' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="integration" value="gmail_leads">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label><input type="text" name="client_id" value="{{ gmail_leads_settings.client_id|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" placeholder="700623064443-...apps.googleusercontent.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Client Secret <span class="text-gray-500 font-normal">(leave blank to keep current)</span></label><input type="password" name="client_secret" autocomplete="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" placeholder="••••••••"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Redirect URI</label><input type="url" name="redirect_uri" value="{{ gmail_leads_settings.redirect_uri|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" placeholder="https://domain.com/integrations/gmail-leads/oauth2callback/"></div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">💾 Save Gmail Leads Settings</button>
+                            <a href="{% url 'gmail_leads:settings' %}" class="text-sm text-gray-500 hover:text-gray-700">→ Full settings page</a>
+                        </div>
+                    </form>
+
+                    <!-- Connected Email Accounts -->
+                    {% if gmail_leads_tokens_list %}
+                    <div class="mt-6 pt-6 border-t">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="h-4 w-4 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Connected Email Accounts
+                        </h4>
+                        <div class="space-y-2">
+                            {% for token in gmail_leads_tokens_list %}
+                            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 text-sm">{{ token.email_account }}</p>
+                                    <p class="text-xs text-gray-500">Last sync: {{ token.last_sync_at|date:"M d, g:i A"|default:"Never" }}</p>
+                                    {% if token.excluded_emails %}<p class="text-xs text-gray-500">Excluded: {{ token.excluded_emails|truncatewords:3 }}</p>{% endif %}
+                                </div>
+                                <div class="flex gap-2">
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this Gmail Leads token? This cannot be undone.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="integration" value="gmail_leads">
+                                        <input type="hidden" name="action" value="delete_token">
+                                        <input type="hidden" name="token_id" value="{{ token.id }}">
+                                        <button type="submit" class="px-3 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200 transition">🗑️ Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Connect New Account -->
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p class="text-sm text-gray-700 mb-3"><strong>Need to connect a new Gmail account?</strong> Use the full settings page to initiate OAuth flow.</p>
+                        <a href="{% url 'gmail_leads:settings' %}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">
+                            + Connect New Gmail Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bigin -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSection = openSection === 'bigin' ? '' : 'bigin'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-sm">BG</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Bigin CRM</p>
+                            <p class="text-xs text-gray-500">Zoho Client ID/Secret, Redirect URI</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {% if bigin_settings %}<span class="px-2 py-1 rounded-full text-xs font-semibold {% if bigin_settings.get_credential_source == 'database' %}bg-green-100 text-green-700{% elif bigin_settings.get_credential_source == 'environment' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">{% if bigin_settings.get_credential_source == 'database' %}✅ DB{% elif bigin_settings.get_credential_source == 'environment' %}⚠️ Env{% else %}❌ Not Set{% endif %}</span>{% endif %}
+                        <svg width="20" height="20" aria-hidden="true" :class="openSection === 'bigin' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="openSection === 'bigin'" class="p-6 bg-white border-t border-gray-100">
+                    <form method="POST" action="{% url 'accounts:admin_dashboard_integrations' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="integration" value="bigin">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Zoho Client ID</label><input type="text" name="client_id" value="{{ bigin_settings.client_id|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Zoho OAuth Client ID"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Zoho Client Secret <span class="text-gray-500 font-normal">(leave blank to keep current)</span></label><input type="password" name="client_secret" autocomplete="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" placeholder="••••••••"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Redirect URI</label><input type="url" name="redirect_uri" value="{{ bigin_settings.redirect_uri|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" placeholder="https://domain.com/integrations/bigin/oauth/callback/"></div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">💾 Save Bigin Settings</button>
+                            <a href="{% url 'bigin:settings' %}" class="text-sm text-gray-500 hover:text-gray-700">→ Full settings page</a>
+                        </div>
+                    </form>
+
+                    <!-- Connected Account Status -->
+                    {% if bigin_token %}
+                    <div class="mt-6 pt-6 border-t">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                            <svg width="16" height="16" aria-hidden="true" class="h-4 w-4 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Connected Account
+                        </h4>
+                        <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <p class="font-medium text-gray-900 text-sm">Zoho Bigin Account Connected</p>
+                            <p class="text-xs text-gray-500 mt-1">Connected: {{ bigin_token.created_at|date:"M d, Y" }}</p>
+                            <p class="text-xs text-gray-500">Last token refresh: {{ bigin_token.updated_at|date:"M d, g:i A" }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mt-6 pt-6 border-t">
+                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <p class="text-sm text-yellow-800 mb-2">⚠️ <strong>No Bigin account connected yet</strong></p>
+                            <a href="{% url 'bigin:settings' %}" class="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition">
+                                + Connect Bigin Account
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Adobe Sign -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSection = openSection === 'adobe_sign' ? '' : 'adobe_sign'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-red-100 rounded-lg flex items-center justify-center text-red-600 font-bold text-sm">AS</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Adobe Sign</p>
+                            <p class="text-xs text-gray-500">Integration Key, API Base URL</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {% if adobe_sign_settings %}<span class="px-2 py-1 rounded-full text-xs font-semibold {% if adobe_sign_settings.integration_key %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">{% if adobe_sign_settings.integration_key %}✅ Configured{% else %}⚠️ Not Set{% endif %}</span>{% endif %}
+                        <svg width="20" height="20" aria-hidden="true" :class="openSection === 'adobe_sign' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="openSection === 'adobe_sign'" class="p-6 bg-white border-t border-gray-100">
+                    <form method="POST" action="{% url 'accounts:admin_dashboard_integrations' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="integration" value="adobe_sign">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Integration Key <span class="text-gray-500 font-normal">(leave blank to keep current)</span></label><input type="password" name="integration_key" autocomplete="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="••••••••"><p class="text-xs text-gray-500 mt-1">Get from: Adobe Sign → Account → Personal Preferences → Access Tokens</p></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">API Base URL</label><input type="url" name="api_base_url" value="{{ adobe_sign_settings.api_base_url|default:'https://api.in1.adobesign.com/api/rest/v6' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500" placeholder="https://api.in1.adobesign.com/api/rest/v6"></div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">💾 Save Adobe Sign Settings</button>
+                            <a href="{% url 'adobe_sign:settings' %}" class="text-sm text-gray-500 hover:text-gray-700">→ Full settings page</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Callyzer -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSection = openSection === 'callyzer' ? '' : 'callyzer'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold text-sm">CL</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Callyzer</p>
+                            <p class="text-xs text-gray-500">Encrypted API tokens in database</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold {% if callyzer_token_count > 0 %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {% if callyzer_token_count > 0 %}✅ {{ callyzer_token_count }} Token{{ callyzer_token_count|pluralize }}{% else %}❌ Not Configured{% endif %}
+                        </span>
+                        <svg width="20" height="20" aria-hidden="true" :class="openSection === 'callyzer' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="openSection === 'callyzer'" class="p-6 bg-white border-t border-gray-100">
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-orange-800"><strong>Multi-Account Support:</strong> Callyzer supports multiple API tokens for different accounts/teams. Each token is encrypted at rest in the database.</p>
+                    </div>
+
+                    {% if callyzer_tokens %}
+                    <div class="mb-6">
+                        <p class="text-sm font-semibold text-gray-700 mb-3">Active Tokens ({{ callyzer_token_count }})</p>
+                        <div class="space-y-2">
+                            {% for token in callyzer_tokens %}
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ token.account_name }}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        Last synced: {% if token.last_sync_at %}{{ token.last_sync_at|date:"M j, Y g:i A" }}{% else %}Never{% endif %}
+                                    </p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold {% if token.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+                                        {% if token.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                    <form method="POST" action="{% url 'accounts:admin_dashboard_integrations' %}" class="inline" onsubmit="return confirm('Delete {{ token.account_name }}?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_token">
+                                        <input type="hidden" name="integration" value="callyzer">
+                                        <input type="hidden" name="token_id" value="{{ token.id }}">
+                                        <button type="submit" class="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition">🗑️ Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-6 text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <svg width="48" height="48" aria-hidden="true" class="h-12 w-12 mx-auto text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <p class="text-sm text-gray-500">No Callyzer tokens configured</p>
+                        <p class="text-xs text-gray-500 mt-1">Add your first token to start syncing call data</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 flex items-center justify-between border-t pt-4">
+                        <p class="text-xs text-gray-500">Manage tokens, view analytics, and configure sync settings</p>
+                        <a href="{% url 'callyzer:settings' %}" class="px-5 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition">Manage Callyzer →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TallySync -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSection = openSection === 'tallysync' ? '' : 'tallysync'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-sm">TS</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">TallySync</p>
+                            <p class="text-xs text-gray-500">Tally Server Connection (IP Address + Port)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold {% if tally_host %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                            {% if tally_host %}✅ Configured{% else %}⚠️ Not Set{% endif %}
+                        </span>
+                        <svg width="20" height="20" aria-hidden="true" :class="openSection === 'tallysync' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </button>
+                <div x-show="openSection === 'tallysync'" class="p-6 bg-white border-t border-gray-100">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-green-800"><strong>Direct Server Connection:</strong> TallySync connects directly to Tally Prime server using XML API over HTTP. No OAuth required - uses IP address and port.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Server IP Address</p>
+                            <p class="text-sm font-mono bg-gray-100 px-3 py-2 rounded border">{{ tally_host|default:"—" }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Server Port</p>
+                            <p class="text-sm font-mono bg-gray-100 px-3 py-2 rounded border">{{ tally_port|default:"—" }}</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Connection Status</p>
+                            <p class="text-sm bg-gray-100 px-3 py-2 rounded border">
+                                {% if tallysync_settings.server_ip %}
+                                <span class="text-green-600 font-semibold">● Database</span> — Connection to {{ tally_host }}:{{ tally_port }} (stored in database)
+                                {% elif tally_host %}
+                                <span class="text-yellow-600 font-semibold">⚠️ Environment Fallback</span> — Using {{ tally_host }}:{{ tally_port }} from .env (should migrate to database)
+                                {% else %}
+                                <span class="text-red-600 font-semibold">○ Not Configured</span> — Configure server connection below or in TallySync settings
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{% url 'accounts:admin_dashboard_integrations' %}" class="mt-6 border-t pt-6">
+                        {% csrf_token %}
+                        <input type="hidden" name="integration" value="tallysync">
+                        <input type="hidden" name="action" value="update_settings">
+
+                        <p class="text-sm font-semibold text-gray-700 mb-3">Update Connection Settings</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Server IP Address</label>
+                                <input type="text" name="server_ip" value="{{ tallysync_settings.server_ip|default:'' }}" placeholder="192.168.1.100" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Server Port</label>
+                                <input type="text" name="server_port" value="{{ tallysync_settings.server_port|default:'9000' }}" placeholder="9000" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Company Name <span class="text-gray-500 font-normal">(optional)</span></label>
+                                <input type="text" name="company_name" value="{{ tallysync_settings.company_name|default:'' }}" placeholder="My Company" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <button type="submit" class="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition">💾 Save Connection Settings</button>
+                            <a href="{% url 'tallysync:settings' %}" class="text-sm text-gray-500 hover:text-gray-700">→ Full settings page (sync, mapping, variances)</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SYNC CONFIGURATION -->
+        <div x-show="activeTab === 'sync_config'" class="p-6" x-data="{ openSync: 'google_ads' }">
+            <div class="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">
+                <strong>⚙️ Sync Controls.</strong> Trigger manual syncs and monitor progress for each integration. Use full settings pages for advanced sync options.
+            </div>
+
+            <!-- Google Ads Sync -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSync = openSync === 'google_ads' ? '' : 'google_ads'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-red-100 rounded-lg flex items-center justify-center text-red-600 font-bold text-sm">GA</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Google Ads Sync</p>
+                            <p class="text-xs text-gray-500">Campaigns, Ads, Keywords, Performance Data</p>
+                        </div>
+                    </div>
+                    <svg width="20" height="20" aria-hidden="true" :class="openSync === 'google_ads' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openSync === 'google_ads'" class="p-6 bg-white border-t">
+                    <!-- Sync Buttons -->
+                    {% if google_ads_tokens_list %}
+                    <div class="mb-4">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Manual Sync</h5>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{% url 'google_ads:settings' %}" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition">
+                                🔄 Sync All Accounts
+                            </a>
+                            <a href="{% url 'google_ads:settings' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition">
+                                ⚙️ Advanced Sync Options
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 mb-4">
+                        <p class="text-sm text-yellow-800">⚠️ No Google Ads accounts connected. Connect an account in the Credentials tab first.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Last Sync Status -->
+                    {% if recent_syncs_per_integration.google_ads %}
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Last Sync</h5>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div>
+                                <p class="text-gray-600">Started</p>
+                                <p class="font-medium">{{ recent_syncs_per_integration.google_ads.started_at|date:"M d, g:i A" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Status</p>
+                                <p class="font-medium">
+                                    <span class="px-2 py-1 rounded-full text-xs {% if recent_syncs_per_integration.google_ads.status == 'completed' %}bg-green-100 text-green-700{% elif recent_syncs_per_integration.google_ads.status == 'failed' %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                                        {{ recent_syncs_per_integration.google_ads.status|upper }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Records</p>
+                                <p class="font-medium">{{ recent_syncs_per_integration.google_ads.total_records_synced|default:0 }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Progress</p>
+                                <p class="font-medium">{{ recent_syncs_per_integration.google_ads.overall_progress_percent|default:0 }}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-600">No sync history available yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Gmail Leads Sync -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openSync = openSync === 'gmail_leads' ? '' : 'gmail_leads'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm">GL</div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Gmail Leads Sync</p>
+                            <p class="text-xs text-gray-500">Contact Us & SAAS Inventory Forms</p>
+                        </div>
+                    </div>
+                    <svg width="20" height="20" aria-hidden="true" :class="openSync === 'gmail_leads' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openSync === 'gmail_leads'" class="p-6 bg-white border-t">
+                    {% if gmail_leads_tokens_list %}
+                    <div class="mb-4">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Manual Sync</h5>
+                        <a href="{% url 'gmail_leads:settings' %}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">
+                            🔄 Sync All Accounts
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p class="text-sm text-yellow-800">⚠️ No Gmail accounts connected.</p>
+                    </div>
+                    {% endif %}
+
+                    {% if recent_syncs_per_integration.gmail_leads %}
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Last Sync</h5>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                            <div>
+                                <p class="text-gray-600">Started</p>
+                                <p class="font-medium">{{ recent_syncs_per_integration.gmail_leads.started_at|date:"M d, g:i A" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Status</p>
+                                <p><span class="px-2 py-1 rounded-full text-xs {% if recent_syncs_per_integration.gmail_leads.status == 'completed' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">{{ recent_syncs_per_integration.gmail_leads.status|upper }}</span></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Records</p>
+                                <p class="font-medium">{{ recent_syncs_per_integration.gmail_leads.total_records_synced|default:0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Note about other integrations -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-600">
+                <p><strong>📝 Note:</strong> For Bigin, Callyzer, TallySync, and Adobe Sign sync controls, please visit their respective full settings pages. Advanced sync options, schedules, and configurations are available there.</p>
+            </div>
+        </div>
+
+        <!-- TAB 4: DATA OVERVIEW -->
+        <div x-show="activeTab === 'data_overview'" class="p-6" x-data="{ openData: 'google_ads' }">
+            <div class="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+                <strong>📊 Data Overview.</strong> View synced data counts and access detailed reports for each integration.
+            </div>
+
+            <!-- Google Ads Data -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openData = openData === 'google_ads' ? '' : 'google_ads'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-red-100 rounded-lg flex items-center justify-center text-red-600 font-bold text-sm">GA</div>
+                        <p class="font-semibold text-gray-800">Google Ads Data</p>
+                    </div>
+                    <svg width="20" height="20" aria-hidden="true" :class="openData === 'google_ads' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openData === 'google_ads'" class="p-6 bg-white border-t">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-4 bg-red-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-red-600">{{ google_ads_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Campaigns</p>
+                        </div>
+                        <div class="p-4 bg-orange-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-orange-600">{{ google_ads_ads_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Ads</p>
+                        </div>
+                        <div class="p-4 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-yellow-600">{{ google_ads_keywords_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Keywords</p>
+                        </div>
+                        <div class="p-4 bg-pink-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-pink-600">{{ google_ads_active_campaigns }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Active</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{% url 'google_ads:dashboard' %}" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition">View Dashboard</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gmail Leads Data -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openData = openData === 'gmail_leads' ? '' : 'gmail_leads'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm">GL</div>
+                        <p class="font-semibold text-gray-800">Gmail Leads Data</p>
+                    </div>
+                    <svg width="20" height="20" aria-hidden="true" :class="openData === 'gmail_leads' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openData === 'gmail_leads'" class="p-6 bg-white border-t">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div class="p-4 bg-blue-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-blue-600">{{ gmail_leads_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Total Leads</p>
+                        </div>
+                        <div class="p-4 bg-cyan-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-cyan-600">{{ gmail_leads_contact_us }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Contact Us</p>
+                        </div>
+                        <div class="p-4 bg-teal-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-teal-600">{{ gmail_leads_saas_inventory }}</p>
+                            <p class="text-xs text-gray-600 mt-1">SAAS Inventory</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'gmail_leads:dashboard' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">View Dashboard</a>
+                </div>
+            </div>
+
+            <!-- TallySync Data -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openData = openData === 'tallysync' ? '' : 'tallysync'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-sm">TS</div>
+                        <p class="font-semibold text-gray-800">TallySync Data</p>
+                    </div>
+                    <svg width="20" height="20" aria-hidden="true" :class="openData === 'tallysync' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openData === 'tallysync'" class="p-6 bg-white border-t">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div class="p-4 bg-green-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-green-600">{{ tally_vouchers_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Vouchers</p>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-emerald-600">{{ tally_ledgers_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Ledgers</p>
+                        </div>
+                        <div class="p-4 bg-lime-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-lime-600">{{ tally_cost_centres_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Cost Centres</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'tallysync:reconciliation_dashboard' %}" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition">View Dashboard</a>
+                </div>
+            </div>
+
+            <!-- Callyzer Data -->
+            <div class="mb-4 border border-gray-200 rounded-xl overflow-hidden">
+                <button @click="openData = openData === 'callyzer' ? '' : 'callyzer'" class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-9 w-9 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold text-sm">CL</div>
+                        <p class="font-semibold text-gray-800">Callyzer Data</p>
+                    </div>
+                    <svg width="20" height="20" aria-hidden="true" :class="openData === 'callyzer' ? 'rotate-180' : ''" class="h-5 w-5 text-gray-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openData === 'callyzer'" class="p-6 bg-white border-t">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div class="p-4 bg-orange-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-orange-600">{{ callyzer_calls_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Total Calls</p>
+                        </div>
+                        <div class="p-4 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-yellow-600">{{ callyzer_incoming_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Incoming</p>
+                        </div>
+                        <div class="p-4 bg-amber-50 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-amber-600">{{ callyzer_outgoing_count }}</p>
+                            <p class="text-xs text-gray-600 mt-1">Outgoing</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'callyzer:dashboard' %}" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 transition">View Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: SYNC ACTIVITY -->
+        <div x-show="activeTab === 'sync'" class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Sync Activity</h3>
+                <a href="{% url 'integrations:sync_audit' %}" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm font-medium">View Full Audit Log →</a>
+            </div>
+
+            <div class="space-y-3">
+                {% if recent_syncs_detailed %}
+                    {% for sync in recent_syncs_detailed %}
+                    <div class="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition">
+                        <div class="flex items-start justify-between">
+                            <!-- Left: Integration name and icon -->
+                            <div class="flex items-center space-x-3">
+                                {% if sync.integration == 'google_ads' %}
+                                    <div class="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center text-lg">📊</div>
+                                {% elif sync.integration == 'gmail_leads' %}
+                                    <div class="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center text-lg">📧</div>
+                                {% elif sync.integration == 'bigin' %}
+                                    <div class="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center text-lg">👥</div>
+                                {% elif sync.integration == 'callyzer' %}
+                                    <div class="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center text-lg">📞</div>
+                                {% elif sync.integration == 'tallysync' %}
+                                    <div class="h-10 w-10 bg-yellow-100 rounded-lg flex items-center justify-center text-lg">💰</div>
+                                {% elif sync.integration == 'adobe_sign' %}
+                                    <div class="h-10 w-10 bg-pink-100 rounded-lg flex items-center justify-center text-lg">✍️</div>
+                                {% else %}
+                                    <div class="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg">🔄</div>
+                                {% endif %}
+
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">
+                                        {% if sync.integration == 'google_ads' %}Google Ads
+                                        {% elif sync.integration == 'gmail_leads' %}Gmail Leads
+                                        {% elif sync.integration == 'bigin' %}Bigin CRM
+                                        {% elif sync.integration == 'callyzer' %}Callyzer
+                                        {% elif sync.integration == 'tallysync' %}TallySync
+                                        {% elif sync.integration == 'adobe_sign' %}Adobe Sign
+                                        {% else %}{{ sync.integration|title }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-xs text-gray-500">{{ sync.started_at|date:"M j, Y g:i A" }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Right: Status and metrics -->
+                            <div class="text-right space-y-1">
+                                {% if sync.status == 'completed' %}
+                                    <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✓ Completed</span>
+                                {% elif sync.status == 'failed' %}
+                                    <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">✗ Failed</span>
+                                {% elif sync.status == 'running' %}
+                                    <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">⏳ Running</span>
+                                {% else %}
+                                    <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">{{ sync.status|title }}</span>
+                                {% endif %}
+
+                                {% if sync.records_synced %}
+                                    <p class="text-sm font-medium text-gray-700">{{ sync.records_synced|intcomma }} records</p>
+                                {% endif %}
+
+                                {% if sync.duration_seconds %}
+                                    <p class="text-xs text-gray-500">{{ sync.duration_seconds }}s</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Progress bar (if applicable) -->
+                        {% if sync.status == 'running' and sync.progress_percentage %}
+                        <div class="mt-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-medium text-blue-600">Syncing...</span>
+                                <span class="text-xs font-medium text-blue-600">{{ sync.progress_percentage }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full transition duration-300" style="width: {{ sync.progress_percentage }}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Error message (if failed) -->
+                        {% if sync.status == 'failed' and sync.error_message %}
+                        <div class="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                            <strong>Error:</strong> {{ sync.error_message|truncatewords:20 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-12 text-gray-500">
+                        <svg width="48" height="48" aria-hidden="true" class="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                        </svg>
+                        <p class="text-sm font-medium">No recent sync activity</p>
+                        <p class="text-xs text-gray-500 mt-1">Sync activity will appear here once integrations start syncing</p>
+                        <a href="{% url 'integrations:sync_audit' %}" class="mt-3 inline-block px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 transition">View Full Audit Log</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- TAB 4: API HEALTH -->
+        <div x-show="activeTab === 'health'" class="p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">API Health & Monitoring</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-medium text-green-700">API Uptime</p>
+                        <span class="h-3 w-3 bg-green-500 rounded-full animate-pulse"></span>
+                    </div>
+                    <p class="text-2xl font-bold text-green-900">{{ api_uptime }}%</p>
+                    <p class="text-xs text-green-600 mt-1">Last 24 hours</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                    <p class="text-xs font-medium text-blue-700">Total Records</p>
+                    <p class="text-2xl font-bold text-blue-900">{{ total_api_calls }}</p>
+                    <p class="text-xs text-blue-600 mt-1">All integrations</p>
+                </div>
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                    <p class="text-xs font-medium text-orange-700">Failed Requests</p>
+                    <p class="text-2xl font-bold text-orange-900">{{ failed_requests }}</p>
+                    <p class="text-xs text-orange-600 mt-1">{{ failure_rate }}% failure rate</p>
+                </div>
+            </div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-3">Integration Status</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"><span class="text-sm font-medium text-gray-800">Gmail Leads</span><span class="px-3 py-1 rounded-full text-xs font-semibold {% if gmail_leads_status == 'Connected' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ gmail_leads_status }}</span></div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"><span class="text-sm font-medium text-gray-800">Google Ads</span><span class="px-3 py-1 rounded-full text-xs font-semibold {% if google_ads_status == 'Connected' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ google_ads_status }}</span></div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"><span class="text-sm font-medium text-gray-800">Callyzer</span><span class="px-3 py-1 rounded-full text-xs font-semibold {% if callyzer_status == 'Connected' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ callyzer_status }}</span></div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"><span class="text-sm font-medium text-gray-800">Bigin CRM</span><span class="px-3 py-1 rounded-full text-xs font-semibold {% if bigin_status == 'Active' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ bigin_status }}</span></div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"><span class="text-sm font-medium text-gray-800">TallySync</span><span class="px-3 py-1 rounded-full text-xs font-semibold {% if tally_status == 'Active' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ tally_status }}</span></div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"><span class="text-sm font-medium text-gray-800">Adobe Sign</span><span class="px-3 py-1 rounded-full text-xs font-semibold {% if adobe_status == 'Active' or adobe_status == 'Configured' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ adobe_status }}</span></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</div>
+
+<script>
+// Real-time sync progress monitoring
+let syncPollingInterval = null;
+
+function updateSyncStatus() {
+    fetch('{% url "accounts:integration_sync_status_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            // Update running syncs display
+            if (data.running_syncs && data.running_syncs.length > 0) {
+                console.log('Active syncs:', data.running_syncs);
+
+                // Show notification banner if syncs are running
+                showActiveSyncBanner(data.running_syncs);
+
+                // If on Sync Activity tab, refresh the display
+                const activeTab = document.querySelector('[x-data]')?.__x?.$data?.activeTab;
+                if (activeTab === 'sync') {
+                    // Optionally auto-refresh the page or update specific elements
+                    // For now, just log - user can manually refresh
+                }
+            } else {
+                hideActiveSyncBanner();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching sync status:', error);
+        });
+}
+
+function showActiveSyncBanner(runningSyncs) {
+    // Check if banner already exists
+    let banner = document.getElementById('active-sync-banner');
+
+    if (!banner) {
+        // Create banner
+        banner = document.createElement('div');
+        banner.id = 'active-sync-banner';
+        banner.className = 'fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white px-4 py-2 shadow-lg';
+        banner.style.animation = 'slideDown 0.3s ease-out';
+
+        const container = document.querySelector('.container-fluid') || document.body;
+        container.insertBefore(banner, container.firstChild);
+    }
+
+    // Update banner content
+    const syncCount = runningSyncs.length;
+    const syncNames = runningSyncs.map(s => s.integration_name).join(', ');
+
+    banner.innerHTML = `
+        <div class="flex items-center justify-between max-w-7xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                <span class="font-medium">
+                    ${syncCount} integration${syncCount > 1 ? 's' : ''} syncing: ${syncNames}
+                </span>
+            </div>
+            <a href="#" onclick="document.querySelector('[\\@click*=\\"sync\\"]').click(); return false;"
+               class="text-xs underline hover:text-blue-200">
+                View Details →
+            </a>
+        </div>
+    `;
+}
+
+function hideActiveSyncBanner() {
+    const banner = document.getElementById('active-sync-banner');
+    if (banner) {
+        banner.style.animation = 'slideUp 0.3s ease-out';
+        setTimeout(() => banner.remove(), 300);
+    }
+}
+
+// Start polling when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial check
+    updateSyncStatus();
+
+    // Poll every 5 seconds
+    syncPollingInterval = setInterval(updateSyncStatus, 5000);
+
+    // Stop polling when user leaves page
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            if (syncPollingInterval) {
+                clearInterval(syncPollingInterval);
+            }
+        } else {
+            // Resume polling when user returns
+            updateSyncStatus();
+            syncPollingInterval = setInterval(updateSyncStatus, 5000);
+        }
+    });
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (syncPollingInterval) {
+        clearInterval(syncPollingInterval);
+    }
+});
+
+// CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+{% endblock %}

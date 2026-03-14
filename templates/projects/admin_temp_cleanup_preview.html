@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Preview Migration - {{ project.project_id }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-5xl mx-auto px-4">
+
+        <div class="mb-6">
+            <a href="{% url 'projects:admin_temp_cleanup' %}" class="text-blue-600 hover:text-blue-800 mb-2 inline-block">
+                ← Back to Cleanup List
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">🔄 Migration Options</h1>
+            <p class="text-gray-600 mt-1">Choose how to handle this TEMP project</p>
+        </div>
+
+        <!-- Current Project Info -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">📋 Current TEMP Project</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <span class="text-sm text-gray-500">Project ID:</span>
+                    <div class="font-mono font-semibold text-red-600">{{ project.project_id }}</div>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-500">Code:</span>
+                    <div class="font-mono font-semibold text-lg">{{ project.code }}</div>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-500">Client:</span>
+                    <div>{{ project.client_name }}</div>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-500">Vendor:</span>
+                    <div>{{ project.vendor_name }}</div>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-500">Location:</span>
+                    <div>{{ project.location }}</div>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-500">Operational Data:</span>
+                    <div class="font-semibold text-red-600">{{ total_count }} records</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Option 1: Create New Permanent ID -->
+        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6 mb-4">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-green-900 mb-2">✨ Option 1: Create New Permanent ID</h3>
+                    <div class="space-y-2 text-sm text-green-800">
+                        <div>• New Project ID: <span class="font-mono font-bold">{{ proposed_project_id }}</span></div>
+                        <div>• Code stays: <span class="font-mono font-bold">{{ project.code }}</span> (unchanged)</div>
+                        <div>• All {{ total_count }} records will be migrated</div>
+                        <div>• Project will be marked as Active</div>
+                        <div>• TEMP ID will be archived</div>
+                    </div>
+                </div>
+                <form method="POST" action="{% url 'projects:admin_temp_cleanup_action' project.project_id %}"
+                      onsubmit="return confirm('🔄 CREATE NEW PERMANENT ID\n\nNew ID: {{ proposed_project_id }}\nCode: {{ project.code }} (stays same)\n\nThis will migrate {{ total_count }} records.\n\nProceed?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="migrate_data">
+                    <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium whitespace-nowrap">
+                        ✅ Create New ID
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Option 2: Merge with Existing Project -->
+        {% if mergeable_projects %}
+        <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-purple-900 mb-3">🔀 Option 2: Merge into Existing Project</h3>
+            <p class="text-sm text-purple-700 mb-3">
+                These projects match your location + either client or vendor. Select one to merge into:
+            </p>
+            <div class="bg-purple-100 border border-purple-300 rounded p-3 mb-4 text-sm text-purple-800">
+                <strong>What happens when you merge:</strong>
+                <ul class="list-disc ml-5 mt-1 space-y-1">
+                    <li>All {{ total_count }} operational records will be <strong>added</strong> to the existing project</li>
+                    <li>Existing project's data is <strong>preserved</strong> (not replaced)</li>
+                    <li>Client/Vendor names will be updated to match TEMP project</li>
+                    <li>TEMP-029 will be deleted and archived</li>
+                </ul>
+            </div>
+
+            <div class="space-y-3">
+                {% for existing_proj in mergeable_projects %}
+                <div class="bg-white border border-purple-200 rounded-lg p-4 hover:border-purple-400 transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="font-mono font-bold text-purple-900 mb-2">{{ existing_proj.project_id }}</div>
+                            <div class="space-y-2 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Current Project Code:</span>
+                                    <div class="font-semibold text-gray-700">{{ existing_proj.project_code }}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Will become:</span>
+                                    <div class="font-semibold text-orange-700">{{ project.project_code }} {% if existing_proj.project_code != project.project_code %}→ NEW{% endif %}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-medium">{{ existing_proj.project_status }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <form method="POST" action="{% url 'projects:admin_temp_cleanup_action' project.project_id %}"
+                              onsubmit="return confirm('🔀 MERGE INTO EXISTING PROJECT\n\nTarget: {{ existing_proj.project_id }}\nCode: {{ existing_proj.code }}\n\n{% if existing_proj.client_name != project.client_name %}⚠️ Client will change: {{ existing_proj.client_name }} → {{ project.client_name }}\n{% endif %}{% if existing_proj.vendor_name != project.vendor_name %}⚠️ Vendor will change: {{ existing_proj.vendor_name }} → {{ project.vendor_name }}\n{% endif %}\nMigrate {{ total_count }} records?\n\nProceed?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="merge_into_existing">
+                            <input type="hidden" name="target_project_id" value="{{ existing_proj.project_id }}">
+                            <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium whitespace-nowrap text-sm">
+                                Merge Here
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-gray-100 border border-gray-300 rounded-lg p-6 text-center">
+            <div class="text-gray-600 mb-2">🔍 No existing projects found for merging</div>
+            <div class="text-sm text-gray-500">No projects match: same location + (same client or same vendor)</div>
+        </div>
+        {% endif %}
+
+        <!-- Cancel Button -->
+        <div class="mt-6 text-center">
+            <a href="{% url 'projects:admin_temp_cleanup' %}" class="inline-block px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Cancel
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

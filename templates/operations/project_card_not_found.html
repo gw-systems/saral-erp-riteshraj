@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}No Project Card - {{ project.project_code }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+            
+            <!-- Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
+                <svg width="40" height="40" aria-hidden="true" class="h-10 w-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+
+            <!-- Heading -->
+            <h1 class="text-3xl font-bold text-gray-900 mb-3">No Project Card Defined</h1>
+            
+            <!-- Project Info -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 inline-block">
+                <p class="text-sm text-gray-600 mb-1">Project</p>
+                <p class="text-lg font-semibold text-gray-900">{{ project.project_code }}</p>
+            </div>
+
+            <!-- Message -->
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                {% if can_create %}
+                    This project doesn't have a project card yet. Create one to define storage rates, handling charges, and other commercials.
+                {% else %}
+                    This project doesn't have a project card defined yet. Please contact the backoffice team to create one.
+                {% endif %}
+            </p>
+
+            <!-- Actions -->
+            <div class="flex justify-center gap-4">
+                {% if can_create %}
+                <a href="{% url 'projects:project_card_create' %}?project={{ project.project_id }}" 
+                   class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Create Project Card
+                </a>
+                {% endif %}
+                
+                <a href="{% url 'projects:project_card_list' %}" 
+                   class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Project Cards
+                </a>
+
+                <a href="{% url 'projects:project_detail' project.project_id %}" 
+                   class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    View Project Details
+                </a>
+            </div>
+
+            <!-- Help Text -->
+            <div class="mt-8 p-4 bg-gray-50 rounded-lg max-w-md mx-auto">
+                <p class="text-sm text-gray-600">
+                    <strong>Note:</strong> Rate cards define all commercial terms including storage rates, handling charges, value-added services, and infrastructure costs for each project.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

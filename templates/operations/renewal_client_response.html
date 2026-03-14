@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Record Client Response - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" class="text-gray-500 hover:text-gray-600">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">Record Client Response</h1>
+            </div>
+            <p class="text-gray-600 mt-1">
+                Project: {{ tracker.project_card.project.project_code }}
+            </p>
+        </div>
+
+        <!-- Success Banner -->
+        <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700">
+                        <strong>Great!</strong> The client has responded. Please record the details below.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Info -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-500">Client:</span>
+                    <span class="text-gray-900 font-medium ml-2">{{ tracker.project_card.project.client_name }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Agreement Expires:</span>
+                    <span class="text-gray-900 font-medium ml-2">{{ tracker.project_card.agreement_end_date|date:"d M Y" }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Sales Manager:</span>
+                    <span class="text-gray-900 font-medium ml-2">{{ tracker.project_card.project.sales_manager|default:"-" }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Reminders Sent:</span>
+                    <span class="text-gray-900 font-medium ml-2">{{ tracker.get_workflow_stage }}/7 stages</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Client Response Summary <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="response_summary" rows="8" required
+                              placeholder="Record the complete client response:
+
+1. Response Date: [Date]
+2. Received Via: [Email/Call/Meeting]
+3. Client's Decision: [Wants to renew / Not renewing / Needs time / Discussing terms]
+4. Key Points Discussed:
+   -
+   -
+5. Client's Concerns (if any):
+   -
+6. Agreed Next Steps:
+   -
+7. Follow-up Required: [Yes/No]
+8. Target Date for Final Decision: [Date if applicable]
+
+Additional Notes:
+"
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-sm"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Include all important details - this becomes part of the permanent record</p>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <h3 class="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-1.5">
+                        <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Important Guidelines
+                    </h3>
+                    <ul class="text-xs text-yellow-700 space-y-1 list-disc list-inside">
+                        <li>Record exact quotes from client where relevant</li>
+                        <li>Include names of people involved in the conversation</li>
+                        <li>Note any commitments or promises made by either party</li>
+                        <li>If client needs more time, record the specific deadline they mentioned</li>
+                        <li>If negotiating terms, record what was discussed</li>
+                        <li>This response will be visible to sales manager and management</li>
+                    </ul>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end gap-3">
+                    <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}"
+                       class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <svg width="16" height="16" aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Save Client Response
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Next Steps Info -->
+        <div class="bg-blue-50 rounded-lg p-4 mt-6">
+            <h3 class="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-1.5">
+                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+                </svg>
+                What Happens Next?
+            </h3>
+            <ul class="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                <li>Status will automatically change to "Client Responded"</li>
+                <li>This response will be logged in the activity timeline</li>
+                <li>Sales manager should be informed of the client's response</li>
+                <li>If renewal confirmed, create new project card and link it to this tracker</li>
+                <li>If not renewing, update tracker status to "Not Renewed"</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Session #{{ session.id }} — Porter Invoice Editor{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="mb-6">
+        <a href="{% url 'operations:porter_invoice_dashboard' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Dashboard</a>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">Session #{{ session.id }}</h1>
+    </div>
+
+    <!-- Session Metadata -->
+    <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Type</p>
+                {% if session.session_type == 'batch' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">Batch</span>
+                {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mt-1">Single</span>
+                {% endif %}
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Status</p>
+                {% if session.status == 'completed' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">Completed</span>
+                {% elif session.status == 'processing' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">Processing</span>
+                {% elif session.status == 'failed' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-1">Failed</span>
+                {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 mt-1">{{ session.get_status_display }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Created By</p>
+                <p class="text-sm font-medium text-gray-900 mt-1">{{ session.created_by.get_full_name }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Date</p>
+                <p class="text-sm font-medium text-gray-900 mt-1">{{ session.created_at|date:"d M Y, H:i" }}</p>
+            </div>
+            {% if session.session_type == 'single' %}
+            {% with file=files.first %}
+            {% if file and file.crn %}
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Order Number</p>
+                <p class="text-sm font-medium text-gray-900 mt-1 font-mono">{{ file.crn }}</p>
+            </div>
+            {% endif %}
+            {% endwith %}
+            {% endif %}
+        </div>
+
+        {% if session.session_type == 'batch' %}
+        <div class="border-t mt-4 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Multiplier</p>
+                <p class="text-sm font-medium text-gray-900 mt-1">{{ session.multiplier|default_if_none:"—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Total Files</p>
+                <p class="text-sm font-medium text-gray-900 mt-1">{{ session.total_files }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Success</p>
+                <p class="text-sm font-medium text-green-600 mt-1">{{ session.success_count }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Errors / Skipped</p>
+                <p class="text-sm font-medium mt-1">
+                    <span class="text-red-600">{{ session.error_count }}</span>
+                    <span class="text-gray-400 mx-1">/</span>
+                    <span class="text-yellow-600">{{ session.skipped_count }}</span>
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if session.result_zip and session.result_zip.name %}
+        <div class="border-t mt-4 pt-4">
+            <a href="{% url 'operations:porter_invoice_download_zip' session.id %}"
+               class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Download All (ZIP)
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Files Table -->
+    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Filename</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">CRN</th>
+                    {% if session.session_type == 'batch' %}
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Old Total</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">New Total</th>
+                    {% endif %}
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Download</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for file in files %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title="{{ file.original_filename }}">{{ file.original_filename }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">{{ file.crn|default:"—" }}</td>
+                    {% if session.session_type == 'batch' %}
+                    <td class="px-4 py-3 text-sm text-gray-600 text-right">{% if file.old_total is not None %}{{ file.old_total|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 font-medium text-right">{% if file.new_total is not None %}{{ file.new_total|floatformat:0 }}{% else %}—{% endif %}</td>
+                    {% endif %}
+                    <td class="px-4 py-3 text-sm text-center">
+                        {% if file.status == 'success' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Success</span>
+                        {% elif file.status == 'error' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" title="{{ file.error_message }}">Error</span>
+                        {% elif file.status == 'skipped' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Skipped</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">{{ file.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-center">
+                        {% if file.edited_pdf and file.edited_pdf.name %}
+                        <a href="{% url 'operations:porter_invoice_download_file' file.id %}"
+                           class="text-blue-600 hover:text-blue-800 font-medium">Download</a>
+                        {% else %}
+                        <span class="text-gray-400">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">No files in this session.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

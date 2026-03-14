@@ -1,0 +1,786 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.project_code }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <a href="javascript:history.back()" class="text-gray-500 hover:text-gray-600 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Project Details</h1>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    {% if user.role in 'backoffice,admin,director,super_user' %}
+                    <a href="{% url 'projects:project_edit' project.project_id %}?return_url={{ request.get_full_path|urlencode }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Project
+                    </a>
+
+                    {% if project_card %}
+                    <a href="{% url 'projects:project_card_edit' project_card_id=project_card.id %}?return_url={{ request.get_full_path|urlencode }}"
+                        class="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Edit Project Card
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Information Card - CONCISE VERSION -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Information</h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Project ID</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.project_id }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Code</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.code }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Series Type</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.series_type }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Status</label>
+                    {% if project.project_status == 'Active' %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                    {% elif project.project_status == 'Operation Not Started' %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Not Started</span>
+                    {% elif project.project_status == 'Notice Period' %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Notice Period</span>
+                    {% else %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Client</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.client_name }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Vendor</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.vendor_name }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Location</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.location }}, {{ project.state }}</p>
+                </div>
+
+                <div class="col-span-1">
+                    <label class="text-xs font-medium text-gray-500">Ops. Mode</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.get_operation_mode_display|default:"-" }}</p>
+                </div>
+
+                <div class="col-span-1">
+                    <label class="text-xs font-medium text-gray-500">MIS</label>
+                    {% if project.mis_status %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full
+                            {% if 'daily' in project.mis_status %}bg-blue-100 text-blue-800
+                            {% elif 'weekly' in project.mis_status %}bg-purple-100 text-purple-800
+                            {% elif 'monthly' in project.mis_status %}bg-green-100 text-green-800
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ project.get_mis_status_display }}
+                        </span>
+                    {% else %}
+                        <p class="text-sm text-gray-500">-</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Operation Start Date</label>
+                    {% if project_card and project_card.operation_start_date %}
+                        <p class="text-sm text-green-600 font-medium flex items-center gap-1">
+                            <svg class="h-4 w-4 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            {{ project_card.operation_start_date|date:"d M Y" }}
+                        </p>
+                    {% else %}
+                        <p class="text-sm text-gray-500 flex items-center gap-1">
+                            <svg class="h-4 w-4 flex-shrink-0 text-gray-400" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Not started yet
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Billing Start Date</label>
+                    {% if project_card and project_card.billing_start_date %}
+                        <p class="text-sm text-gray-900 font-medium">{{ project_card.billing_start_date|date:"d M Y" }}</p>
+                    {% else %}
+                        <p class="text-sm text-gray-500 flex items-center gap-1">
+                            <svg class="h-4 w-4 flex-shrink-0 text-amber-400" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Not set
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Information Card - TEXT ONLY -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Team</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Sales Manager</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.sales_manager|default:"-" }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Operation Coordinator</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.operation_coordinator|default:"-" }}</p>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Backup Coordinator</label>
+                    <p class="text-sm text-gray-900 font-medium">{{ project.backup_coordinator|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== RATE CARD SECTION (IF EXISTS) ========== -->
+        {% if project_card %}
+
+        <!-- Linked Master Data -->
+        {% if project_card.client_card or project_card.vendor_warehouse %}
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-blue-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Linked Master Data
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Client Card Link -->
+                {% if project_card.client_card %}
+                <div class="border-l-4 border-green-500 bg-green-50 rounded-lg p-4">
+                    <p class="text-xs font-semibold text-green-800 uppercase mb-2">Client Card</p>
+                    <a href="{% url 'projects:client_card_detail' project_card.client_card.client_code %}"
+                       class="text-sm font-bold text-green-600 hover:text-green-800 hover:underline flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        {{ project_card.client_card.client_code }} - {{ project_card.client_card.client_legal_name }}
+                        <svg class="h-4 w-4 ml-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                    <p class="text-xs text-gray-600 mt-1">
+                        PAN: {{ project_card.client_card.client_pan|default:"-" }}
+                    </p>
+                </div>
+                {% else %}
+                <div class="border-l-4 border-gray-300 bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Client Card</p>
+                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                        <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Not linked
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Warehouse Link -->
+                {% if project_card.vendor_warehouse %}
+                <div class="border-l-4 border-purple-500 bg-purple-50 rounded-lg p-4">
+                    <p class="text-xs font-semibold text-purple-800 uppercase mb-2">Warehouse</p>
+                    <a href="{% url 'supply:warehouse_detail' project_card.vendor_warehouse.warehouse_code %}"
+                       class="text-sm font-bold text-purple-600 hover:text-purple-800 hover:underline flex items-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        {{ project_card.vendor_warehouse.warehouse_code }}
+                        <svg class="h-4 w-4 ml-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                    <p class="text-xs text-gray-600 mt-1">
+                        {{ project_card.vendor_warehouse.vendor_code.vendor_short_name }} •
+                        {{ project_card.vendor_warehouse.warehouse_location_id.city }}
+                    </p>
+                </div>
+                {% else %}
+                <div class="border-l-4 border-gray-300 bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Warehouse</p>
+                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                        <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Not linked
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Agreement Summary -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-gray-600 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Agreement Summary
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Agreement Period -->
+                <div>
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Agreement Period</label>
+                    <p class="text-gray-900 font-medium">{{ project_card.agreement_start_date|date:"d M Y" }}</p>
+                    <p class="text-gray-900 font-medium">{{ project_card.agreement_end_date|date:"d M Y" }}</p>
+                </div>
+
+                <!-- Escalation -->
+                <div>
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Escalation</label>
+                    {% if project_card.has_fixed_escalation %}
+                        <p class="text-gray-900 font-medium">{{ project_card.annual_escalation_percent }}% Annual</p>
+                        <p class="text-xs text-gray-500 mt-1">Effective: {{ project_card.yearly_escalation_date|date:"d M Y" }}</p>
+                    {% else %}
+                        <p class="text-gray-500">No Fixed Escalation</p>
+                    {% endif %}
+                </div>
+
+                <!-- Security Deposit -->
+                <div>
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Security Deposit</label>
+                    <p class="text-gray-900 font-medium text-lg">₹{{ project_card.security_deposit|floatformat:0 }}</p>
+                </div>
+
+                <!-- Project Margin -->
+                <div>
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Project Margin</label>
+                    {% if margin_percent.overall %}
+                        <div class="relative group inline-block">
+                            <p class="text-2xl font-bold cursor-help
+                                {% if margin_percent.overall >= 20 %}text-green-600
+                                {% elif margin_percent.overall >= 10 %}text-yellow-600
+                                {% elif margin_percent.overall >= 5 %}text-orange-600
+                                {% else %}text-red-600{% endif %}">
+                                {{ margin_percent.overall }}%
+                            </p>
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500">No data</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Terms -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-gray-600 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                Payment Terms
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Storage Payment</label>
+                    {% if project_card.storage_payment_days %}
+                        <p class="text-gray-900 font-medium">{{ project_card.storage_payment_days }} days</p>
+                    {% else %}
+                        <p class="text-gray-500 flex items-center gap-1">
+                            <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Not specified
+                        </p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Handling Payment</label>
+                    {% if project_card.handling_payment_days %}
+                        <p class="text-gray-900 font-medium">{{ project_card.handling_payment_days }} days</p>
+                    {% else %}
+                        <p class="text-gray-500 flex items-center gap-1">
+                            <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Not specified
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Client & Vendor Rates Side by Side -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+            <!-- CLIENT RATES -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="h-5 w-5 text-gray-600 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Client Rates
+                </h2>
+
+                <!-- Storage Rates -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Storage
+                    </h3>
+                    {% with client_storage=None %}
+                    {% for rate in storage_rates %}
+                        {% if rate.rate_for == 'client' %}
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-600">Type</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
+                                        {{ rate.space_type|upper }}
+                                    </span>
+                                </div>
+                                {% if rate.minimum_billable_area %}
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-600">Min Billable</span>
+                                    <span class="font-semibold text-gray-900">{{ rate.minimum_billable_area|floatformat:0 }}</span>
+                                </div>
+                                {% endif %}
+                                {% if rate.monthly_billable_amount %}
+                                <div class="flex justify-between items-center pt-2 border-t border-blue-300">
+                                    <span class="text-sm font-medium text-gray-700">Monthly</span>
+                                    <span class="text-lg font-bold text-blue-600">₹{{ rate.monthly_billable_amount|floatformat:0 }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    {% if not client_storage %}
+                        <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                            <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            No storage rates defined
+                        </p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Handling Rates -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                        Handling
+                    </h3>
+                    {% with has_client_handling=False %}
+                        <div class="space-y-3">
+                            {% for rate in handling_rates %}
+                            {% if rate.rate_for == 'client' %}
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <p class="font-semibold text-gray-900">{{ rate.direction|title }} - {{ rate.channel|upper }}</p>
+                                            <p class="text-xs text-gray-600">{{ rate.base_type|title }}</p>
+                                        </div>
+                                        <span class="text-lg font-bold text-green-600">₹{{ rate.rate|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not has_client_handling %}
+                            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                                <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                No handling rates defined
+                            </p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- VAS -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Value Added Services
+                    </h3>
+                    {% with has_client_vas=False %}
+                        <div class="space-y-2">
+                            {% for service in vas_services %}
+                            {% if service.rate_for == 'client' %}
+                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                    <div class="flex justify-between items-center">
+                                        <p class="font-semibold text-gray-900">{{ service.service_type|title }}</p>
+                                        <span class="font-bold text-purple-600">
+                                            {% if service.rate %}₹{{ service.rate|floatformat:2 }}{% else %}At Actual{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not has_client_vas %}
+                            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                                <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                No VAS defined
+                            </p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Infrastructure -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        Infrastructure
+                    </h3>
+                    {% with has_client_infra=False %}
+                        <div class="space-y-2">
+                            {% for cost in infrastructure_costs %}
+                            {% if cost.rate_for == 'client' %}
+                                <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 flex justify-between items-center">
+                                    <p class="font-semibold text-gray-900">{{ cost.cost_type|title }}</p>
+                                    <p class="font-bold text-orange-600">₹{{ cost.amount|floatformat:0 }}</p>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not has_client_infra %}
+                            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                                <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                No infrastructure costs defined
+                            </p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            <!-- VENDOR RATES -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="h-5 w-5 text-gray-600 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
+                    Vendor Rates
+                </h2>
+
+                <!-- Storage Rates -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Storage
+                    </h3>
+                    {% with vendor_storage=None %}
+                    {% for rate in storage_rates %}
+                        {% if rate.rate_for == 'vendor' %}
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-600">Type</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
+                                        {{ rate.space_type|upper }}
+                                    </span>
+                                </div>
+                                {% if rate.minimum_billable_area %}
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-600">Min Billable</span>
+                                    <span class="font-semibold text-gray-900">{{ rate.minimum_billable_area|floatformat:0 }}</span>
+                                </div>
+                                {% endif %}
+                                {% if rate.monthly_billable_amount %}
+                                <div class="flex justify-between items-center pt-2 border-t border-blue-300">
+                                    <span class="text-sm font-medium text-gray-700">Monthly</span>
+                                    <span class="text-lg font-bold text-blue-600">₹{{ rate.monthly_billable_amount|floatformat:0 }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    {% if not vendor_storage %}
+                        <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                            <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            No storage rates defined
+                        </p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Handling Rates -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                        Handling
+                    </h3>
+                    {% with has_vendor_handling=False %}
+                        <div class="space-y-3">
+                            {% for rate in handling_rates %}
+                            {% if rate.rate_for == 'vendor' %}
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <p class="font-semibold text-gray-900">{{ rate.direction|title }} - {{ rate.channel|upper }}</p>
+                                            <p class="text-xs text-gray-600">{{ rate.base_type|title }}</p>
+                                        </div>
+                                        <span class="text-lg font-bold text-green-600">₹{{ rate.rate|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not has_vendor_handling %}
+                            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                                <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                No handling rates defined
+                            </p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- VAS -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Value Added Services
+                    </h3>
+                    {% with has_vendor_vas=False %}
+                        <div class="space-y-2">
+                            {% for service in vas_services %}
+                            {% if service.rate_for == 'vendor' %}
+                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                    <div class="flex justify-between items-center">
+                                        <p class="font-semibold text-gray-900">{{ service.service_type|title }}</p>
+                                        <span class="font-bold text-purple-600">
+                                            {% if service.rate %}₹{{ service.rate|floatformat:2 }}{% else %}At Actual{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not has_vendor_vas %}
+                            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                                <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                No VAS defined
+                            </p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Infrastructure -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        Infrastructure
+                    </h3>
+                    {% with has_vendor_infra=False %}
+                        <div class="space-y-2">
+                            {% for cost in infrastructure_costs %}
+                            {% if cost.rate_for == 'vendor' %}
+                                <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 flex justify-between items-center">
+                                    <p class="font-semibold text-gray-900">{{ cost.cost_type|title }}</p>
+                                    <p class="font-bold text-orange-600">₹{{ cost.amount|floatformat:0 }}</p>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not has_vendor_infra %}
+                            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-1">
+                                <svg class="h-4 w-4 text-amber-400 flex-shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                No infrastructure costs defined
+                            </p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Notes Section -->
+        {% if project_card.notes %}
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-600 mr-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Notes
+            </h2>
+            <p class="text-gray-700 whitespace-pre-wrap">{{ project_card.notes }}</p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No Project Card -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-yellow-400 mr-3" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-yellow-900 mb-2">No Project Card Found</h3>
+                    <p class="text-yellow-700">This project does not have a project card yet.</p>
+                    {% if user.role in 'admin,backoffice' %}
+                    <a href="{% url 'projects:project_card_by_project' project.project_id %}?project={{ project.project_id }}"
+                       class="mt-3 inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        Create Project Card
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Notice Period Information (if applicable) -->
+        {% if project.project_status == 'Notice Period' and project.notice_period_end_date %}
+        <div class="bg-orange-50 border-l-4 border-orange-400 p-6 mb-6">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-orange-400 mr-3" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-orange-900 mb-2">Notice Period Active</h3>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <p class="text-orange-700 font-medium">Start Date</p>
+                            <p class="text-orange-900">{{ project.notice_period_start_date|date:"d M Y" }}</p>
+                        </div>
+                        <div>
+                            <p class="text-orange-700 font-medium">Duration</p>
+                            <p class="text-orange-900">{{ project.notice_period_duration }} days</p>
+                        </div>
+                        <div>
+                            <p class="text-orange-700 font-medium">End Date</p>
+                            <p class="text-orange-900 font-bold">{{ project.notice_period_end_date|date:"d M Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+function updateCoordinator(projectId, field, coordinatorId) {
+    const fieldName = field === 'operation_coordinator' ? 'operation-coordinator' : 'backup-coordinator';
+    const statusEl = document.getElementById(`${fieldName}-status`);
+    const selectEl = document.getElementById(`${fieldName}-select`);
+
+    // Show loading
+    statusEl.textContent = 'Updating...';
+    statusEl.className = 'text-xs text-blue-600 mt-1';
+    selectEl.disabled = true;
+
+    // Send update
+    fetch(`/projects/${projectId}/update-coordinator/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `field=${field}&coordinator_id=${coordinatorId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusEl.textContent = data.message;
+            statusEl.className = 'text-xs text-green-600 mt-1';
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 3000);
+        } else {
+            statusEl.textContent = 'Error: ' + data.error;
+            statusEl.className = 'text-xs text-red-600 mt-1';
+        }
+        selectEl.disabled = false;
+    })
+    .catch(error => {
+        statusEl.textContent = 'Update failed';
+        statusEl.className = 'text-xs text-red-600 mt-1';
+        selectEl.disabled = false;
+    });
+}
+</script>
+
+<!-- DOCUMENTS & AGREEMENTS SECTION -->
+<div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <svg class="h-5 w-5 text-gray-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            Documents &amp; Agreements
+        </h3>
+        <a href="{% url 'projects:project_document_upload' project.project_id %}"
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold inline-flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+            <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Manage Documents
+        </a>
+    </div>
+
+    {% if project.documents %}
+        {% with documents=project.documents.get_all_documents %}
+        {% if documents %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {% for doc in documents %}
+                <div class="p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200 hover:shadow-md transition">
+                    <div class="flex items-start gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 flex-shrink-0" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-800 text-sm mb-2">{{ doc.name }}</h4>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <a href="{% url 'projects:project_document_preview' project.project_id doc.field %}"
+                                   target="_blank"
+                                   class="text-blue-600 hover:text-blue-800 text-xs font-medium inline-flex items-center gap-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                    <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    Preview
+                                </a>
+                                <span class="text-gray-500 text-xs">|</span>
+                                <a href="{% url 'projects:project_document_download' project.project_id doc.field %}"
+                                   class="text-green-600 hover:text-green-800 text-xs font-medium inline-flex items-center gap-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                                    <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    Download
+                                </a>
+                                <span class="text-gray-500 text-xs">|</span>
+                                {% if project.documents and project.documents.id %}
+                                <span class="text-gray-500 text-xs">|</span>
+                                <form method="POST"
+                                      action="{% url 'accounts:universal_file_delete' 'projects' 'projectdocument' project.documents.id doc.field %}"
+                                      onsubmit="return confirm('Are you sure you want to delete this file? This action cannot be undone.');"
+                                      class="inline m-0">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-800 text-xs font-medium hover:underline inline-flex items-center gap-1">
+                                        <svg class="h-3.5 w-3.5" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-500 mb-3" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-gray-500 text-sm mb-3">No documents uploaded yet</p>
+                <a href="{% url 'projects:project_document_upload' project.project_id %}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Upload First Document
+                </a>
+            </div>
+        {% endif %}
+        {% endwith %}
+    {% else %}
+        <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-500 mb-3" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-gray-500 text-sm mb-3">No documents uploaded yet</p>
+            <a href="{% url 'projects:project_document_upload' project.project_id %}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                <svg class="h-4 w-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Upload First Document
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

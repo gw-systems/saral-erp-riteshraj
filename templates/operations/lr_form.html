@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit {{ lr.lr_number }}{% else %}Create LR{% endif %} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6 flex justify-between items-end">
+            <div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'operations:lr_list' %}" class="text-gray-500 hover:text-gray-600 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                        <svg aria-hidden="true" width="24" height="24" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">
+                        {% if is_edit %}Edit LR {{ lr.lr_number }}{% else %}Create Lorry Receipt{% endif %}
+                    </h1>
+                </div>
+                <p class="text-gray-600 mt-1 ml-9">
+                    {% if is_edit %}Update the lorry receipt details{% else %}Fill in the details to generate a new LR / Consignment Note{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" id="lrForm">
+            {% csrf_token %}
+
+            <!-- Section 1: Project -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Project (Internal Record)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Project <span class="text-red-500">*</span></label>
+                        <select name="project" required
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">Select Project</option>
+                            {% for p in projects %}
+                            <option value="{{ p.project_id }}" {% if is_edit and lr.project.project_id == p.project_id %}selected{% endif %}>
+                                {{ p.project_code }} - {{ p.client_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">For internal records only. Not printed on the LR.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">LR Date <span class="text-red-500">*</span></label>
+                        <input type="date" name="lr_date" required
+                            value="{% if is_edit %}{{ lr.lr_date|date:'Y-m-d' }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: LR Header -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">LR Header</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">From Location <span class="text-red-500">*</span></label>
+                        <input type="text" name="from_location" required
+                            value="{% if is_edit %}{{ lr.from_location }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. Mumbai">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">To Location <span class="text-red-500">*</span></label>
+                        <input type="text" name="to_location" required
+                            value="{% if is_edit %}{{ lr.to_location }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. Delhi">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle No.</label>
+                        <input type="text" name="vehicle_no"
+                            value="{% if is_edit %}{{ lr.vehicle_no }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. MH04AB1234">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
+                        <input type="text" name="vehicle_type"
+                            value="{% if is_edit %}{{ lr.vehicle_type }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. 14ft Closed Container">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Address of Delivery Office</label>
+                        <textarea name="delivery_office_address" rows="2"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Address of the delivery office">{% if is_edit %}{{ lr.delivery_office_address }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Consignment Parties -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Consignment Parties</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Consignor Name</label>
+                        <input type="text" name="consignor_name"
+                            value="{% if is_edit %}{{ lr.consignor_name }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Consignor's name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Consignee Name</label>
+                        <input type="text" name="consignee_name"
+                            value="{% if is_edit %}{{ lr.consignee_name }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Consignee's name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Consignor Address</label>
+                        <textarea name="consignor_address" rows="2"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Consignor's address">{% if is_edit %}{{ lr.consignor_address }}{% endif %}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Consignee Address</label>
+                        <textarea name="consignee_address" rows="2"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Consignee's address">{% if is_edit %}{{ lr.consignee_address }}{% endif %}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Consignor's GST No.</label>
+                        <input type="text" name="consignor_gst_no"
+                            value="{% if is_edit %}{{ lr.consignor_gst_no }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="GST Number">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Consignee's GST No.</label>
+                        <input type="text" name="consignee_gst_no"
+                            value="{% if is_edit %}{{ lr.consignee_gst_no }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="GST Number">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Shipment Details -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Shipment Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Invoice No.</label>
+                        <input type="text" name="invoice_no"
+                            value="{% if is_edit %}{{ lr.invoice_no }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Invoice number">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">GST Paid By</label>
+                        <div class="flex items-center gap-6 mt-2">
+                            {% for value, label in gst_paid_by_choices %}
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="gst_paid_by" value="{{ value }}"
+                                    {% if is_edit %}{% if lr.gst_paid_by == value %}checked{% endif %}{% elif value == 'consignee' %}checked{% endif %}
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mode of Packing</label>
+                        <input type="text" name="mode_of_packing"
+                            value="{% if is_edit %}{{ lr.mode_of_packing }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. Carton, Wooden Box">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Value (Declared)</label>
+                        <input type="text" name="value"
+                            value="{% if is_edit %}{{ lr.value }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. Rs. 1,50,000/-">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                        <textarea name="remarks" rows="2"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Any additional remarks">{% if is_edit %}{{ lr.remarks }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Insurance -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Insurance Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                        <input type="text" name="insurance_company"
+                            value="{% if is_edit %}{{ lr.insurance_company }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Policy No.</label>
+                        <input type="text" name="insurance_policy_no"
+                            value="{% if is_edit %}{{ lr.insurance_policy_no }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" name="insurance_date"
+                            value="{% if is_edit %}{{ lr.insurance_date }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                        <input type="text" name="insurance_amount"
+                            value="{% if is_edit %}{{ lr.insurance_amount }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Risk</label>
+                        <input type="text" name="insurance_risk"
+                            value="{% if is_edit %}{{ lr.insurance_risk }}{% endif %}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Items Table -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Items / Consignment Details</h3>
+
+                <!-- Table Header -->
+                <div class="grid grid-cols-12 gap-2 mb-3 text-xs font-bold text-gray-500 uppercase">
+                    <div class="col-span-2">Packages</div>
+                    <div class="col-span-3">Description</div>
+                    <div class="col-span-2">Actual Weight</div>
+                    <div class="col-span-2">Charged Weight</div>
+                    <div class="col-span-2">Amount</div>
+                    <div class="col-span-1 text-center">Action</div>
+                </div>
+
+                <!-- Line Items Container -->
+                <div id="lineItemsContainer">
+                    {% if is_edit and line_items %}
+                        {% for item in line_items %}
+                        <div class="lr-line-item grid grid-cols-12 gap-2 mb-3 items-start">
+                            <input type="text" name="item_packages[]" value="{{ item.packages }}"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 10 Boxes">
+                            <input type="text" name="item_description[]" value="{{ item.description }}"
+                                class="col-span-3 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Description of goods">
+                            <input type="text" name="item_actual_weight[]" value="{{ item.actual_weight }}"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 500 Kgs">
+                            <input type="text" name="item_charged_weight[]" value="{{ item.charged_weight }}"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 500 Kgs">
+                            <input type="text" name="item_amount[]" value="{{ item.amount }}"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 5000">
+                            <button type="button" onclick="removeLineItem(this)"
+                                class="col-span-1 text-red-500 hover:text-red-700 text-center text-xl font-bold py-1">
+                                &times;
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Default empty row -->
+                        <div class="lr-line-item grid grid-cols-12 gap-2 mb-3 items-start">
+                            <input type="text" name="item_packages[]"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 10 Boxes">
+                            <input type="text" name="item_description[]"
+                                class="col-span-3 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Description of goods">
+                            <input type="text" name="item_actual_weight[]"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 500 Kgs">
+                            <input type="text" name="item_charged_weight[]"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 500 Kgs">
+                            <input type="text" name="item_amount[]"
+                                class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g. 5000">
+                            <button type="button" onclick="removeLineItem(this)"
+                                class="col-span-1 text-red-500 hover:text-red-700 text-center text-xl font-bold py-1">
+                                &times;
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="button" onclick="addLineItem()"
+                    class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm transition">
+                    + Add Row
+                </button>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end gap-3 pt-4 pb-8">
+                <a href="{% if is_edit %}{% url 'operations:lr_detail' lr.id %}{% else %}{% url 'operations:lr_list' %}{% endif %}"
+                    class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transform hover:-translate-y-0.5 transition text-sm">
+                    {% if is_edit %}Update LR{% else %}Create LR{% endif %}
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+function addLineItem() {
+    const container = document.getElementById('lineItemsContainer');
+    const row = document.createElement('div');
+    row.className = 'lr-line-item grid grid-cols-12 gap-2 mb-3 items-start';
+    row.innerHTML = `
+        <input type="text" name="item_packages[]"
+            class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g. 10 Boxes">
+        <input type="text" name="item_description[]"
+            class="col-span-3 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Description of goods">
+        <input type="text" name="item_actual_weight[]"
+            class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g. 500 Kgs">
+        <input type="text" name="item_charged_weight[]"
+            class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g. 500 Kgs">
+        <input type="text" name="item_amount[]"
+            class="col-span-2 border border-gray-300 rounded text-sm px-2 py-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g. 5000">
+        <button type="button" onclick="removeLineItem(this)"
+            class="col-span-1 text-red-500 hover:text-red-700 text-center text-xl font-bold py-1">
+            &times;
+        </button>
+    `;
+    container.appendChild(row);
+}
+
+function removeLineItem(btn) {
+    const container = document.getElementById('lineItemsContainer');
+    const rows = container.querySelectorAll('.lr-line-item');
+    if (rows.length > 1) {
+        btn.closest('.lr-line-item').remove();
+    } else {
+        alert('At least one row is required.');
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,717 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Backoffice Dashboard - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Specific transition properties — no transition */
+    .metric-card {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    /* Respect prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+        .metric-card,
+        .metric-card:hover {
+            transition: none;
+            transform: none;
+        }
+    }
+    /* Prevent number width shift */
+    .metric-number {
+        font-variant-numeric: tabular-nums;
+    }
+    /* Action card transitions */
+    .action-card {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .action-card {
+            transition: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
+
+            <!-- Total Projects Card -->
+            <a href="{% url 'projects:project_list_all' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-blue-50 uppercase">Projects</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_projects }}</p>
+                        <p class="text-xs text-blue-50 mt-1">{{ active_projects_count }} Active</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Total Clients Card -->
+            <a href="{% url 'projects:client_card_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-emerald-50 uppercase">Clients</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_clients }}</p>
+                        <p class="text-xs text-emerald-50 mt-1">Client Cards</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Total Vendors Card -->
+            <a href="{% url 'supply:vendor_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-indigo-50 uppercase">Vendors</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_vendors }}</p>
+                        <p class="text-xs text-indigo-50 mt-1">Vendor Cards</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Total Warehouses Card -->
+            <a href="{% url 'supply:warehouse_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-purple-50 uppercase">Warehouses</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_warehouses }}</p>
+                        <p class="text-xs text-purple-50 mt-1">Active</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Incomplete Project Cards -->
+            <a href="{% url 'projects:incomplete_project_cards' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-rose-400 to-rose-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-rose-50 uppercase">Incomplete</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ incomplete_cards_count }}</p>
+                        <p class="text-xs text-rose-50 mt-1">Missing Fields</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Agreement Renewals -->
+            <a href="{% url 'projects:renewal_tracker_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-amber-50 uppercase">Renewals</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_renewals }}</p>
+                        <p class="text-xs text-amber-50 mt-1">
+                            {% if renewals_overdue > 0 %}
+                            {{ renewals_overdue }} Overdue
+                            {% else %}
+                            {{ renewals_upcoming }} Upcoming
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Annual Escalations -->
+            <a href="{% url 'projects:escalation_tracker_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-pink-50 uppercase">Escalations</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_escalations }}</p>
+                        <p class="text-xs text-pink-50 mt-1">
+                            {% if escalations_overdue_tracker > 0 %}
+                            {{ escalations_overdue_tracker }} Overdue
+                            {% else %}
+                            {{ escalations_upcoming_tracker }} Upcoming
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Missing Project Cards -->
+            <a href="{% url 'projects:project_card_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-yellow-50 uppercase">Missing</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ projects_without_rate_card }}</p>
+                        <p class="text-xs text-yellow-50 mt-1">w/o Cards</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- No Main Agreement -->
+            <a href="{% url 'projects:project_list_filtered' 'missing_agreement' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-purple-50 uppercase">No Agreement</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ missing_agreement_count }}</p>
+                        <p class="text-xs text-purple-50 mt-1">WAAS, not inactive</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- No Vendor Addendum -->
+            <a href="{% url 'projects:project_list_filtered' 'missing_addendum_vendor' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-fuchsia-400 to-fuchsia-600 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-fuchsia-50 uppercase">No Addendum</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ missing_addendum_count }}</p>
+                        <p class="text-xs text-fuchsia-50 mt-1">WAAS, not inactive</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Agreement E-Sign Card -->
+            <a href="{% url 'adobe_sign:dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-md cursor-pointer p-5 metric-card">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-red-50 uppercase">E-Sign</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ adobe_total_count }}</p>
+                        <p class="text-xs text-red-50 mt-1">
+                            {% if adobe_pending_count > 0 %}
+                            {{ adobe_pending_count }} Pending
+                            {% elif adobe_draft_count > 0 %}
+                            {{ adobe_draft_count }} Drafts
+                            {% else %}
+                            All Agreements
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- System Health (non-interactive display card) -->
+            <div class="bg-gradient-to-br from-{{ health_color }}-400 to-{{ health_color }}-500 rounded-xl shadow-md p-5 metric-card">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-{{ health_color }}-50 uppercase">Health</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                            {% if health_score >= 90 %}
+                            <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {% elif health_score >= 60 %}
+                            <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            {% else %}
+                            <svg class="w-4 h-4 text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold metric-number">{{ health_score }}%</p>
+                    <p class="text-xs text-{{ health_color }}-50 mt-1 capitalize">{{ health_status|title }}</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-indigo-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Quick Actions
+            </h2>
+
+            <!-- Project Management Section -->
+            <div class="mb-5">
+                <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 flex items-center">
+                    <svg class="h-3 w-3 text-gray-500 mr-1" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    Project Management
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+
+                    <!-- Gmail Setup -->
+                    <a href="/gmail/" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-red-300 rounded-lg hover:border-red-500 hover:bg-gradient-to-br hover:from-red-50 hover:to-red-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-red-100 rounded-full p-3 group-hover:bg-red-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-red-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-red-600 text-center">Gmail Setup</span>
+                        </div>
+                    </a>
+
+                    <!-- Create Project -->
+                    <a href="{% url 'projects:project_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-gradient-to-br hover:from-green-50 hover:to-green-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-green-100 rounded-full p-3 group-hover:bg-green-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-green-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-green-600 text-center">Create Project</span>
+                        </div>
+                    </a>
+
+                    <!-- All Projects -->
+                    <a href="{% url 'projects:project_list_all' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-teal-500 hover:bg-gradient-to-br hover:from-teal-50 hover:to-teal-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-teal-100 rounded-full p-3 group-hover:bg-teal-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-teal-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-teal-600 text-center">All Projects</span>
+                        </div>
+                    </a>
+
+                    <!-- Create Project Card -->
+                    <a href="{% url 'projects:project_card_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-blue-100 rounded-full p-3 group-hover:bg-blue-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-blue-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-blue-600 text-center">Create Card</span>
+                        </div>
+                    </a>
+
+                    <!-- View Project Cards -->
+                    <a href="{% url 'projects:project_card_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-purple-100 rounded-full p-3 group-hover:bg-purple-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-purple-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-purple-600 text-center">All Cards</span>
+                        </div>
+                    </a>
+
+                    <!-- Renewals -->
+                    <a href="{% url 'projects:renewal_tracker_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-orange-100 rounded-full p-3 group-hover:bg-orange-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-orange-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-orange-600 text-center">Renewals</span>
+                        </div>
+                    </a>
+
+                    <!-- Escalations -->
+                    <a href="{% url 'projects:escalation_tracker_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-gradient-to-br hover:from-red-50 hover:to-red-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-red-100 rounded-full p-3 group-hover:bg-red-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-red-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-red-600 text-center">Escalations</span>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Master Data Section -->
+            <div>
+                <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 flex items-center">
+                    <svg class="h-3 w-3 text-gray-500 mr-1" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Master Data
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+
+                    <!-- Add Vendor Card -->
+                    <a href="{% url 'supply:vendor_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-indigo-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-indigo-100 rounded-full p-3 group-hover:bg-indigo-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-indigo-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-indigo-600 text-center">Add Vendor</span>
+                        </div>
+                    </a>
+
+                    <!-- All Vendors -->
+                    <a href="{% url 'supply:vendor_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-indigo-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-indigo-100 rounded-full p-3 group-hover:bg-indigo-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-indigo-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-indigo-600 text-center">All Vendors</span>
+                        </div>
+                    </a>
+
+                    <!-- Add Client Card -->
+                    <a href="{% url 'projects:client_card_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-gradient-to-br hover:from-green-50 hover:to-green-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-green-100 rounded-full p-3 group-hover:bg-green-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-green-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-green-600 text-center">Add Client</span>
+                        </div>
+                    </a>
+
+                    <!-- All Clients -->
+                    <a href="{% url 'projects:client_card_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-gradient-to-br hover:from-green-50 hover:to-green-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-green-100 rounded-full p-3 group-hover:bg-green-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-green-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-green-600 text-center">All Clients</span>
+                        </div>
+                    </a>
+
+                    <!-- Add Warehouse -->
+                    <a href="{% url 'supply:warehouse_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-purple-100 rounded-full p-3 group-hover:bg-purple-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-purple-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-purple-600 text-center">Add Warehouse</span>
+                        </div>
+                    </a>
+
+                    <!-- All Warehouses -->
+                    <a href="{% url 'supply:warehouse_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-purple-100 rounded-full p-3 group-hover:bg-purple-200 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-purple-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-purple-600 text-center">All Warehouses</span>
+                        </div>
+                    </a>
+
+                    <!-- Add Location -->
+                    <a href="{% url 'supply:location_create' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-gray-500 hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-gray-200 rounded-full p-3 group-hover:bg-gray-300 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-gray-700" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-gray-900 text-center">Add Location</span>
+                        </div>
+                    </a>
+
+                    <!-- All Locations -->
+                    <a href="{% url 'supply:location_list' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+                        <div class="flex flex-col items-center p-4 border-2 border-gray-200 rounded-lg hover:border-gray-500 hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 hover:shadow-md action-card cursor-pointer h-28">
+                            <div class="bg-gray-200 rounded-full p-3 group-hover:bg-gray-300 group-hover:scale-110 transition-transform duration-200">
+                                <svg class="h-6 w-6 text-gray-700" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                            </div>
+                            <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-gray-900 text-center">All Locations</span>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Work Status Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- Project Cards Pending -->
+            {% if pending_rate_card_projects %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="px-5 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600">
+                    <h3 class="text-base font-bold text-white flex items-center">
+                        <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Project Cards Pending ({{ projects_without_rate_card }})
+                    </h3>
+                </div>
+                <div class="p-5 max-h-80 overflow-y-auto">
+                    <div class="space-y-2">
+                        {% for project in pending_rate_card_projects %}
+                        <div class="p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors duration-150 hover:shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <div class="flex-1">
+                                    <a href="{% url 'projects:project_card_by_project' project.project_id %}"
+                                       class="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                                        {{ project.project_code }}
+                                    </a>
+                                    <p class="text-xs text-gray-600 mt-1">{{ project.client_name }}</p>
+                                </div>
+                                <a href="{% url 'projects:project_card_create' %}?project={{ project.project_id }}"
+                                   class="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors duration-150 font-medium">
+                                    Create Card
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="px-5 py-3 bg-gradient-to-r from-green-500 to-green-600">
+                    <h3 class="text-base font-bold text-white">Project Cards Pending</h3>
+                </div>
+                <div class="p-10 text-center">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-green-100 rounded-full mb-3">
+                        <svg class="h-7 w-7 text-green-600" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-700 font-medium text-sm">All caught up!</p>
+                    <p class="text-xs text-gray-500 mt-1">All active projects have project cards</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Agreement Renewals Upcoming -->
+            {% if agreements_expiring %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="px-5 py-3 bg-gradient-to-r from-orange-500 to-orange-600">
+                    <h3 class="text-base font-bold text-white flex items-center">
+                        <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Renewals Upcoming (60 Days)
+                    </h3>
+                </div>
+                <div class="p-5 max-h-80 overflow-y-auto">
+                    <div class="space-y-2">
+                        {% for rate_card in agreements_expiring %}
+                        <div class="p-3 border-l-4 border-orange-400 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-150 hover:shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <a href="{% url 'projects:project_card_by_project' rate_card.project.project_id %}"
+                                       class="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                                        {{ rate_card.project.project_code }}
+                                    </a>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        Expires: <strong>{{ rate_card.agreement_end_date|date:"d M Y" }}</strong>
+                                        (in {{ rate_card.agreement_end_date|timeuntil }})
+                                    </p>
+                                </div>
+                                <a href="{% url 'projects:renewal_tracker_list' %}"
+                                   class="text-xs bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700 transition-colors duration-150 font-medium">
+                                    Track
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="px-5 py-3 bg-gradient-to-r from-green-500 to-green-600">
+                    <h3 class="text-base font-bold text-white">Agreement Renewals Upcoming</h3>
+                </div>
+                <div class="p-10 text-center">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-green-100 rounded-full mb-3">
+                        <svg class="h-7 w-7 text-green-600" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-700 font-medium text-sm">No renewals due soon</p>
+                    <p class="text-xs text-gray-500 mt-1">All agreements are current</p>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Critical Alerts Section -->
+        {% if expired_agreements_count > 0 or overdue_escalations_count > 0 %}
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-red-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Critical Alerts
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Expired Agreements -->
+                {% if expired_agreements %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-red-500">
+                    <div class="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600">
+                        <h3 class="text-base font-bold text-white flex items-center">
+                            <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            Expired Agreements ({{ expired_agreements_count }})
+                        </h3>
+                    </div>
+                    <div class="p-5 max-h-80 overflow-y-auto">
+                        <div class="space-y-2">
+                            {% for rate_card in expired_agreements %}
+                            <div class="p-3 border-l-4 border-red-400 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-150 hover:shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <a href="{% url 'projects:project_card_by_project' rate_card.project.project_id %}"
+                                           class="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                                            {{ rate_card.project.project_code }}
+                                        </a>
+                                        <p class="text-xs text-gray-600 mt-1">
+                                            Expired: <strong class="text-red-700">{{ rate_card.agreement_end_date|date:"d M Y" }}</strong>
+                                            ({{ rate_card.agreement_end_date|timesince }} ago)
+                                        </p>
+                                    </div>
+                                    <a href="{% url 'projects:renewal_tracker_list' %}"
+                                       class="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors duration-150 font-medium">
+                                        Track
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Overdue Escalations -->
+                {% if overdue_escalations %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-yellow-500">
+                    <div class="px-5 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600">
+                        <h3 class="text-base font-bold text-white flex items-center">
+                            <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            Overdue Escalations ({{ overdue_escalations_count }})
+                        </h3>
+                    </div>
+                    <div class="p-5 max-h-80 overflow-y-auto">
+                        <div class="space-y-2">
+                            {% for rate_card in overdue_escalations %}
+                            <div class="p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors duration-150 hover:shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <a href="{% url 'projects:project_card_by_project' rate_card.project.project_id %}"
+                                           class="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                                            {{ rate_card.project.project_code }}
+                                        </a>
+                                        <p class="text-xs text-gray-600 mt-1">
+                                            Escalation Due: <strong class="text-yellow-700">{{ rate_card.yearly_escalation_date|date:"d M Y" }}</strong>
+                                            ({{ rate_card.yearly_escalation_date|timesince }} ago)
+                                        </p>
+                                    </div>
+                                    <a href="{% url 'projects:escalation_tracker_list' %}"
+                                       class="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors duration-150 font-medium">
+                                        Track
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+

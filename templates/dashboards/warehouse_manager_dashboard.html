@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Warehouse Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- My Projects -->
+        <a href="{% url 'projects:my_projects' %}" class="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">My Projects</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_projects }}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-blue-100 rounded-full p-4">
+                            <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Active Projects -->
+        <a href="{% url 'projects:project_list_active' %}" class="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Active</p>
+                        <p class="text-3xl font-bold text-green-600 mt-2">{{ active_projects }}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-green-100 rounded-full p-4">
+                            <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Entries Today -->
+        <a href="{% url 'operations:daily_entry_list' %}" class="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Entries Today</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-2">{{ entries_today_count }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Out of {{ total_projects }}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-blue-100 rounded-full p-4">
+                            <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Pending Entries (non-clickable stat) -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Pending</p>
+                        <p class="text-3xl font-bold text-yellow-600 mt-2">{{ pending_entries_count }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Need attention</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-yellow-100 rounded-full p-4">
+                            <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Quick Actions
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+                <!-- Gmail Setup -->
+                <a href="/gmail/" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex flex-col items-center justify-center p-4 border-2 border-red-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition duration-200 cursor-pointer h-32">
+                        <div class="bg-red-100 rounded-full p-3 group-hover:bg-red-200 transition-colors">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-red-600 text-center">Gmail Setup</span>
+                    </div>
+                </a>
+
+                <!-- View Projects -->
+                <a href="{% url 'projects:my_projects' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition duration-200 cursor-pointer h-32">
+                        <div class="bg-blue-100 rounded-full p-3 group-hover:bg-blue-200 transition-colors">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-blue-600 text-center">My Projects</span>
+                    </div>
+                </a>
+
+                <!-- Single Entry -->
+                <a href="{% url 'operations:daily_entry_single' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition duration-200 cursor-pointer h-32">
+                        <div class="bg-green-100 rounded-full p-3 group-hover:bg-green-200 transition-colors">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-green-600 text-center">Single Entry</span>
+                    </div>
+                </a>
+
+                <!-- Bulk Entry -->
+                <a href="{% url 'operations:daily_entry_bulk' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition duration-200 cursor-pointer h-32">
+                        <div class="bg-purple-100 rounded-full p-3 group-hover:bg-purple-200 transition-colors">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-purple-600 text-center">Bulk Entry</span>
+                    </div>
+                </a>
+
+                <!-- MIS Status -->
+                <a href="{% url 'operations:mis_dashboard' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition duration-200 cursor-pointer h-32">
+                        <div class="bg-yellow-100 rounded-full p-3 group-hover:bg-yellow-200 transition-colors">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-yellow-600 text-center">MIS Status</span>
+                    </div>
+                </a>
+
+                <!-- Calendar -->
+                <a href="{% url 'activity_logs:calendar' %}" class="group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition duration-200 cursor-pointer h-32">
+                        <div class="bg-teal-100 rounded-full p-3 group-hover:bg-teal-200 transition-colors">
+                            <svg aria-hidden="true" width="24" height="24" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-semibold text-gray-700 group-hover:text-teal-600 text-center">Calendar</span>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Calendar Widget -->
+    {% include 'activity_logs/components/week_widget.html' %}
+
+    <!-- Projects with Missing Entries (if any) -->
+    {% if projects_missing_today %}
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                Projects Missing Today's Entry
+            </h3>
+            <a href="{% url 'operations:daily_entry_bulk' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100">
+                Add Bulk Entry &#8594;
+            </a>
+        </div>
+
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for project in projects_missing_today|slice:":9" %}
+                <div class="p-4 border-2 border-red-200 bg-red-50 rounded-lg">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ project.project_code }}</h4>
+                    <p class="text-xs text-gray-600 mb-2">{{ project.client_name }}</p>
+                    <p class="text-xs text-gray-500">{{ project.location }}</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if projects_missing_today|length > 9 %}
+            <div class="mt-4 text-center text-sm text-gray-600">
+                ...and {{ projects_missing_today|length|add:"-9" }} more project(s)
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% load static %}
+
+<div class="bg-white rounded-xl border border-gray-200 p-4">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-gray-700">This Week's Activity</h3>
+        <a href="{% url 'activity_logs:calendar' %}"
+           class="text-xs text-indigo-600 hover:underline">View Full →</a>
+    </div>
+    <div id="widget-week-grid" class="grid grid-cols-7 gap-1">
+        {% for day in widget_week_data %}
+        <div class="text-center">
+            <div class="text-xs text-gray-400">{{ day.day_name }}</div>
+            <div class="rounded-lg py-1 mt-1 text-xs font-semibold
+                {% if day.is_future %}bg-gray-50 text-gray-300
+                {% elif day.total_actions > 20 %}bg-green-100 text-green-800
+                {% elif day.total_actions > 5 %}bg-yellow-100 text-yellow-800
+                {% elif day.total_actions > 0 %}bg-red-100 text-red-800
+                {% else %}bg-gray-100 text-gray-400{% endif %}">
+                {{ day.total_actions }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

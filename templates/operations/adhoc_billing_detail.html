@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}Adhoc Entry #{{ entry.id }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6 flex justify-between items-start">
+            <div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'operations:adhoc_billing_list' %}" class="text-gray-500 hover:text-gray-600 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                        <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-900">Adhoc Entry #{{ entry.id }}</h1>
+
+                    <!-- Status Dropdown Form -->
+                    <form action="{% url 'operations:adhoc_update_status' entry.id %}" method="POST">
+                        {% csrf_token %}
+                        <select name="status" onchange="this.form.submit()"
+                                class="text-sm font-semibold rounded-lg px-3 py-1.5 border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer
+                                {% if entry.status.code == 'pending' %}bg-yellow-50 text-yellow-700 border-yellow-200
+                                {% elif entry.status.code == 'billed' %}bg-green-50 text-green-700 border-green-200
+                                {% else %}bg-gray-50 text-gray-700 border-gray-200{% endif %}">
+                            <option value="pending" {% if entry.status.code == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="billed" {% if entry.status.code == 'billed' %}selected{% endif %}>Billed</option>
+                            <option value="cancelled" {% if entry.status.code == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </form>
+                </div>
+                <p class="text-gray-600 mt-2">
+                    Project:
+                    <a href="{% url 'projects:project_detail' entry.project.project_id %}"
+                       class="text-blue-600 hover:text-blue-800 hover:underline font-semibold outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                        {{ entry.project.project_code }}
+                    </a>
+                    <span class="mx-2 text-gray-300">|</span>
+                    Client: <span class="font-medium">{{ entry.project.client_name }}</span>
+                    <span class="mx-2 text-gray-300">|</span>
+                    Event Date: <span class="font-medium">{{ entry.event_date|date:"d M Y" }}</span>
+                    <span class="mx-2 text-gray-300">|</span>
+                    Billing Month: <span class="font-medium">{{ entry.billing_month|date:"F Y" }}</span>
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+                {% if user.role in 'admin,backoffice,operation_manager,operation_controller' or entry.created_by == user %}
+                <a href="{% url 'operations:adhoc_billing_edit' entry.id %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg class="w-4 h-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                </a>
+                {% endif %}
+
+                {% if user.role in 'admin,backoffice,operation_controller' %}
+                <a href="{% url 'operations:adhoc_billing_delete' entry.id %}"
+                   class="inline-flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500">
+                    <svg class="w-4 h-4 mr-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
+            <div class="grid grid-cols-4 gap-4 text-sm">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created By</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ entry.created_by.get_full_name }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created At</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ entry.created_at|date:"d M Y, h:i A" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Last Updated</p>
+                    <p class="text-gray-900 font-medium mt-1">{{ entry.updated_at|date:"d M Y, h:i A" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</p>
+                    <p class="mt-1">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
+                            {% if entry.status.code == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% elif entry.status.code == 'billed' %}bg-green-100 text-green-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ entry.status.label }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENT BILLING SECTION (TEAL) -->
+        <div class="bg-teal-50 border border-teal-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+            <div class="bg-teal-100 px-6 py-4 border-b border-teal-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-teal-800 flex items-center gap-2">
+                    <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Client Billing (Receivable)
+                </h3>
+                <span class="text-xs font-bold bg-teal-200 text-teal-800 px-3 py-1 rounded uppercase tracking-wider">
+                    {% with client_count=entry.line_items.all|length %}
+                        {{ client_count }} Item{{ client_count|pluralize }}
+                    {% endwith %}
+                </span>
+            </div>
+
+            <div class="p-6">
+                <!-- Client Line Items Table -->
+                <div class="overflow-x-auto mb-4">
+                    <table class="min-w-full divide-y divide-teal-200">
+                        <thead>
+                            <tr class="bg-teal-50">
+                                <th class="px-4 py-3 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Description</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-teal-800 uppercase tracking-wider">Qty</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-teal-800 uppercase tracking-wider">Rate (₹)</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Unit</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-teal-800 uppercase tracking-wider">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-teal-100">
+                            {% for item in client_items %}
+                                <tr class="hover:bg-teal-50/30 transition">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-teal-100 text-teal-800">
+                                            {{ item.charge_type.label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ item.description }}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">{{ item.quantity|floatformat:2 }}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">{{ item.rate|floatformat:2 }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ item.unit }}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-bold text-teal-700">₹{{ item.amount|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-teal-100">
+                            <tr>
+                                <td colspan="5" class="px-4 py-4 text-right text-sm font-bold text-teal-900 uppercase">Grand Total (Client):</td>
+                                <td class="px-4 py-4 text-right text-xl font-bold text-teal-800">₹{{ entry.total_client_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Client Attachments -->
+                <div class="border-t border-teal-200 pt-4">
+                    <p class="text-sm font-bold text-teal-800 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                        Client Approvals / POs
+                    </p>
+                    {% if client_attachments %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {% for att in client_attachments %}
+                                <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-teal-200 shadow-sm hover:shadow-md transition">
+                                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                                        <svg class="w-5 h-5 text-teal-600 flex-shrink-0" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <span class="truncate text-sm text-gray-700 font-medium">{{ att.filename }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ att.signed_url|default:att.file.url }}" target="_blank"
+                                        class="text-teal-600 hover:text-teal-800 font-semibold text-sm whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                                            View &rarr;
+                                        </a>
+                                        <form method="POST"
+                                            action="{% url 'accounts:universal_file_delete' 'operations' 'adhocbillingattachment' att.id 'file' %}"
+                                            onsubmit="return confirm('Delete this attachment? This cannot be undone.');"
+                                            class="inline m-0">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="inline-flex items-center text-red-600 hover:text-red-800 text-sm font-medium">
+                                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-gray-500 italic bg-white p-3 rounded border border-teal-100">No client attachments uploaded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- VENDOR COST SECTION (INDIGO) -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+            <div class="bg-indigo-100 px-6 py-4 border-b border-indigo-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-indigo-800 flex items-center gap-2">
+                    <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    Vendor Cost (Payable)
+                </h3>
+                <span class="text-xs font-bold bg-indigo-200 text-indigo-800 px-3 py-1 rounded uppercase tracking-wider">
+                    {% with vendor_count=entry.line_items.all|length %}
+                        {{ vendor_count }} Item{{ vendor_count|pluralize }}
+                    {% endwith %}
+                </span>
+            </div>
+
+            <div class="p-6">
+                <!-- Vendor Line Items Table -->
+                <div class="overflow-x-auto mb-4">
+                    <table class="min-w-full divide-y divide-indigo-200">
+                        <thead>
+                            <tr class="bg-indigo-50">
+                                <th class="px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Description</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-indigo-800 uppercase tracking-wider">Qty</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-indigo-800 uppercase tracking-wider">Rate (₹)</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Unit</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold text-indigo-800 uppercase tracking-wider">Cost (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-indigo-100">
+                            {% for item in vendor_items %}
+                                <tr class="hover:bg-indigo-50/30 transition">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            {{ item.charge_type.label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ item.description }}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">{{ item.quantity|floatformat:2 }}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">{{ item.rate|floatformat:2 }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ item.unit }}</td>
+                                    <td class="px-4 py-3 text-sm text-right font-bold text-indigo-700">₹{{ item.amount|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-indigo-100">
+                            <tr>
+                                <td colspan="5" class="px-4 py-4 text-right text-sm font-bold text-indigo-900 uppercase">Grand Total (Vendor):</td>
+                                <td class="px-4 py-4 text-right text-xl font-bold text-indigo-800">₹{{ entry.total_vendor_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Vendor Attachments -->
+                <div class="border-t border-indigo-200 pt-4">
+                    <p class="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                        Vendor Invoices / Bills
+                    </p>
+                    {% if vendor_attachments %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {% for att in vendor_attachments %}
+                                <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-indigo-200 shadow-sm hover:shadow-md transition">
+                                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                                        <svg class="w-5 h-5 text-indigo-600 flex-shrink-0" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <span class="truncate text-sm text-gray-700 font-medium">{{ att.filename }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ att.signed_url|default:att.file.url }}" target="_blank"
+                                        class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded">
+                                            View &rarr;
+                                        </a>
+                                        <form method="POST"
+                                            action="{% url 'accounts:universal_file_delete' 'operations' 'adhocbillingattachment' att.id 'file' %}"
+                                            onsubmit="return confirm('Delete this attachment? This cannot be undone.');"
+                                            class="inline m-0">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="inline-flex items-center text-red-600 hover:text-red-800 text-sm font-medium">
+                                                <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-gray-500 italic bg-white p-3 rounded border border-indigo-100">No vendor attachments uploaded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Remarks (if any) -->
+        {% if entry.billing_remarks %}
+        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Billing Remarks</h3>
+            <p class="text-gray-900 leading-relaxed">{{ entry.billing_remarks }}</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

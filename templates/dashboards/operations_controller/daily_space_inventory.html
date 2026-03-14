@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Space & Inventory - {{ selected_date|date:"M d, Y" }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <a href="{% url 'accounts:operation_controller_dashboard' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 flex items-center mb-2 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Space & Inventory</h1>
+                    <p class="text-gray-600 mt-1">Combined breakdown for {{ selected_date|date:"l, F d, Y" }}</p>
+                </div>
+
+                <!-- Filters -->
+                <form method="get" class="flex items-center space-x-2">
+                    <label for="coordinator" class="text-sm text-gray-600">Coordinator:</label>
+                    <select
+                        id="coordinator"
+                        name="coordinator"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                        <option value="">All Coordinators</option>
+                        {% for coord in all_coordinators %}
+                        <option value="{{ coord }}" {% if coord == selected_coordinator %}selected{% endif %}>{{ coord }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="selected_date" class="text-sm text-gray-600 ml-4">Date:</label>
+                    <input
+                        type="date"
+                        id="selected_date"
+                        name="selected_date"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        max="{{ today|date:'Y-m-d' }}"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('selected_date').value='{{ today|date:'Y-m-d' }}'; this.form.submit();" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Today
+                    </button>
+                </form>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-{{ unit_totals|length|add:3 }} gap-4 mb-6">
+                <!-- Total Projects -->
+                <div class="bg-white rounded-xl p-4 shadow-md border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-600 mb-1">Total Projects</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_projects }}</p>
+                </div>
+
+                <!-- Total Space Combined -->
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                    <p class="text-xs text-gray-600 mb-1">Total Space</p>
+                    <p class="text-2xl font-bold text-green-600">{{ total_space_combined_lakhs|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-500">Lakhs Sq. Ft.</p>
+                </div>
+
+                <!-- Individual Unit Types -->
+                {% for unit_name, data in unit_totals.items %}
+                <div class="bg-white rounded-xl p-4 shadow-md">
+                    <p class="text-xs text-gray-600 mb-1">{{ unit_name }}</p>
+                    <p class="text-xl font-bold text-gray-900">{{ data.value|floatformat:0 }}</p>
+                    {% if data.in_sqft > 0 %}
+                    <p class="text-xs text-gray-500">= {{ data.in_sqft|floatformat:0 }} sq ft</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Total Inventory -->
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+                    <p class="text-xs text-gray-600 mb-1">Total Inventory</p>
+                    <p class="text-2xl font-bold text-amber-600">₹{{ total_inventory_crores|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-500">Crores</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Table -->
+        {% if projects_data %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Code</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Space</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Inventory Value</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">In Crores</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for data in projects_data %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ data.project.project_code }}</div>
+                                <div class="text-xs text-gray-500">{{ data.project.client_name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-medium text-gray-900">{{ data.space_utilized|floatformat:2 }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    {{ data.unit_name }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-medium text-gray-900">₹{{ data.inventory_value|floatformat:2 }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold text-amber-600">₹{{ data.inventory_in_crores|floatformat:2 }}</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+            <svg aria-hidden="true" width="64" height="64" class="mx-auto h-16 w-16 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <p class="text-gray-500 text-lg">No data for this date</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

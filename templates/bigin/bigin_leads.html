@@ -1,0 +1,851 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bigin Leads - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+
+<style>
+/* Custom Choices.js Theme */
+.choices__inner {
+    background-color: #f9fafb !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.375rem 0.75rem !important;
+    min-height: 44px !important;
+}
+
+/* When dropdown is CLOSED (not focused) - fixed height */
+.choices__inner:not(:focus-within) {
+    max-height: 44px !important;
+    overflow: hidden !important;
+}
+
+/* When dropdown is OPEN (focused/active) - dynamic height */
+.choices__inner:focus-within,
+.choices.is-open .choices__inner {
+    max-height: none !important;
+    overflow-y: auto !important;
+}
+
+/* Fixed height for all select containers */
+.fixed-height-select {
+    height: 44px !important;
+}
+
+.choices__list--multiple .choices__item {
+    background-color: #9333ea !important;
+    border: 1px solid #7e22ce !important;
+    color: white !important;
+    border-radius: 0.25rem !important;
+    padding: 2px 8px !important;
+    font-size: 0.75rem !important;
+}
+
+.choices__list--multiple .choices__item.is-highlighted {
+    background-color: #7e22ce !important;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #ede9fe !important;
+    color: #6b21a8 !important;
+}
+
+.choices__input {
+    background-color: transparent !important;
+    font-size: 0.875rem !important;
+}
+
+.choices[data-type*=select-multiple] .choices__button {
+    border-left: 1px solid #7e22ce !important;
+}
+
+.choices__list--dropdown {
+    z-index: 100 !important;
+}
+
+/* Toggle Button Styles */
+.toggle-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0.125rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.toggle-btn.active {
+    background-color: #9333ea;
+    color: white;
+}
+.toggle-btn.inactive {
+    background-color: #e5e7eb;
+    color: #6b7280;
+}
+.col-hidden {
+    display: none !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-6 px-2 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="mb-6 bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">📋 Lead Management</h1>
+                <p class="text-sm text-gray-600 mt-1">
+                    {% if user.role == 'sales_manager' %}
+                        Showing your assigned leads only
+                    {% else %}
+                        All leads across all owners
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                    Total: <span class="font-bold text-blue-600">{{ page_obj.paginator.count }}</span> leads
+                </div>
+                <a href="{% url 'bigin:create_contact' %}"
+                   class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add New Contact
+                </a>
+                {% if user.role == 'crm_executive' %}
+                <a href="{% url 'bigin:bigin_dashboard' %}"
+                   class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition">
+                    📊 View Analytics Dashboard
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Universal Search Bar (Gmail-style) -->
+    <div class="bg-white rounded-lg shadow-md mb-4 border border-gray-200">
+        <form method="get" class="p-4">
+            <div class="flex items-center gap-3">
+                <!-- Search Icon & Input -->
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           name="search"
+                           value="{{ filters.search }}"
+                           placeholder="🔍 Search leads by name, account, email, mobile, location, industry, or any field..."
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400">
+                </div>
+
+                <!-- Search Button -->
+                <button type="submit"
+                        class="px-6 py-3 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition shadow-sm whitespace-nowrap">
+                    Search
+                </button>
+
+                <!-- Clear Button (only show if search is active) -->
+                {% if filters.search %}
+                <a href="{% url 'bigin:bigin_leads' %}"
+                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition whitespace-nowrap">
+                    Clear
+                </a>
+                {% endif %}
+
+                <!-- Advanced Filters Toggle -->
+                <button type="button"
+                        onclick="toggleAdvancedFilters()"
+                        class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition whitespace-nowrap flex items-center gap-2">
+                    <svg width="16" height="16" aria-hidden="true" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    </svg>
+                    Filters
+                    <svg width="16" height="16" aria-hidden="true" id="filter-arrow" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Active Filters Summary -->
+            {% if filters.search or filters.start_date or filters.end_date or filters.owner_list or filters.status_list or filters.contact_type_list or filters.lead_stage_list or filters.industry_type_list or filters.location_list or filters.lead_source_list or filters.reason_list or filters.area_range or filters.utm_campaign_list or filters.utm_medium_list or filters.utm_term_list or filters.utm_content_list %}
+            <div class="mt-3 flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-semibold text-gray-600">Active Filters:</span>
+
+                {% if filters.search %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 border border-purple-200">
+                    Search: "{{ filters.search|truncatechars:30 }}"
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'search' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="ml-1 text-purple-600 hover:text-purple-800">×</a>
+                </span>
+                {% endif %}
+
+                {% if filters.start_date or filters.end_date %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">
+                    Date: {{ filters.start_date|default:"Start" }} - {{ filters.end_date|default:"End" }}
+                </span>
+                {% endif %}
+
+                {% if filters.area_range %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                    Area: {{ filters.area_range }}
+                </span>
+                {% endif %}
+
+                {% for owner in filters.owner_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    Owner: {{ owner }}
+                </span>
+                {% endfor %}
+
+                {% for status in filters.status_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 border border-red-200">
+                    Status: {{ status }}
+                </span>
+                {% endfor %}
+
+                {% for r in filters.reason_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800 border border-orange-200">
+                    Reason: {{ r }}
+                </span>
+                {% endfor %}
+
+                {% for campaign in filters.utm_campaign_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
+                    UTM Campaign: {{ campaign }}
+                </span>
+                {% endfor %}
+
+                {% for medium in filters.utm_medium_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 text-teal-800 border border-teal-200">
+                    UTM Medium: {{ medium }}
+                </span>
+                {% endfor %}
+
+                {% for term in filters.utm_term_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-cyan-100 text-cyan-800 border border-cyan-200">
+                    UTM Term: {{ term }}
+                </span>
+                {% endfor %}
+
+                {% for content in filters.utm_content_list %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-pink-100 text-pink-800 border border-pink-200">
+                    UTM Content: {{ content }}
+                </span>
+                {% endfor %}
+
+                <a href="{% url 'bigin:bigin_leads' %}" class="text-xs text-purple-600 hover:text-purple-800 font-semibold ml-2">Clear All</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Compact Searchable Filters (Sticky, Initially Hidden) -->
+    <div id="advanced-filters" class="bg-white rounded-lg shadow-md mb-6 sticky top-0 z-30 border border-gray-200 hidden">
+
+        <!-- Filter Form -->
+        <form method="get" class="p-4">
+            <!-- Preserve search query when using filters -->
+            {% if filters.search %}
+            <input type="hidden" name="search" value="{{ filters.search }}">
+            {% endif %}
+            <!-- Row 1: Date & Area -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📅 Start Date</label>
+                    <input type="date" name="start_date" value="{{ filters.start_date }}" 
+                           class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📅 End Date</label>
+                    <input type="date" name="end_date" value="{{ filters.end_date }}" 
+                           class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📏 Area Range</label>
+                    <select name="area_range" class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                        <option value="">All Ranges</option>
+                        <option value="0-1000" {% if filters.area_range == '0-1000' %}selected{% endif %}>0-1K</option>
+                        <option value="1001-3000" {% if filters.area_range == '1001-3000' %}selected{% endif %}>1K-3K</option>
+                        <option value="3001-5000" {% if filters.area_range == '3001-5000' %}selected{% endif %}>3K-5K</option>
+                        <option value="5001-10000" {% if filters.area_range == '5001-10000' %}selected{% endif %}>5K-10K</option>
+                        <option value="10001-20000" {% if filters.area_range == '10001-20000' %}selected{% endif %}>10K-20K</option>
+                        <option value="20001-30000" {% if filters.area_range == '20001-30000' %}selected{% endif %}>20K-30K</option>
+                        <option value="30001+" {% if filters.area_range == '30001+' %}selected{% endif %}>30K+</option>
+                        <option value="blank" {% if filters.area_range == 'blank' %}selected{% endif %}>⚠️ Blank</option>
+                    </select>
+                </div>
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:from-purple-700 hover:to-indigo-700 transition shadow-sm">
+                        Apply
+                    </button>
+                    <a href="{% url 'bigin:bigin_leads' %}" class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-300 transition">
+                        Clear
+                    </a>
+                </div>
+            </div>
+
+            <!-- Row 2: Searchable Multi-Select Filters (4 columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+
+                <!-- Owner / Assigned To -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">👤 Owner</label>
+                    <select name="owner" multiple class="searchable-select fixed-height-select" id="owner_select">
+                        <option value="blank" {% if 'blank' in filters.owner_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for owner in owners %}
+                        <option value="{{ owner }}" {% if owner in filters.owner_list %}selected{% endif %}>{{ owner }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Contact Type -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">🏢 Contact Type</label>
+                    <select name="contact_type" multiple class="searchable-select fixed-height-select" id="contact_type_select">
+                        <option value="blank" {% if 'blank' in filters.contact_type_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for type in types %}
+                        <option value="{{ type }}" {% if type in filters.contact_type_list %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">🎯 Status</label>
+                    <select name="status" multiple class="searchable-select fixed-height-select" id="status_select">
+                        <option value="blank" {% if 'blank' in filters.status_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        <option value="hot" {% if 'hot' in filters.status_list %}selected{% endif %}>🔥 Hot</option>
+                        <option value="warm" {% if 'warm' in filters.status_list %}selected{% endif %}>🌡️ Warm</option>
+                        <option value="cold" {% if 'cold' in filters.status_list %}selected{% endif %}>❄️ Cold</option>
+                        <option value="converted" {% if 'converted' in filters.status_list %}selected{% endif %}>✅ Converted</option>
+                        <option value="closed" {% if 'closed' in filters.status_list %}selected{% endif %}>🔒 Closed</option>
+                        <option value="junk" {% if 'junk' in filters.status_list %}selected{% endif %}>🗑️ Junk</option>
+                    </select>
+                </div>
+
+                <!-- Lead Stage -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📊 Lead Stage</label>
+                    <select name="lead_stage" multiple class="searchable-select fixed-height-select" id="lead_stage_select">
+                        <option value="blank" {% if 'blank' in filters.lead_stage_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for stage in lead_stages %}
+                        <option value="{{ stage }}" {% if stage in filters.lead_stage_list %}selected{% endif %}>{{ stage }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Row 3: Additional Filters (4 columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+                <!-- Industry Type -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">🏭 Industry</label>
+                    <select name="industry_type" multiple class="searchable-select fixed-height-select" id="industry_type_select">
+                        <option value="blank" {% if 'blank' in filters.industry_type_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for industry in industry_types %}
+                        <option value="{{ industry }}" {% if industry in filters.industry_type_list %}selected{% endif %}>{{ industry }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Locations -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📍 Locations</label>
+                    <select name="location" multiple class="searchable-select fixed-height-select" id="location_select">
+                        <option value="blank" {% if 'blank' in filters.location_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for location in locations %}
+                        <option value="{{ location }}" {% if location in filters.location_list %}selected{% endif %}>{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Lead Source -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📢 Source</label>
+                    <select name="lead_source" multiple class="searchable-select fixed-height-select" id="lead_source_select">
+                        <option value="blank" {% if 'blank' in filters.lead_source_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for source in lead_sources %}
+                        <option value="{{ source }}" {% if source in filters.lead_source_list %}selected{% endif %}>{{ source }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Reason Filter -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">❌ Reason</label>
+                    <select name="reason" multiple class="searchable-select fixed-height-select" id="reason_select">
+                        <option value="blank" {% if 'blank' in filters.reason_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for r in reasons %}
+                        <option value="{{ r }}" {% if r in filters.reason_list %}selected{% endif %}>{{ r }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Row 4: UTM Filters (4 columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+
+                <!-- UTM Campaign -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">🎯 UTM Campaign</label>
+                    <select name="utm_campaign" multiple class="searchable-select fixed-height-select" id="utm_campaign_select">
+                        <option value="blank" {% if 'blank' in filters.utm_campaign_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for campaign in utm_campaigns %}
+                        <option value="{{ campaign }}" {% if campaign in filters.utm_campaign_list %}selected{% endif %}>{{ campaign }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- UTM Medium -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📱 UTM Medium</label>
+                    <select name="utm_medium" multiple class="searchable-select fixed-height-select" id="utm_medium_select">
+                        <option value="blank" {% if 'blank' in filters.utm_medium_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for medium in utm_mediums %}
+                        <option value="{{ medium }}" {% if medium in filters.utm_medium_list %}selected{% endif %}>{{ medium }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- UTM Term -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">🔍 UTM Term</label>
+                    <select name="utm_term" multiple class="searchable-select fixed-height-select" id="utm_term_select">
+                        <option value="blank" {% if 'blank' in filters.utm_term_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for term in utm_terms %}
+                        <option value="{{ term }}" {% if term in filters.utm_term_list %}selected{% endif %}>{{ term }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- UTM Content -->
+                <div class="min-h-[80px]">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">📝 UTM Content</label>
+                    <select name="utm_content" multiple class="searchable-select fixed-height-select" id="utm_content_select">
+                        <option value="blank" {% if 'blank' in filters.utm_content_list %}selected{% endif %}>⚠️ Blank/None</option>
+                        {% for content in utm_contents %}
+                        <option value="{{ content }}" {% if content in filters.utm_content_list %}selected{% endif %}>{{ content }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- Column Toggles (Always Visible) -->
+    <div class="bg-white rounded-lg shadow-md mb-6 border border-gray-200">
+        <div class="px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">👁️ Visible Columns</span>
+                <button onclick="resetColumns()" class="text-xs text-purple-600 hover:text-purple-800 font-semibold">Reset</button>
+            </div>
+            <div class="flex flex-wrap gap-1">
+                <button class="toggle-btn active" data-column="date" onclick="toggleColumn('date')">Date</button>
+                <button class="toggle-btn active" data-column="owner" onclick="toggleColumn('owner')">Owner</button>
+                <button class="toggle-btn active" data-column="account" onclick="toggleColumn('account')">Account</button>
+                <button class="toggle-btn active" data-column="name" onclick="toggleColumn('name')">Name</button>
+                <button class="toggle-btn active" data-column="type" onclick="toggleColumn('type')">Type</button>
+                <button class="toggle-btn active" data-column="locations" onclick="toggleColumn('locations')">Locations</button>
+                <button class="toggle-btn active" data-column="area" onclick="toggleColumn('area')">Area</button>
+                <button class="toggle-btn active" data-column="status" onclick="toggleColumn('status')">Status</button>
+                <button class="toggle-btn active" data-column="stage" onclick="toggleColumn('stage')">Stage</button>
+                <button class="toggle-btn active" data-column="conversion" onclick="toggleColumn('conversion')">Conversion</button>
+                <button class="toggle-btn active" data-column="source" onclick="toggleColumn('source')">Source</button>
+                <button class="toggle-btn active" data-column="industry" onclick="toggleColumn('industry')">Industry</button>
+                <button class="toggle-btn active" data-column="business_model" onclick="toggleColumn('business_model')">Biz Model</button>
+                <button class="toggle-btn active" data-column="reason" onclick="toggleColumn('reason')">Reason</button>
+                <button class="toggle-btn active" data-column="notes" onclick="toggleColumn('notes')">Notes</button>
+                <button class="toggle-btn inactive" data-column="email" onclick="toggleColumn('email')">Email</button>
+                <button class="toggle-btn inactive" data-column="mobile" onclick="toggleColumn('mobile')">Mobile</button>
+                <button class="toggle-btn inactive" data-column="description" onclick="toggleColumn('description')">Description</button>
+                <button class="toggle-btn inactive" data-column="utm_campaign" onclick="toggleColumn('utm_campaign')">UTM Campaign</button>
+                <button class="toggle-btn inactive" data-column="utm_medium" onclick="toggleColumn('utm_medium')">UTM Medium</button>
+                <button class="toggle-btn inactive" data-column="utm_term" onclick="toggleColumn('utm_term')">UTM Term</button>
+                <button class="toggle-btn inactive" data-column="utm_content" onclick="toggleColumn('utm_content')">UTM Content</button>
+                <button class="toggle-btn inactive" data-column="gclid" onclick="toggleColumn('gclid')">GCLID</button>
+                <button class="toggle-btn inactive" data-column="call_count" onclick="toggleColumn('call_count')">Calls</button>
+                <button class="toggle-btn inactive" data-column="last_call" onclick="toggleColumn('last_call')">Last Call</button>
+                <button class="toggle-btn inactive" data-column="recording" onclick="toggleColumn('recording')">Recording</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Table with Sticky Headers -->
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto" style="max-height: calc(100vh - 180px);">
+            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                <!-- STICKY HEADER -->
+                <thead class="bg-gradient-to-r from-gray-100 to-gray-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="col-date px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Date</th>
+                        <th class="col-owner px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Owner</th>
+                        <th class="col-account px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Account</th>
+                        <th class="col-name px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Name</th>
+                        <th class="col-email px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">Email</th>
+                        <th class="col-mobile px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">Mobile</th>
+                        <th class="col-type px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Type</th>
+                        <th class="col-locations px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Locations</th>
+                        <th class="col-area px-3 py-2 text-right font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Area</th>
+                        <th class="col-status px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Status</th>
+                        <th class="col-stage px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Stage</th>
+                        <th class="col-conversion px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Conversion</th>
+                        <th class="col-source px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Source</th>
+                        <th class="col-industry px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Industry</th>
+                        <th class="col-business_model px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Biz Model</th>
+                        <th class="col-reason px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Reason</th>
+                        <th class="col-description px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">Description</th>
+                        <th class="col-notes px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300">Notes</th>
+                        <th class="col-utm_campaign px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">UTM Campaign</th>
+                        <th class="col-utm_medium px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">UTM Medium</th>
+                        <th class="col-utm_term px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">UTM Term</th>
+                        <th class="col-utm_content px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide border-r border-gray-300 col-hidden">UTM Content</th>
+                        <th class="col-gclid px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide col-hidden border-r border-gray-300">GCLID</th>
+                        <th class="col-call_count px-3 py-2 text-center font-bold text-gray-700 uppercase text-[10px] tracking-wide col-hidden border-r border-gray-300">Calls</th>
+                        <th class="col-last_call px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide col-hidden border-r border-gray-300">Last Call</th>
+                        <th class="col-recording px-3 py-2 text-left font-bold text-gray-700 uppercase text-[10px] tracking-wide col-hidden">Recording</th>
+                    </tr>
+                </thead>
+                
+                <!-- SCROLLABLE BODY -->
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for lead in page_obj %}
+                    <tr class="hover:bg-purple-50 transition cursor-pointer" onclick="window.location='{% url 'bigin:contact_detail' lead.bigin_id %}'">
+                        <td class="col-date px-3 py-3 text-gray-600 border-r border-gray-100">{{ lead.created_time|date:"d-M-Y" }}</td>
+                        <td class="col-owner px-3 py-3 font-medium text-gray-900 border-r border-gray-100">{{ lead.owner|default:"-" }}</td>
+                        <td class="col-account px-3 py-3 border-r border-gray-100">{{ lead.account_name|default:"-" }}</td>
+                        <td class="col-name px-3 py-3 font-medium border-r border-gray-100">{{ lead.full_name|default:"-" }}</td>
+                        <td class="col-email px-3 py-3 text-blue-600 col-hidden border-r border-gray-100">{{ lead.email|default:"-" }}</td>
+                        <td class="col-mobile px-3 py-3 col-hidden border-r border-gray-100">{{ lead.mobile|default:"-" }}</td>
+                        <td class="col-type px-3 py-3 border-r border-gray-100">
+                            {% if lead.contact_type %}
+                            <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-[10px]">{{ lead.contact_type }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-locations px-3 py-3 border-r border-gray-100">
+                            <div class="flex flex-wrap gap-1">
+                                {% for loc in lead.locations_list %}
+                                <span class="px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 border border-teal-200 text-[10px]">{{ loc }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="col-area px-3 py-3 text-right font-medium border-r border-gray-100">{{ lead.area_requirement|default:"-" }}</td>
+                        <td class="col-status px-3 py-3 border-r border-gray-100">
+                            <div class="flex flex-wrap gap-1">
+                                {% for status in lead.status_list %}
+                                    {% with status_lower=status|lower %}
+                                        {% if 'hot' in status_lower %}
+                                            <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 font-medium text-[10px]">🔥 Hot</span>
+                                        {% elif 'warm' in status_lower %}
+                                            <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200 font-medium text-[10px]">🌡️ Warm</span>
+                                        {% elif 'cold' in status_lower %}
+                                            <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 font-medium text-[10px]">❄️ Cold</span>
+                                        {% elif 'converted' in status_lower %}
+                                            <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-medium text-[10px]">✅ Converted</span>
+                                        {% elif 'closed' in status_lower %}
+                                            <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200 font-medium text-[10px]">🔒 Closed</span>
+                                        {% elif 'junk' in status_lower %}
+                                            <span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 font-medium text-[10px]">🗑️ Junk</span>
+                                        {% else %}
+                                            <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 text-[10px]">{{ status }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="col-stage px-3 py-3 border-r border-gray-100">
+                            {% if lead.lead_stage %}
+                            <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px]">{{ lead.lead_stage }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-conversion px-3 py-3 border-r border-gray-100">
+                            {% if lead.conversion_date %}
+                                <span class="px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 text-[10px] font-medium">
+                                     {{ lead.conversion_date }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-source px-3 py-3 border-r border-gray-100">
+                            {% if lead.lead_source %}
+                            <span class="text-[10px]">{{ lead.lead_source }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-industry px-3 py-3 border-r border-gray-100">
+                            {% if lead.industry_type %}
+                            <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 text-[10px]">{{ lead.industry_type }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-business_model px-3 py-3 border-r border-gray-100">
+                            {% if lead.business_model %}
+                            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px]">{{ lead.business_model }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-reason px-3 py-3 border-r border-gray-100">
+                            {% if lead.reason %}
+                            <span class="text-[10px] text-gray-600">{{ lead.reason|truncatechars:30 }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-description px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.description %}
+                            <span class="text-[10px] text-gray-600">{{ lead.description|truncatechars:50 }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-notes px-3 py-3 border-r border-gray-100">
+                            {% if lead.notes and lead.notes != '[No Notes Found]' %}
+                            <div class="notes-cell" data-contact-id="{{ lead.bigin_id }}">
+                                <div class="notes-preview text-gray-600 cursor-pointer hover:text-purple-600" onclick="toggleNotes('{{ lead.bigin_id }}')">
+                                    {{ lead.notes|truncatechars:100 }} <span class="text-purple-600">▼</span>
+                                </div>
+                                <div class="notes-full hidden text-gray-700 whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded mt-1 border max-h-60 overflow-y-auto">
+                                    {{ lead.notes }}
+                                    <button onclick="toggleNotes('{{ lead.bigin_id }}')" class="text-purple-600 text-xs mt-1">▲ Collapse</button>
+                                </div>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-500 italic text-xs">No notes</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-utm_campaign px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.utm_campaign %}
+                            <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-medium">{{ lead.utm_campaign|truncatechars:30 }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-utm_medium px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.utm_medium %}
+                            <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px]">{{ lead.utm_medium }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-utm_term px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.utm_term %}
+                            <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 text-[10px]">{{ lead.utm_term|truncatechars:25 }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-utm_content px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.utm_content %}
+                            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px]">{{ lead.utm_content|truncatechars:25 }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-gclid px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.gclid %}
+                            <span class="px-2 py-0.5 rounded bg-green-100 text-green-700 text-[10px] font-mono">{{ lead.gclid|truncatechars:15 }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-call_count px-3 py-3 col-hidden text-center border-r border-gray-100">
+                            {% if lead.call_stats %}
+                            <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">{{ lead.call_stats.call_count }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-last_call px-3 py-3 col-hidden border-r border-gray-100">
+                            {% if lead.call_stats and lead.call_stats.last_call_date %}
+                            {% if lead.call_stats.last_call_type == 'missed' %}
+                            <span class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-medium">Missed</span>
+                            {% elif lead.call_stats.last_call_type == 'incoming' %}
+                            <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-medium">Incoming</span>
+                            {% else %}
+                            <span class="px-1.5 py-0.5 rounded bg-green-100 text-green-700 text-[10px] font-medium">Outgoing</span>
+                            {% endif %}
+                            <span class="text-gray-500 text-[10px] block mt-0.5">{{ lead.call_stats.last_call_date }}</span>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">No calls</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-recording px-3 py-3 col-hidden">
+                            {% if lead.call_stats and lead.call_stats.last_recording_url %}
+                            <audio controls style="height:26px;max-width:150px;">
+                                <source src="{{ lead.call_stats.last_recording_url }}" type="audio/mpeg">
+                            </audio>
+                            {% else %}
+                            <span class="text-gray-500 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="21" class="px-6 py-12 text-center text-gray-500">
+                            <p class="text-lg font-medium">No leads found</p>
+                            <p class="text-sm">Try adjusting your filters</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex items-center justify-between bg-white rounded-lg shadow-sm p-4">
+        <div class="text-sm text-gray-700">
+            Page <span class="font-medium">{{ page_obj.number }}</span> of <span class="font-medium">{{ page_obj.paginator.num_pages }}</span>
+        </div>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                class="px-4 py-2 border border-gray-300 bg-white rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                class="px-4 py-2 border border-gray-300 bg-white rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Choices.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+
+<script>
+// Initialize Choices.js on all searchable selects
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElements = document.querySelectorAll('.searchable-select');
+    
+    selectElements.forEach(function(element) {
+        new Choices(element, {
+            removeItemButton: true,
+            searchEnabled: true,
+            searchPlaceholderValue: 'Search...',
+            noResultsText: 'No options found',
+            itemSelectText: 'Click to select',
+            maxItemCount: -1, // Unlimited selections
+            shouldSort: false, // Keep original order (already sorted in view)
+        });
+    });
+    
+    // Load column preferences
+    loadColumnPreferences();
+});
+
+// Column toggle functions
+const DEFAULT_VISIBLE = ['date', 'owner', 'account', 'name', 'type', 'locations', 'area', 'status', 'stage', 'conversion', 'source', 'industry', 'business_model', 'reason', 'notes'];
+
+function loadColumnPreferences() {
+    const saved = localStorage.getItem('bigin_leads_visible_columns');
+    const visible = saved ? JSON.parse(saved) : DEFAULT_VISIBLE;
+    
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        const column = btn.dataset.column;
+        const isVisible = visible.includes(column);
+        
+        if (isVisible) {
+            btn.classList.remove('inactive');
+            btn.classList.add('active');
+            showColumn(column);
+        } else {
+            btn.classList.remove('active');
+            btn.classList.add('inactive');
+            hideColumn(column);
+        }
+    });
+}
+
+function toggleColumn(columnName) {
+    const btn = document.querySelector(`[data-column="${columnName}"]`);
+    const isActive = btn.classList.contains('active');
+    
+    if (isActive) {
+        btn.classList.remove('active');
+        btn.classList.add('inactive');
+        hideColumn(columnName);
+    } else {
+        btn.classList.remove('inactive');
+        btn.classList.add('active');
+        showColumn(columnName);
+    }
+    
+    saveColumnPreferences();
+}
+
+function hideColumn(columnName) {
+    document.querySelectorAll(`.col-${columnName}`).forEach(el => {
+        el.classList.add('col-hidden');
+    });
+}
+
+function showColumn(columnName) {
+    document.querySelectorAll(`.col-${columnName}`).forEach(el => {
+        el.classList.remove('col-hidden');
+    });
+}
+
+function saveColumnPreferences() {
+    const visible = [];
+    document.querySelectorAll('.toggle-btn.active').forEach(btn => {
+        visible.push(btn.dataset.column);
+    });
+    localStorage.setItem('bigin_leads_visible_columns', JSON.stringify(visible));
+}
+
+function resetColumns() {
+    localStorage.setItem('bigin_leads_visible_columns', JSON.stringify(DEFAULT_VISIBLE));
+    loadColumnPreferences();
+}
+
+// Notes toggle
+function toggleNotes(contactId) {
+    const cell = document.querySelector(`.notes-cell[data-contact-id="${contactId}"]`);
+    if (!cell) return;
+    const preview = cell.querySelector('.notes-preview');
+    const full = cell.querySelector('.notes-full');
+
+    if (full.classList.contains('hidden')) {
+        preview.classList.add('hidden');
+        full.classList.remove('hidden');
+    } else {
+        preview.classList.remove('hidden');
+        full.classList.add('hidden');
+    }
+}
+
+// Toggle advanced filters
+function toggleAdvancedFilters() {
+    const filtersDiv = document.getElementById('advanced-filters');
+    const arrow = document.getElementById('filter-arrow');
+
+    if (filtersDiv.classList.contains('hidden')) {
+        filtersDiv.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        filtersDiv.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+</script>
+{% endblock %}

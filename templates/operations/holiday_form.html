@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if holiday %}Edit Holiday{% else %}Add Holiday{% endif %}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{% if holiday %}Edit Holiday{% else %}Add New Holiday{% endif %}</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                {% if holiday %}Update holiday information{% else %}Add a holiday to the warehouse calendar{% endif %}
+            </p>
+        </div>
+        <a href="{% url 'operations:holiday_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+            Back to List
+        </a>
+    </div>
+
+    <!-- Info Alert -->
+    {% if not holiday %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-900">Holiday Guidelines</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>National holidays apply to all projects and warehouses</li>
+                        <li>Regional holidays apply to specific state/location</li>
+                        <li>Project-specific holidays only affect the selected project</li>
+                        <li>No daily entries are expected on declared holidays</li>
+                        <li>Coordinators will be automatically notified about upcoming holidays</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Holiday Details</h2>
+        </div>
+        <form method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- Holiday Name -->
+            <div>
+                <label for="holiday_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Holiday Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" 
+                       id="holiday_name" 
+                       name="holiday_name" 
+                       value="{% if holiday %}{{ holiday.holiday_name }}{% endif %}"
+                       required
+                       maxlength="100"
+                       placeholder="e.g., Republic Day, Diwali, Warehouse Maintenance"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="mt-1 text-xs text-gray-500">Enter the name of the holiday or closure</p>
+            </div>
+
+            <!-- Holiday Date -->
+            <div>
+                <label for="holiday_date" class="block text-sm font-medium text-gray-700 mb-2">
+                    Holiday Date <span class="text-red-500">*</span>
+                </label>
+                <input type="date" 
+                       id="holiday_date" 
+                       name="holiday_date" 
+                       value="{% if holiday %}{{ holiday.holiday_date|date:'Y-m-d' }}{% endif %}"
+                       required
+                       min="{{ today|date:'Y-m-d' }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="mt-1 text-xs text-gray-500">Select the date of the holiday</p>
+                <p id="day-display" class="mt-1 text-sm font-medium text-blue-600"></p>
+            </div>
+
+            <!-- Holiday Type -->
+            <div>
+                <label for="holiday_type" class="block text-sm font-medium text-gray-700 mb-2">
+                    Holiday Type <span class="text-red-500">*</span>
+                </label>
+                <select id="holiday_type" 
+                        name="holiday_type" 
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Select Type --</option>
+                    <option value="national" {% if holiday and holiday.holiday_type == 'national' %}selected{% endif %}>National Holiday - Applies to all projects</option>
+                    <option value="regional" {% if holiday and holiday.holiday_type == 'regional' %}selected{% endif %}>Regional Holiday - State/region specific</option>
+                    <option value="warehouse_closure" {% if holiday and holiday.holiday_type == 'warehouse_closure' %}selected{% endif %}>Warehouse Closure - Maintenance/Emergency</option>
+                    <option value="project_specific" {% if holiday and holiday.holiday_type == 'project_specific' %}selected{% endif %}>Project Specific - Client requirement</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Select the appropriate category</p>
+            </div>
+
+            <!-- Project Selection (conditionally shown) -->
+            <div id="project-selection" class="{% if not holiday or holiday.holiday_type != 'project_specific' %}hidden{% endif %}">
+                <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    Select Project <span class="text-red-500">*</span>
+                </label>
+                <select id="project_id" 
+                        name="project_id" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Select a Project --</option>
+                    {% for project in projects %}
+                    <option value="{{ project.project_id }}" {% if holiday and holiday.project and holiday.project.project_id == project.project_id %}selected{% endif %}>
+                        {{ project }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Required for project-specific holidays</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description <span class="text-gray-500">(Optional)</span>
+                </label>
+                <textarea id="description" 
+                          name="description" 
+                          rows="3"
+                          placeholder="Add any additional notes or details about this holiday..."
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{% if holiday %}{{ holiday.description }}{% endif %}</textarea>
+                <p class="mt-1 text-xs text-gray-500">Optional additional information</p>
+            </div>
+
+            <!-- Notifications Toggle -->
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="send_notification" 
+                           name="send_notification" 
+                           type="checkbox"
+                           {% if not holiday %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                </div>
+                <div class="ml-3">
+                    <label for="send_notification" class="font-medium text-gray-700">Send Notifications</label>
+                    <p class="text-sm text-gray-500">Notify all coordinators about this holiday via email/system notification</p>
+                </div>
+            </div>
+
+            <!-- Preview Card -->
+            <div id="holiday-preview" class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-semibold text-indigo-900 mb-2">Holiday Preview</h3>
+                        <div class="space-y-2 text-sm text-indigo-800">
+                            <p><span class="font-semibold">Name:</span> <span id="preview-name">-</span></p>
+                            <p><span class="font-semibold">Date:</span> <span id="preview-date">-</span></p>
+                            <p><span class="font-semibold">Type:</span> <span id="preview-type">-</span></p>
+                            <p id="preview-project-line" class="hidden"><span class="font-semibold">Project:</span> <span id="preview-project">-</span></p>
+                            <p id="preview-scope" class="font-medium text-indigo-900 mt-3">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Box -->
+            {% if holiday %}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-900">Editing Existing Holiday</h3>
+                        <p class="mt-1 text-sm text-yellow-700">
+                            Changes to this holiday will affect all related projects and daily entry schedules. Coordinators will be notified of the changes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <a href="{% url 'operations:holiday_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+                    <svg width="20" height="20" aria-hidden="true" class="inline h-5 w-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    {% if holiday %}Update Holiday{% else %}Add Holiday{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const holidayTypeSelect = document.getElementById('holiday_type');
+    const projectSelection = document.getElementById('project-selection');
+    const projectSelect = document.getElementById('project_id');
+    const dateInput = document.getElementById('holiday_date');
+    const dayDisplay = document.getElementById('day-display');
+    const nameInput = document.getElementById('holiday_name');
+    const preview = document.getElementById('holiday-preview');
+
+    // Show/hide project selection based on holiday type
+    holidayTypeSelect.addEventListener('change', function() {
+        if (this.value === 'project_specific') {
+            projectSelection.classList.remove('hidden');
+            projectSelect.required = true;
+        } else {
+            projectSelection.classList.add('hidden');
+            projectSelect.required = false;
+            projectSelect.value = '';
+        }
+        updatePreview();
+    });
+
+    // Display day of week when date is selected
+    dateInput.addEventListener('change', function() {
+        if (this.value) {
+            const date = new Date(this.value + 'T00:00:00');
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[date.getDay()];
+            dayDisplay.textContent = `📅 This holiday falls on ${dayName}`;
+            
+            // Highlight if weekend
+            if (date.getDay() === 0 || date.getDay() === 6) {
+                dayDisplay.classList.add('text-orange-600');
+                dayDisplay.textContent += ' (Weekend)';
+            } else {
+                dayDisplay.classList.remove('text-orange-600');
+            }
+        }
+        updatePreview();
+    });
+
+    // Update preview
+    function updatePreview() {
+        const name = nameInput.value;
+        const date = dateInput.value;
+        const type = holidayTypeSelect.options[holidayTypeSelect.selectedIndex]?.text.split(' - ')[0];
+        const project = projectSelect.options[projectSelect.selectedIndex]?.text;
+
+        if (name && date && type) {
+            preview.classList.remove('hidden');
+            document.getElementById('preview-name').textContent = name;
+            
+            const dateObj = new Date(date + 'T00:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('preview-date').textContent = dateObj.toLocaleDateString('en-US', options);
+            
+            document.getElementById('preview-type').textContent = type;
+
+            if (holidayTypeSelect.value === 'project_specific' && projectSelect.value) {
+                document.getElementById('preview-project-line').classList.remove('hidden');
+                document.getElementById('preview-project').textContent = project;
+                document.getElementById('preview-scope').textContent = '🎯 This holiday will only affect the selected project';
+            } else {
+                document.getElementById('preview-project-line').classList.add('hidden');
+                if (holidayTypeSelect.value === 'national') {
+                    document.getElementById('preview-scope').textContent = '🌍 This holiday will apply to ALL projects across all locations';
+                } else if (holidayTypeSelect.value === 'regional') {
+                    document.getElementById('preview-scope').textContent = '🗺️ This holiday will apply to projects in the specific region';
+                } else if (holidayTypeSelect.value === 'warehouse_closure') {
+                    document.getElementById('preview-scope').textContent = '🏭 This will mark the warehouse as closed for all projects';
+                }
+            }
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    // Add event listeners for preview updates
+    nameInput.addEventListener('input', updatePreview);
+    projectSelect.addEventListener('change', updatePreview);
+
+    // Initial preview update if editing
+    {% if holiday %}
+    updatePreview();
+    {% endif %}
+
+    // Confirm before submitting
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const type = holidayTypeSelect.value;
+        if (type === 'national' || type === 'regional') {
+            if (!confirm('This holiday will affect multiple projects. Are you sure you want to continue?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

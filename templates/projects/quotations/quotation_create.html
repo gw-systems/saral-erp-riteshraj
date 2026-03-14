@@ -1,0 +1,1653 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Saral ERP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
+        <p class="mt-1 text-sm text-gray-600">Create professional quotations with multi-location pricing</p>
+    </div>
+
+    <!-- Display Non-Field Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex">
+            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Form Errors</h3>
+                <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="POST" id="quotation-form" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Section 1: Client Information -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                Client Information
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Client Name -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.client_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Client Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.client_name }}
+                    {% if form.client_name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Client Company -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.client_company.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Company Name
+                    </label>
+                    {{ form.client_company }}
+                    {% if form.client_company.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client_company.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Client Email -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.client_email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                    </label>
+                    {{ form.client_email }}
+                    {% if form.client_email.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Number -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.client_phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Contact Number
+                    </label>
+                    {{ form.client_phone }}
+                    {% if form.client_phone.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client_phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Address -->
+                <div class="col-span-2">
+                    <label for="{{ form.billing_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Address
+                    </label>
+                    {{ form.billing_address }}
+                    {% if form.billing_address.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.billing_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Quotation Details -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Quotation Details
+            </h2>
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Validity Period -->
+                <div>
+                    <label for="{{ form.validity_period.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Validity Period (Days)
+                    </label>
+                    {{ form.validity_period }}
+                    {% if form.validity_period.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.validity_period.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- GST Rate -->
+                <div>
+                    <label for="{{ form.gst_rate.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        GST Rate (%)
+                    </label>
+                    {{ form.gst_rate }}
+                    {% if form.gst_rate.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.gst_rate.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2.5: Operational Scope of Service -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                Operational Scope of Service
+            </h2>
+
+            <!-- Pallet Configuration -->
+            <!-- Row 1: Total Boxes + Variance -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="{{ form.operational_total_boxes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Total Boxes
+                    </label>
+                    {{ form.operational_total_boxes }}
+                    {% if form.operational_total_boxes.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.operational_total_boxes.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.operational_variance_pct.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Variance %
+                    </label>
+                    {{ form.operational_variance_pct }}
+                    {% if form.operational_variance_pct.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.operational_variance_pct.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Row 2: Pallet dimensions -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="{{ form.operational_pallet_l.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pallet L (ft)
+                    </label>
+                    {{ form.operational_pallet_l }}
+                    {% if form.operational_pallet_l.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.operational_pallet_l.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.operational_pallet_w.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pallet W (ft)
+                    </label>
+                    {{ form.operational_pallet_w }}
+                    {% if form.operational_pallet_w.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.operational_pallet_w.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.operational_pallet_h.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pallet H (ft)
+                    </label>
+                    {{ form.operational_pallet_h }}
+                    {% if form.operational_pallet_h.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.operational_pallet_h.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Product Formset -->
+            {{ product_formset.management_form }}
+
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-md font-semibold text-gray-700">Products / SKUs</h3>
+                <button type="button" id="add-product" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
+                    + Add SKU
+                </button>
+            </div>
+
+            <!-- Product Rows Container -->
+            <div id="sku-error" class="hidden mb-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700 font-medium"></div>
+            <div id="product-rows-container" class="space-y-3">
+                <!-- Populated by JS from existing_products_json or empty on create -->
+            </div>
+
+            <!-- Operational Summary Panel -->
+            <div class="mt-6 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                <h4 class="text-sm font-semibold text-indigo-800 mb-3">Pallet & Storage Summary</h4>
+                <div class="grid grid-cols-4 gap-4 text-center">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Pallet Volume</p>
+                        <p id="op-pallet-volume" class="text-lg font-bold text-indigo-700">—</p>
+                        <p class="text-xs text-gray-400">cu.ft</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Total Pallets</p>
+                        <p id="op-total-pallets" class="text-lg font-bold text-indigo-700">—</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Actual Pallets</p>
+                        <p id="op-actual-pallets" class="text-lg font-bold text-indigo-700">—</p>
+                        <p class="text-xs text-gray-400">(incl. variance)</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Billable Area</p>
+                        <p id="op-billable-area" class="text-lg font-bold text-indigo-700">—</p>
+                        <p class="text-xs text-gray-400">sq.ft</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden JSON for pre-populating products (edit mode / validation failure) -->
+        <div id="existing-products-json" class="hidden">{{ existing_products_json|escapejs }}</div>
+
+        <!-- Section 2b: Commercial Settings -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 7h.01M15 7h.01M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Commercial Settings
+            </h2>
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <div class="flex items-center gap-4">
+                        <label class="block text-sm font-medium text-gray-700">Commercial Type</label>
+                        <div class="inline-flex rounded-lg border border-gray-300 overflow-hidden" id="commercial-type-toggle">
+                            <button type="button" data-value="vendor_rate" class="toggle-pill px-5 py-2 text-sm font-medium bg-blue-600 text-white border-r border-gray-300 transition">
+                                Vendor Rate
+                            </button>
+                            <button type="button" data-value="market_rate" class="toggle-pill px-5 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition">
+                                Market Rate
+                            </button>
+                        </div>
+                        <input type="hidden" id="commercial_type_input" name="commercial_type" value="{{ form.commercial_type.value|default:'vendor_rate' }}">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Select whether costs are based on vendor rates or market rates.</p>
+                </div>
+                <div>
+                    <label for="{{ form.default_markup_pct.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Default Markup % <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.default_markup_pct }}
+                    {% if form.default_markup_pct.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.default_markup_pct.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Client price = Cost × (1 + Markup%). Min 26% or request approval.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Locations & Items (Dynamic Formsets) -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Locations & Pricing
+                </h2>
+                <button type="button" id="add-location" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
+                    + Add Location
+                </button>
+            </div>
+
+            <p class="text-sm text-gray-600 mb-6">Add different warehouse locations with their respective pricing</p>
+
+            <!-- Location Formset Container -->
+            <div id="location-formset">
+                <!-- Management Form -->
+                {{ location_formset.management_form }}
+
+                <!-- Location Forms Container -->
+                <div id="location-forms-container" class="space-y-6">
+                    {% for location_form in location_formset %}
+                    <div class="location-form border-2 border-gray-300 rounded-lg p-6 bg-gray-50" data-location-index="{{ forloop.counter0 }}">
+
+                        <!-- Location Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-md font-semibold text-gray-800 flex items-center">
+                                <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">
+                                    {{ forloop.counter }}
+                                </span>
+                                Location {{ forloop.counter }}
+                            </h3>
+                            {% if not location_form.instance.pk or forloop.counter > 1 %}
+                            <button type="button" class="delete-location px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition">
+                                Remove
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Location Fields (Hidden) -->
+                        <div class="hidden">
+                            {{ location_form.location_id }}
+                            {{ location_form.quotation }}
+                            {{ location_form.DELETE }}
+                        </div>
+
+                        <!-- Location Name & Order -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Location Name <span class="text-red-500">*</span>
+                                </label>
+                                {{ location_form.location_name }}
+                                {% if location_form.location_name.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ location_form.location_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Display Order
+                                </label>
+                                {{ location_form.order }}
+                                {% if location_form.order.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ location_form.order.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Items Section -->
+                        <div class="items-section space-y-4">
+
+                            <!-- Cost Input Table (orange) -->
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-semibold text-orange-800 cost-table-label">Vendor Costs</h4>
+                                    <button type="button" class="add-item px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition">
+                                        + Add Item
+                                    </button>
+                                </div>
+                                <div class="items-container space-y-2">
+                                    <!-- Item rows injected here by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Client Pricing Table (blue, read-only, auto-calculated) -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-semibold text-blue-800">Client Pricing</h4>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-600">Markup:</span>
+                                        <input type="number" class="loc-markup-pct w-20 px-2 py-1 text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-400 text-center"
+                                               value="{{ form.default_markup_pct.value|default:'26.00' }}" step="0.01" min="0">
+                                        <span class="text-xs text-gray-600">%</span>
+                                    </div>
+                                </div>
+                                <!-- Client pricing display table -->
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="text-xs text-blue-700 border-b border-blue-200">
+                                                <th class="text-left py-1 pr-3 font-medium w-2/5">Description</th>
+                                                <th class="text-right py-1 px-2 font-medium">Client Rate</th>
+                                                <th class="text-right py-1 px-2 font-medium">Qty</th>
+                                                <th class="text-right py-1 pl-2 font-medium">Total (₹)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="client-pricing-tbody">
+                                            <!-- Rows injected by JS -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="border-t border-blue-200 text-xs text-blue-700">
+                                                <td colspan="3" class="text-right py-1 pr-2 font-medium">Subtotal:</td>
+                                                <td class="text-right py-1 pl-2 font-semibold location-subtotal">₹0.00</td>
+                                            </tr>
+                                            <tr class="text-xs text-blue-700">
+                                                <td colspan="3" class="text-right py-1 pr-2 font-medium gst-label">GST (18%):</td>
+                                                <td class="text-right py-1 pl-2 font-semibold location-gst">₹0.00</td>
+                                            </tr>
+                                            <tr class="text-xs font-bold text-blue-900 border-t border-blue-300">
+                                                <td colspan="3" class="text-right py-1 pr-2">Grand Total:</td>
+                                                <td class="text-right py-1 pl-2 location-total text-blue-700">₹0.00</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-gray-500 py-8">No locations added yet. Click "Add Location" to start.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Overall Quotation Total -->
+            <div class="mt-6 bg-blue-50 border-2 border-blue-600 rounded-lg p-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-bold text-gray-900">Quotation Grand Total:</span>
+                    <span id="quotation-grand-total" class="text-2xl font-bold text-blue-600">₹0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Margin Summary Panel (shown when vendor commercials are entered) -->
+        <div id="margin-panel" class="bg-white shadow rounded-lg p-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Commercial Summary
+            </h2>
+            <div class="grid grid-cols-3 gap-6">
+                <div class="text-center">
+                    <p class="text-sm font-medium text-gray-500 mb-1">Client Total</p>
+                    <p id="summary-client-total" class="text-xl font-bold text-blue-600">₹0.00</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-medium text-gray-500 mb-1">Vendor Total</p>
+                    <p id="summary-vendor-total" class="text-xl font-bold text-orange-600">₹0.00</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-medium text-gray-500 mb-1">Gross Markup</p>
+                    <p id="summary-margin-pct" class="text-xl font-bold text-gray-900">—</p>
+                </div>
+            </div>
+            <!-- Low margin warning -->
+            <div id="margin-warning" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-semibold text-red-800">Markup Below Minimum (26%)</h3>
+                        <p class="mt-1 text-sm text-red-700">
+                            The current markup is below the required 26% threshold. You cannot save this quotation normally.
+                            You may request director approval if markup is ≥15%. Below 15% is hard-blocked.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- Good margin indicator -->
+            <div id="margin-ok" class="hidden mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="ml-3 text-sm font-medium text-green-800">Markup meets the 26% minimum requirement. ✓</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-end gap-3 sticky bottom-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+            <!-- Hidden field — set to '1' when requesting director approval -->
+            <input type="hidden" name="_request_approval" id="request-approval-flag" value="">
+
+            <a href="{% url 'projects:quotation_list' %}"
+               class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition">
+                Cancel
+            </a>
+
+            <!-- Request Director Approval button — shown only when margin < 22% -->
+            <button type="button" id="btn-request-approval"
+                    class="hidden px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium transition shadow-sm">
+                Request Director Approval
+            </button>
+
+            <!-- Normal save button — disabled when margin is too low -->
+            <button type="submit" id="btn-save"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition shadow-sm">
+                {{ title }}
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<!-- Item Row Template (Hidden) -->
+<template id="item-template">
+    <div class="item-row border border-orange-200 rounded bg-white p-2">
+        <!-- Visible cost inputs -->
+        <div class="grid grid-cols-12 gap-2 items-end">
+            <div class="col-span-4">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                <select class="item-description w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-400">
+                    <option value="">Select...</option>
+                    {% for value, label in item_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-span-3">
+                <label class="block text-xs font-medium text-orange-700 mb-1">Cost Rate</label>
+                <input type="text" class="item-vendor-unit-cost w-full px-2 py-1.5 text-sm border border-orange-300 rounded focus:ring-2 focus:ring-orange-400" placeholder="Rate">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-orange-700 mb-1">Qty</label>
+                <input type="text" class="item-vendor-quantity w-full px-2 py-1.5 text-sm border border-orange-300 rounded focus:ring-2 focus:ring-orange-400" placeholder="Qty">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Cost Total</label>
+                <p class="item-cost-total text-sm font-semibold text-orange-700 py-1.5">—</p>
+            </div>
+            <div class="col-span-1 flex items-end pb-0.5">
+                <button type="button" class="delete-item w-full px-1.5 py-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition text-center">
+                    <svg width="14" height="14" aria-hidden="true" class="h-3.5 w-3.5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Custom description (optional) -->
+        <div class="mt-1.5">
+            <input type="text" class="item-custom-desc w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-gray-400 text-gray-500" placeholder="Custom description (optional)">
+        </div>
+        <!-- Storage unit type (conditionally shown) -->
+        <div class="storage-unit-field hidden mt-1.5">
+            <select class="storage-unit-type w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-gray-400">
+                <option value="">Select storage unit...</option>
+                {% for value, label in storage_unit_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Hidden client-side form fields (populated by JS before submit) -->
+        <div class="hidden">
+            <input type="text" class="item-unit-cost">
+            <input type="text" class="item-quantity">
+        </div>
+    </div>
+</template>
+
+<!-- Product Row Template (Hidden) -->
+<template id="product-row-template">
+    <div class="product-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+        <div class="grid grid-cols-12 gap-3">
+            <!-- Product Name -->
+            <div class="col-span-3">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Product / SKU Name <span class="text-red-500">*</span></label>
+                <input type="text" class="prod-name w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. FMCG Cartons">
+            </div>
+            <!-- Business Type -->
+            <div class="col-span-1">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Business</label>
+                <select class="prod-business w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    {% for val, lbl in product_business_choices %}
+                    <option value="{{ val }}">{{ lbl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Operation Type -->
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Operation Type <span class="text-red-500">*</span></label>
+                <select class="prod-operation w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select...</option>
+                    {% for val, lbl in product_operation_choices %}
+                    <option value="{{ val }}">{{ lbl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Packaging Type -->
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Packaging</label>
+                <input type="text" class="prod-packaging w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. Corrugated">
+            </div>
+            <!-- Avg Weight -->
+            <div class="col-span-1">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Wt (kg)</label>
+                <input type="number" step="0.01" class="prod-weight w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+            </div>
+            <!-- Share % -->
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Share %</label>
+                <input type="number" step="0.01" class="prod-share w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="100">
+            </div>
+            <!-- Delete Button -->
+            <div class="col-span-1 flex items-end">
+                <button type="button" class="delete-product w-full px-2 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition">
+                    <svg width="16" height="16" aria-hidden="true" class="h-4 w-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Dimensions Row -->
+        <div class="grid grid-cols-12 gap-3 mt-2">
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Length</label>
+                <input type="number" step="0.0001" class="prod-dim-l w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Width</label>
+                <input type="number" step="0.0001" class="prod-dim-w w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Height</label>
+                <input type="number" step="0.0001" class="prod-dim-h w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Unit</label>
+                <select class="prod-dim-unit w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    {% for val, lbl in product_dim_unit_choices %}
+                    <option value="{{ val }}" {% if val == 'CM' %}selected{% endif %}>{{ lbl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Vol/box (ft&sup3;)</label>
+                <p class="prod-vol-display text-sm font-semibold text-indigo-600 py-2">—</p>
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Pallets</label>
+                <p class="prod-pallets-display text-sm font-semibold text-indigo-600 py-2">—</p>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- JavaScript for Dynamic Form Management -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ========================================================================
+    // CONFIG & STATE
+    // ========================================================================
+    const ITEM_CHOICES = [
+        {% for value, label in item_choices %}
+        ['{{ value }}', '{{ label }}'],
+        {% endfor %}
+    ];
+    const GST_RATE = parseFloat('{{ form.gst_rate.value|default:"18" }}') / 100;
+    const MIN_MARKUP_PCT = {{ min_markup_pct|default:26 }};
+    const AUTO_REJECT_PCT = 15;
+    let locationIndex = {{ location_formset.total_form_count }};
+    const existingItems = JSON.parse('{{ existing_items_json|escapejs }}');
+    const hasExistingItems = Object.keys(existingItems).length > 0;
+
+    const locationFormsContainer = document.getElementById('location-forms-container');
+    const addLocationBtn = document.getElementById('add-location');
+    const itemTemplate = document.getElementById('item-template');
+
+    // ========================================================================
+    // ITEM MANAGEMENT FORM (per location)
+    // ========================================================================
+    function ensureItemManagementForm(locationEl, locIdx) {
+        const container = locationEl.querySelector('.items-container');
+        let mgmt = container.querySelector('.item-mgmt-form');
+        if (!mgmt) {
+            mgmt = document.createElement('div');
+            mgmt.className = 'item-mgmt-form';
+            mgmt.innerHTML = `
+                <input type="hidden" name="locations-${locIdx}-items-TOTAL_FORMS" value="0">
+                <input type="hidden" name="locations-${locIdx}-items-INITIAL_FORMS" value="0">
+                <input type="hidden" name="locations-${locIdx}-items-MIN_NUM_FORMS" value="0">
+                <input type="hidden" name="locations-${locIdx}-items-MAX_NUM_FORMS" value="1000">
+            `;
+            container.insertBefore(mgmt, container.firstChild);
+        }
+        return mgmt;
+    }
+
+    function updateItemManagementForm(locationEl, locIdx) {
+        const mgmt = ensureItemManagementForm(locationEl, locIdx);
+        // TOTAL_FORMS must include ALL forms (including deleted ones) for Django formset processing
+        const items = locationEl.querySelectorAll('.item-row');
+        mgmt.querySelector(`[name="locations-${locIdx}-items-TOTAL_FORMS"]`).value = items.length;
+    }
+
+    // ========================================================================
+    // ADD ITEM ROW
+    // ========================================================================
+    function addItemRow(locationEl, locIdx, data) {
+        const container = locationEl.querySelector('.items-container');
+        ensureItemManagementForm(locationEl, locIdx);
+
+        const itemIdx = container.querySelectorAll('.item-row').length;
+        const prefix = `locations-${locIdx}-items-${itemIdx}`;
+
+        // Clone template
+        const row = itemTemplate.content.cloneNode(true).firstElementChild;
+
+        // Set name attributes with proper prefix
+        const descSelect = row.querySelector('.item-description');
+        descSelect.name = `${prefix}-item_description`;
+
+        row.querySelector('.item-unit-cost').name = `${prefix}-unit_cost`;
+        row.querySelector('.item-quantity').name = `${prefix}-quantity`;
+        row.querySelector('.item-vendor-unit-cost').name = `${prefix}-vendor_unit_cost`;
+        row.querySelector('.item-vendor-quantity').name = `${prefix}-vendor_quantity`;
+        row.querySelector('.item-custom-desc').name = `${prefix}-custom_description`;
+        row.querySelector('.storage-unit-type').name = `${prefix}-storage_unit_type`;
+
+        // Add hidden fields for PK, order, DELETE
+        const hiddens = document.createElement('div');
+        hiddens.className = 'hidden';
+        hiddens.innerHTML = `
+            <input type="hidden" name="${prefix}-item_id" value="${data && data.id ? data.id : ''}">
+            <input type="hidden" name="${prefix}-order" value="${itemIdx}">
+            <input type="hidden" name="${prefix}-DELETE" value="">
+        `;
+        row.appendChild(hiddens);
+
+        // Populate data if provided
+        if (data) {
+            descSelect.value = data.item_description || '';
+            row.querySelector('.item-unit-cost').value = data.unit_cost || '';
+            row.querySelector('.item-quantity').value = data.quantity || '';
+            row.querySelector('.item-vendor-unit-cost').value = data.vendor_unit_cost || '';
+            row.querySelector('.item-vendor-quantity').value = data.vendor_quantity || '';
+            row.querySelector('.item-custom-desc').value = data.custom_description || '';
+
+            const storageSelect = row.querySelector('.storage-unit-type');
+            if (data.storage_unit_type) {
+                storageSelect.value = data.storage_unit_type;
+            }
+
+            // Show storage unit field if applicable
+            if (data.item_description === 'storage_per_pallet') {
+                row.querySelector('.storage-unit-field').classList.remove('hidden');
+            }
+        }
+
+        container.appendChild(row);
+        updateItemManagementForm(locationEl, locIdx);
+
+        // Calculate display totals via client pricing table
+        updateClientPricingTable(row.closest('.location-form'));
+
+        return row;
+    }
+
+    // ========================================================================
+    // AUTO-POPULATE ALL ITEM TYPES FOR NEW LOCATION
+    // ========================================================================
+    function autoPopulateItems(locationEl, locIdx) {
+        ITEM_CHOICES.forEach(function(choice) {
+            addItemRow(locationEl, locIdx, { item_description: choice[0] });
+        });
+        updateClientPricingTable(locationEl);
+    }
+
+    // ========================================================================
+    // LOAD EXISTING ITEMS (edit mode)
+    // ========================================================================
+    function loadExistingItemsForLocation(locationEl, locIdx) {
+        const items = existingItems[String(locIdx)];
+        if (!items || items.length === 0) return;
+
+        // Set INITIAL_FORMS count — only items with a real PK are "initial" (existing DB rows)
+        const mgmt = ensureItemManagementForm(locationEl, locIdx);
+        const existingCount = items.filter(item => item.id && String(item.id).trim() !== '').length;
+        mgmt.querySelector(`[name="locations-${locIdx}-items-INITIAL_FORMS"]`).value = existingCount;
+
+        items.forEach(function(item) {
+            addItemRow(locationEl, locIdx, item);
+        });
+        updateClientPricingTable(locationEl);
+    }
+
+    function calculateGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.location-form:not([style*="display: none"])').forEach(function(loc) {
+            const totalText = loc.querySelector('.location-total').textContent;
+            grandTotal += parseCurrency(totalText);
+        });
+        document.getElementById('quotation-grand-total').textContent = formatCurrency(grandTotal);
+    }
+
+    // ========================================================================
+    // CLIENT PRICING TABLE — real-time update
+    // ========================================================================
+    function updateClientPricingTable(locationEl) {
+        if (!locationEl) return;
+        var markupPct = parseFloat(locationEl.querySelector('.loc-markup-pct').value) || MIN_MARKUP_PCT;
+        var multiplier = 1 + markupPct / 100;
+        var tbody = locationEl.querySelector('.client-pricing-tbody');
+        if (!tbody) return;
+
+        // Clear existing display rows
+        tbody.innerHTML = '';
+
+        var subtotal = 0;
+        locationEl.querySelectorAll('.item-row:not(.item-deleted)').forEach(function(row) {
+            var desc = row.querySelector('.item-description');
+            var vuc = row.querySelector('.item-vendor-unit-cost').value.trim();
+            var vq = row.querySelector('.item-vendor-quantity').value.trim();
+            var customDesc = (row.querySelector('.item-custom-desc') ? row.querySelector('.item-custom-desc').value : '').trim();
+
+            var vucNum = parseFloat(vuc);
+            var vqNum = parseFloat(vq);
+            var hasNumbers = !isNaN(vucNum) && !isNaN(vqNum);
+
+            // Description label
+            var descLabel = '';
+            if (desc) {
+                var opt = desc.querySelector('option[value="' + desc.value + '"]');
+                descLabel = opt ? opt.textContent.trim() : desc.value;
+            }
+            if (customDesc) descLabel = customDesc;
+
+            // Update cost total display in the cost row
+            var costTotalEl = row.querySelector('.item-cost-total');
+            if (costTotalEl) {
+                costTotalEl.textContent = hasNumbers
+                    ? '₹' + (vucNum * vqNum).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '—';
+            }
+
+            // Client values
+            var clientRate, clientQty, clientTotal, clientTotalNum;
+            clientTotalNum = 0;
+            if (hasNumbers) {
+                var cr = vucNum * multiplier;
+                var ct = cr * vqNum;
+                clientRate = '₹' + cr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                clientQty = vqNum.toLocaleString('en-IN');
+                clientTotal = '₹' + ct.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                clientTotalNum = ct;
+                subtotal += ct;
+            } else if (vuc) {
+                clientRate = 'At actual';
+                clientQty = escapeHtml(vq) || '—';
+                clientTotal = '—';
+            } else {
+                clientRate = '—';
+                clientQty = '—';
+                clientTotal = '—';
+            }
+
+            var tr = document.createElement('tr');
+            tr.className = 'text-xs border-b border-blue-100';
+            tr.innerHTML =
+                '<td class="py-1 pr-3 text-gray-700">' + (escapeHtml(descLabel) || '—') + '</td>' +
+                '<td class="py-1 px-2 text-right text-gray-800">' + clientRate + '</td>' +
+                '<td class="py-1 px-2 text-right text-gray-800">' + clientQty + '</td>' +
+                '<td class="py-1 pl-2 text-right font-medium text-blue-800">' + clientTotal + '</td>';
+            tbody.appendChild(tr);
+        });
+
+        var gst = subtotal * GST_RATE;
+        var grandTotal = subtotal + gst;
+        var gstPct = (GST_RATE * 100).toFixed(0);
+
+        locationEl.querySelector('.location-subtotal').textContent = formatCurrency(subtotal);
+        locationEl.querySelector('.location-gst').textContent = formatCurrency(gst);
+        locationEl.querySelector('.location-total').textContent = formatCurrency(grandTotal);
+        var gstLabel = locationEl.querySelector('.gst-label');
+        if (gstLabel) gstLabel.textContent = 'GST (' + gstPct + '%):';
+
+        calculateGrandTotal();
+        updateMarginSummary();
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ========================================================================
+    // SYNC CLIENT FIELDS FROM COST + MARKUP BEFORE SUBMIT
+    // ========================================================================
+    function syncClientFieldsBeforeSubmit() {
+        document.querySelectorAll('.location-form:not([style*="display: none"])').forEach(function(loc) {
+            var markupPct = parseFloat(loc.querySelector('.loc-markup-pct').value) || MIN_MARKUP_PCT;
+            var multiplier = 1 + markupPct / 100;
+
+            loc.querySelectorAll('.item-row:not(.item-deleted)').forEach(function(row) {
+                var vuc = row.querySelector('.item-vendor-unit-cost').value.trim();
+                var vq = row.querySelector('.item-vendor-quantity').value.trim();
+                var ucInput = row.querySelector('.item-unit-cost');
+                var qInput = row.querySelector('.item-quantity');
+
+                var vucNum = parseFloat(vuc);
+                var vqNum = parseFloat(vq);
+
+                if (!isNaN(vucNum) && !isNaN(vqNum)) {
+                    ucInput.value = (vucNum * multiplier).toFixed(2);
+                    qInput.value = vqNum.toFixed(2);
+                } else {
+                    ucInput.value = vuc;
+                    qInput.value = vq;
+                }
+            });
+        });
+    }
+
+    // ========================================================================
+    // MARGIN SUMMARY PANEL
+    // ========================================================================
+    function updateMarginSummary() {
+        let totalClient = 0;
+        let totalVendor = 0;
+        let hasAnyVendor = false;
+
+        document.querySelectorAll('.location-form:not([style*="display: none"])').forEach(function(loc) {
+            loc.querySelectorAll('.item-row:not(.item-deleted)').forEach(function(item) {
+                var locForm = item.closest('.location-form');
+                var markupPct = parseFloat(locForm.querySelector('.loc-markup-pct').value) || MIN_MARKUP_PCT;
+                var multiplier = 1 + markupPct / 100;
+                var vuc = parseFloat(item.querySelector('.item-vendor-unit-cost').value);
+                var vq = parseFloat(item.querySelector('.item-vendor-quantity').value);
+                if (!isNaN(vuc) && !isNaN(vq)) {
+                    totalClient += vuc * multiplier * vq;
+                    totalVendor += vuc * vq;
+                    hasAnyVendor = true;
+                }
+            });
+        });
+
+        const marginPanel = document.getElementById('margin-panel');
+        const marginWarning = document.getElementById('margin-warning');
+        const marginOk = document.getElementById('margin-ok');
+        const btnSave = document.getElementById('btn-save');
+        const btnRequestApproval = document.getElementById('btn-request-approval');
+        const marginPctEl = document.getElementById('summary-margin-pct');
+        const approvalFlag = document.getElementById('request-approval-flag');
+
+        if (!marginPanel) return;
+
+        if (!hasAnyVendor && totalVendor === 0) {
+            marginPanel.classList.add('hidden');
+            if (btnRequestApproval) btnRequestApproval.classList.add('hidden');
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            return;
+        }
+
+        marginPanel.classList.remove('hidden');
+        document.getElementById('summary-client-total').textContent = formatCurrency(totalClient);
+        document.getElementById('summary-vendor-total').textContent = formatCurrency(totalVendor);
+
+        // Markup formula: (client - cost) / cost * 100
+        let markupPct = null;
+        if (totalVendor > 0) {
+            markupPct = ((totalClient - totalVendor) / totalVendor) * 100;
+        }
+
+        if (markupPct === null) {
+            marginPctEl.textContent = '—';
+            marginPctEl.className = 'text-xl font-bold text-gray-500';
+            marginWarning.classList.add('hidden');
+            marginOk.classList.add('hidden');
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (btnRequestApproval) btnRequestApproval.classList.add('hidden');
+            if (approvalFlag) approvalFlag.value = '';
+            return;
+        }
+
+        marginPctEl.textContent = markupPct.toFixed(1) + '%';
+
+        if (markupPct >= MIN_MARKUP_PCT) {
+            // ≥26% — green, save freely
+            marginPctEl.className = 'text-xl font-bold text-green-600';
+            marginWarning.classList.add('hidden');
+            marginOk.classList.remove('hidden');
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (btnRequestApproval) btnRequestApproval.classList.add('hidden');
+            if (approvalFlag) approvalFlag.value = '';
+        } else if (markupPct >= AUTO_REJECT_PCT) {
+            // 15–25.99% — amber, can request approval
+            marginPctEl.className = 'text-xl font-bold text-yellow-600';
+            marginWarning.classList.remove('hidden');
+            marginOk.classList.add('hidden');
+            if (btnSave) {
+                btnSave.disabled = true;
+                btnSave.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            if (btnRequestApproval) btnRequestApproval.classList.remove('hidden');
+        } else {
+            // <15% — red, hard block, no approval possible
+            marginPctEl.className = 'text-xl font-bold text-red-600';
+            marginWarning.classList.remove('hidden');
+            marginOk.classList.add('hidden');
+            if (btnSave) {
+                btnSave.disabled = true;
+                btnSave.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            // Hide approval button for <15% — cannot request approval
+            if (btnRequestApproval) btnRequestApproval.classList.add('hidden');
+            if (approvalFlag) approvalFlag.value = '';
+        }
+    }
+
+    function formatCurrency(amount) {
+        return '₹' + amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function parseCurrency(text) {
+        return parseFloat(text.replace(/[₹,]/g, '')) || 0;
+    }
+
+    // ========================================================================
+    // STORAGE UNIT TOGGLE
+    // ========================================================================
+    function toggleStorageUnit(itemRow) {
+        const desc = itemRow.querySelector('.item-description');
+        const storageField = itemRow.querySelector('.storage-unit-field');
+        if (!desc || !storageField) return;
+        if (desc.value === 'storage_per_pallet') {
+            storageField.classList.remove('hidden');
+        } else {
+            storageField.classList.add('hidden');
+        }
+    }
+
+    // ========================================================================
+    // LOCATION MANAGEMENT
+    // ========================================================================
+    function updateLocationFormPrefixes(locationEl, locIdx) {
+        // Update all location input names: locations-{old}-* → locations-{locIdx}-*
+        locationEl.querySelectorAll('input, select, textarea').forEach(function(el) {
+            if (el.name) {
+                el.name = el.name.replace(/locations-\d+/, `locations-${locIdx}`);
+            }
+            if (el.id) {
+                el.id = el.id.replace(/locations-\d+/, `locations-${locIdx}`);
+            }
+        });
+    }
+
+    function updateLocationManagementForm() {
+        const allForms = locationFormsContainer.querySelectorAll('.location-form');
+        const mgmtInput = document.querySelector('input[name="locations-TOTAL_FORMS"]');
+        if (mgmtInput) {
+            mgmtInput.value = allForms.length;
+        }
+    }
+
+    // ========================================================================
+    // ADD LOCATION
+    // ========================================================================
+    addLocationBtn.addEventListener('click', function() {
+        const firstLocation = locationFormsContainer.querySelector('.location-form');
+        if (!firstLocation) return;
+
+        const newLocation = firstLocation.cloneNode(true);
+        const newIdx = locationIndex;
+        newLocation.setAttribute('data-location-index', newIdx);
+
+        // Update header number
+        const badge = newLocation.querySelector('span.bg-blue-600');
+        if (badge) badge.textContent = newIdx + 1;
+
+        // Clear visible inputs
+        newLocation.querySelectorAll('input:not([type="hidden"]), textarea, select').forEach(function(el) {
+            el.value = '';
+        });
+
+        // Restore default markup for new location
+        const globalMarkupEl = document.querySelector('[name="default_markup_pct"]');
+        var defaultMarkup = globalMarkupEl ? (globalMarkupEl.value || String(MIN_MARKUP_PCT)) : String(MIN_MARKUP_PCT);
+        var markupInput = newLocation.querySelector('.loc-markup-pct');
+        if (markupInput) markupInput.value = defaultMarkup;
+
+        // Clear hidden PKs (new location)
+        newLocation.querySelectorAll('input[name$="-location_id"]').forEach(function(el) { el.value = ''; });
+        newLocation.querySelectorAll('input[name$="-DELETE"]').forEach(function(el) { el.value = ''; el.checked = false; });
+
+        // Clear items container
+        const itemsContainer = newLocation.querySelector('.items-container');
+        itemsContainer.innerHTML = '';
+
+        // Reset totals
+        newLocation.querySelector('.location-subtotal').textContent = '₹0.00';
+        newLocation.querySelector('.location-gst').textContent = '₹0.00';
+        newLocation.querySelector('.location-total').textContent = '₹0.00';
+
+        // Show delete button
+        let delBtn = newLocation.querySelector('.delete-location');
+        if (!delBtn) {
+            const header = newLocation.querySelector('.flex.items-center.justify-between');
+            if (header) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'delete-location px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition';
+                btn.textContent = 'Remove';
+                header.appendChild(btn);
+            }
+        }
+
+        // Update form prefixes
+        updateLocationFormPrefixes(newLocation, newIdx);
+
+        locationFormsContainer.appendChild(newLocation);
+        locationIndex++;
+
+        updateLocationManagementForm();
+
+        // Auto-populate items for new location
+        autoPopulateItems(newLocation, newIdx);
+    });
+
+    // ========================================================================
+    // EVENT DELEGATION
+    // ========================================================================
+    locationFormsContainer.addEventListener('click', function(e) {
+        // Delete Location
+        if (e.target.classList.contains('delete-location') || e.target.closest('.delete-location')) {
+            const locForm = e.target.closest('.location-form');
+            if (!locForm) return;
+            const delCb = locForm.querySelector('input[name$="-DELETE"]');
+            if (delCb) {
+                delCb.checked = true;
+                locForm.style.display = 'none';
+            } else {
+                locForm.remove();
+            }
+            updateLocationManagementForm();
+            calculateGrandTotal();
+        }
+
+        // Add Item (manual)
+        if (e.target.classList.contains('add-item') || e.target.closest('.add-item')) {
+            const locForm = e.target.closest('.location-form');
+            const locIdx = parseInt(locForm.dataset.locationIndex);
+            addItemRow(locForm, locIdx, null);
+        }
+
+        // Delete Item
+        if (e.target.classList.contains('delete-item') || e.target.closest('.delete-item')) {
+            const itemRow = e.target.closest('.item-row');
+            const locForm = e.target.closest('.location-form');
+            if (itemRow) {
+                // Check if item has a PK (existing item) — mark for deletion
+                const pkInput = itemRow.querySelector('input[name$="-item_id"]');
+                const delInput = itemRow.querySelector('input[name$="-DELETE"]');
+                if (pkInput && pkInput.value && delInput) {
+                    delInput.value = 'on';
+                    itemRow.classList.add('item-deleted');
+                    itemRow.style.display = 'none';
+                } else {
+                    itemRow.remove();
+                }
+                // Re-index remaining items and recalculate
+                reindexItems(locForm);
+                updateClientPricingTable(locForm);
+            }
+        }
+    });
+
+    // Input events — cost fields trigger client pricing recalc
+    locationFormsContainer.addEventListener('input', function(e) {
+        if (e.target.classList.contains('item-vendor-unit-cost') ||
+            e.target.classList.contains('item-vendor-quantity') ||
+            e.target.classList.contains('item-custom-desc') ||
+            e.target.classList.contains('loc-markup-pct')) {
+            updateClientPricingTable(e.target.closest('.location-form'));
+        }
+    });
+
+    // Change events — storage unit toggle + description change recalc
+    locationFormsContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('item-description')) {
+            toggleStorageUnit(e.target.closest('.item-row'));
+            updateClientPricingTable(e.target.closest('.location-form'));
+        }
+        if (e.target.classList.contains('loc-markup-pct')) {
+            updateClientPricingTable(e.target.closest('.location-form'));
+        }
+    });
+
+    // ========================================================================
+    // RE-INDEX ITEMS (after delete)
+    // ========================================================================
+    function reindexItems(locationEl) {
+        const locIdx = parseInt(locationEl.dataset.locationIndex);
+        const items = locationEl.querySelectorAll('.item-row');
+        items.forEach(function(row, idx) {
+            const prefix = `locations-${locIdx}-items-${idx}`;
+            row.querySelectorAll('input, select, textarea').forEach(function(el) {
+                if (el.name) {
+                    el.name = el.name.replace(/locations-\d+-items-\d+/, prefix);
+                }
+            });
+            // Update order
+            const orderInput = row.querySelector('input[name$="-order"]');
+            if (orderInput) orderInput.value = idx;
+        });
+        updateItemManagementForm(locationEl, locIdx);
+    }
+
+    // ========================================================================
+    // REQUEST DIRECTOR APPROVAL BUTTON
+    // ========================================================================
+    const btnRequestApproval = document.getElementById('btn-request-approval');
+    if (btnRequestApproval) {
+        btnRequestApproval.addEventListener('click', function() {
+            const confirmed = confirm(
+                'This will save the quotation as "Pending Approval" and notify that a director must approve ' +
+                'the low-margin exception before it can be sent to the client.\n\nProceed?'
+            );
+            if (confirmed) {
+                const approvalFlag = document.getElementById('request-approval-flag');
+                if (approvalFlag) approvalFlag.value = '1';
+
+                // Re-enable the save button briefly so the form can submit
+                const btnSave = document.getElementById('btn-save');
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+
+                syncClientFieldsBeforeSubmit();
+                document.getElementById('quotation-form').submit();
+            }
+        });
+    }
+
+    // ========================================================================
+    // FORM VALIDATION ON SUBMIT
+    // ========================================================================
+    document.getElementById('quotation-form').addEventListener('submit', function(e) {
+        syncClientFieldsBeforeSubmit();
+        let errors = [];
+
+        // Client info
+        const clientName = document.querySelector('input[name="client_name"]');
+        if (clientName && !clientName.value.trim()) errors.push('Client Name is required');
+
+        const clientCompany = document.querySelector('input[name="client_company"]');
+        if (clientCompany && !clientCompany.value.trim()) errors.push('Company Name is required');
+
+        // At least one visible location
+        const visibleLocations = document.querySelectorAll('.location-form:not([style*="display: none"])');
+        if (visibleLocations.length === 0) {
+            errors.push('At least one location is required');
+        }
+
+        // Each visible location must have a name
+        visibleLocations.forEach(function(loc, idx) {
+            const nameInput = loc.querySelector('input[name$="-location_name"]');
+            if (nameInput && !nameInput.value.trim()) {
+                errors.push('Location ' + (idx + 1) + ' name is required');
+            }
+        });
+
+        // Re-index all items before submit to ensure clean prefixes
+        visibleLocations.forEach(function(loc) {
+            reindexItems(loc);
+        });
+
+        // Duplicate SKU validation
+        const skuRows = productContainer.querySelectorAll('.product-row:not(.product-deleted)');
+        const skuMap = {};
+        skuRows.forEach(function(row) {
+            const name = (row.querySelector('.prod-name') ? row.querySelector('.prod-name').value : '').trim().toLowerCase();
+            const share = parseFloat(row.querySelector('.prod-share') ? row.querySelector('.prod-share').value : '0') || 0;
+            if (!name) return;
+            if (!skuMap[name]) skuMap[name] = [];
+            skuMap[name].push(share);
+        });
+        const skuErrorEl = document.getElementById('sku-error');
+        const dupeNames = Object.entries(skuMap)
+            .filter(function([, shares]) { return shares.length > 1 && shares.every(function(s) { return s === 100; }); })
+            .map(function([name]) { return name; });
+        if (dupeNames.length > 0) {
+            if (skuErrorEl) {
+                skuErrorEl.textContent = 'Duplicate SKU with 100% share: "' + dupeNames.join('", "') + '". Adjust Share % or remove duplicates.';
+                skuErrorEl.classList.remove('hidden');
+                skuErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            e.preventDefault();
+            return;
+        }
+        if (skuErrorEl) skuErrorEl.classList.add('hidden');
+
+        if (errors.length > 0) {
+            e.preventDefault();
+            alert('Please fix the following:\n\n' + errors.join('\n'));
+            return;
+        }
+    });
+
+    // ========================================================================
+    // INITIALIZATION
+    // ========================================================================
+    // Initialize locations
+    document.querySelectorAll('.location-form').forEach(function(loc, idx) {
+        loc.setAttribute('data-location-index', idx);
+
+        if (hasExistingItems) {
+            // Edit mode or validation failure re-render — load existing items
+            loadExistingItemsForLocation(loc, idx);
+        } else {
+            // Create mode — auto-populate all item types
+            autoPopulateItems(loc, idx);
+        }
+    });
+
+    document.querySelectorAll('.location-form').forEach(function(loc) {
+        updateClientPricingTable(loc);
+    });
+
+    // ========================================================================
+    // OPERATIONAL SCOPE — PRODUCT ROWS & PALLET CALCULATOR
+    // ========================================================================
+    const DIM_DIVISORS = { 'MM': 304.8, 'CM': 30.48, 'INCH': 12, 'FT': 1 };
+    const productTemplate = document.getElementById('product-row-template');
+    const productContainer = document.getElementById('product-rows-container');
+    const addProductBtn = document.getElementById('add-product');
+    let productIndex = 0;
+
+    function toFt(val, unit) {
+        const d = DIM_DIVISORS[unit] || 1;
+        return val / d;
+    }
+
+    function getPalletVolume() {
+        const pl = parseFloat(document.querySelector('[name="operational_pallet_l"]').value) || 0;
+        const pw = parseFloat(document.querySelector('[name="operational_pallet_w"]').value) || 0;
+        const ph = parseFloat(document.querySelector('[name="operational_pallet_h"]').value) || 0;
+        return pl * pw * ph;
+    }
+
+    function calcProductRow(row) {
+        const l = parseFloat(row.querySelector('.prod-dim-l').value) || 0;
+        const w = parseFloat(row.querySelector('.prod-dim-w').value) || 0;
+        const h = parseFloat(row.querySelector('.prod-dim-h').value) || 0;
+        const unit = row.querySelector('.prod-dim-unit').value;
+
+        const lFt = toFt(l, unit);
+        const wFt = toFt(w, unit);
+        const hFt = toFt(h, unit);
+        const volPerBox = lFt * wFt * hFt;
+
+        const volDisplay = row.querySelector('.prod-vol-display');
+        const palletsDisplay = row.querySelector('.prod-pallets-display');
+
+        if (volPerBox <= 0) {
+            volDisplay.textContent = '—';
+            palletsDisplay.textContent = '—';
+            return;
+        }
+
+        volDisplay.textContent = volPerBox.toFixed(4);
+
+        const palletVol = getPalletVolume();
+        if (palletVol <= 0) {
+            palletsDisplay.textContent = '—';
+            return;
+        }
+
+        const boxesPerPallet = Math.floor(palletVol / volPerBox);
+        if (boxesPerPallet <= 0) {
+            palletsDisplay.textContent = '—';
+            return;
+        }
+
+        const totalBoxes = parseFloat(document.querySelector('[name="operational_total_boxes"]').value) || 0;
+        const sharePct = parseFloat(row.querySelector('.prod-share').value) || 0;
+        const skuBoxes = totalBoxes * sharePct / 100;
+        const numPallets = Math.ceil(skuBoxes / boxesPerPallet);
+
+        palletsDisplay.textContent = numPallets.toLocaleString();
+    }
+
+    function updateOperationalSummary() {
+        const palletVol = getPalletVolume();
+        const pvEl = document.getElementById('op-pallet-volume');
+        const tpEl = document.getElementById('op-total-pallets');
+        const apEl = document.getElementById('op-actual-pallets');
+        const baEl = document.getElementById('op-billable-area');
+
+        pvEl.textContent = palletVol > 0 ? palletVol.toFixed(2) : '—';
+
+        // Sum pallets from all product rows
+        let totalPallets = 0;
+        let allValid = true;
+        const rows = productContainer.querySelectorAll('.product-row:not(.product-deleted)');
+
+        if (rows.length === 0) {
+            tpEl.textContent = '—';
+            apEl.textContent = '—';
+            baEl.textContent = '—';
+            return;
+        }
+
+        rows.forEach(function(row) {
+            const txt = row.querySelector('.prod-pallets-display').textContent;
+            const parsed = parseInt(txt.replace(/,/g, ''));
+            if (isNaN(parsed)) {
+                allValid = false;
+            } else {
+                totalPallets += parsed;
+            }
+        });
+
+        if (!allValid || totalPallets === 0) {
+            tpEl.textContent = '—';
+            apEl.textContent = '—';
+            baEl.textContent = '—';
+            return;
+        }
+
+        tpEl.textContent = totalPallets.toLocaleString();
+
+        const variance = parseFloat(document.querySelector('[name="operational_variance_pct"]').value) || 0;
+        const actualPallets = Math.ceil(totalPallets * (1 + variance / 100));
+        apEl.textContent = actualPallets.toLocaleString();
+
+        const billableArea = actualPallets * 25;
+        baEl.textContent = billableArea.toLocaleString();
+    }
+
+    function recalcAllProducts() {
+        productContainer.querySelectorAll('.product-row:not(.product-deleted)').forEach(calcProductRow);
+        updateOperationalSummary();
+    }
+
+    function addProductRow(data) {
+        const idx = productIndex;
+        const prefix = `products-${idx}`;
+
+        const row = productTemplate.content.cloneNode(true).firstElementChild;
+
+        // Set name attributes
+        row.querySelector('.prod-name').name = `${prefix}-product_name`;
+        row.querySelector('.prod-business').name = `${prefix}-type_of_business`;
+        row.querySelector('.prod-operation').name = `${prefix}-type_of_operation`;
+        row.querySelector('.prod-packaging').name = `${prefix}-packaging_type`;
+        row.querySelector('.prod-weight').name = `${prefix}-avg_weight_kg`;
+        row.querySelector('.prod-share').name = `${prefix}-share_pct`;
+        row.querySelector('.prod-dim-l').name = `${prefix}-dim_l`;
+        row.querySelector('.prod-dim-w').name = `${prefix}-dim_w`;
+        row.querySelector('.prod-dim-h').name = `${prefix}-dim_h`;
+        row.querySelector('.prod-dim-unit').name = `${prefix}-dim_unit`;
+
+        // Add hidden fields for PK, order, DELETE
+        const hiddens = document.createElement('div');
+        hiddens.className = 'hidden';
+        hiddens.innerHTML = `
+            <input type="hidden" name="${prefix}-id" value="${data && data.id ? data.id : ''}">
+            <input type="hidden" name="${prefix}-order" value="${idx}">
+            <input type="hidden" name="${prefix}-DELETE" value="">
+        `;
+        row.appendChild(hiddens);
+
+        // Populate data if provided
+        if (data) {
+            row.querySelector('.prod-name').value = data.product_name || '';
+            row.querySelector('.prod-business').value = data.type_of_business || 'B2B';
+            row.querySelector('.prod-operation').value = data.type_of_operation || '';
+            row.querySelector('.prod-packaging').value = data.packaging_type || '';
+            row.querySelector('.prod-weight').value = data.avg_weight_kg || '';
+            row.querySelector('.prod-share').value = data.share_pct || '100';
+            row.querySelector('.prod-dim-l').value = data.dim_l || '';
+            row.querySelector('.prod-dim-w').value = data.dim_w || '';
+            row.querySelector('.prod-dim-h').value = data.dim_h || '';
+            row.querySelector('.prod-dim-unit').value = data.dim_unit || 'CM';
+        }
+
+        productContainer.appendChild(row);
+        productIndex++;
+
+        updateProductManagementForm();
+        calcProductRow(row);
+        updateOperationalSummary();
+
+        return row;
+    }
+
+    function updateProductManagementForm() {
+        const totalForms = document.querySelector('[name="products-TOTAL_FORMS"]');
+        if (totalForms) {
+            totalForms.value = productContainer.querySelectorAll('.product-row').length;
+        }
+    }
+
+    function reindexProducts() {
+        const rows = productContainer.querySelectorAll('.product-row');
+        rows.forEach(function(row, idx) {
+            const prefix = `products-${idx}`;
+            row.querySelectorAll('input, select').forEach(function(el) {
+                if (el.name) {
+                    el.name = el.name.replace(/products-\d+/, prefix);
+                }
+            });
+            const orderInput = row.querySelector('input[name$="-order"]');
+            if (orderInput) orderInput.value = idx;
+        });
+        updateProductManagementForm();
+    }
+
+    // Add Product button
+    addProductBtn.addEventListener('click', function() {
+        addProductRow(null);
+    });
+
+    // Delete product (event delegation)
+    productContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-product') || e.target.closest('.delete-product')) {
+            const row = e.target.closest('.product-row');
+            if (!row) return;
+            const pkInput = row.querySelector('input[name$="-id"]');
+            const delInput = row.querySelector('input[name$="-DELETE"]');
+            if (pkInput && pkInput.value && delInput) {
+                delInput.value = 'on';
+                row.classList.add('product-deleted');
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+            reindexProducts();
+            updateOperationalSummary();
+        }
+    });
+
+    // Recalculate on product input changes
+    productContainer.addEventListener('input', function(e) {
+        if (e.target.classList.contains('prod-dim-l') ||
+            e.target.classList.contains('prod-dim-w') ||
+            e.target.classList.contains('prod-dim-h') ||
+            e.target.classList.contains('prod-share')) {
+            const row = e.target.closest('.product-row');
+            if (row) {
+                calcProductRow(row);
+                updateOperationalSummary();
+            }
+        }
+    });
+
+    // Recalculate on unit change
+    productContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('prod-dim-unit')) {
+            const row = e.target.closest('.product-row');
+            if (row) {
+                calcProductRow(row);
+                updateOperationalSummary();
+            }
+        }
+    });
+
+    // Recalculate when pallet dims, total boxes, or variance change
+    ['operational_total_boxes', 'operational_variance_pct', 'operational_pallet_l', 'operational_pallet_w', 'operational_pallet_h'].forEach(function(name) {
+        const el = document.querySelector('[name="' + name + '"]');
+        if (el) {
+            el.addEventListener('input', recalcAllProducts);
+        }
+    });
+
+    // Initialize products from existing data
+    const existingProductsEl = document.getElementById('existing-products-json');
+    if (existingProductsEl) {
+        const existingProducts = JSON.parse(existingProductsEl.textContent || '[]');
+        const initialForms = document.querySelector('[name="products-INITIAL_FORMS"]');
+        if (existingProducts.length > 0) {
+            if (initialForms) initialForms.value = existingProducts.length;
+            existingProducts.forEach(function(p) {
+                addProductRow(p);
+            });
+        }
+    }
+
+    updateOperationalSummary();
+
+    // Handle "same as billing" checkbox
+    const sameAsBillingCheckbox = document.querySelector('input[name="same_as_billing"]');
+    const shippingAddressContainer = document.getElementById('shipping-address-container');
+    const shippingAddressTextarea = document.querySelector('textarea[name="shipping_address"]');
+
+    if (sameAsBillingCheckbox && shippingAddressContainer) {
+        function toggleShippingAddress() {
+            if (sameAsBillingCheckbox.checked) {
+                shippingAddressContainer.style.display = 'none';
+                if (shippingAddressTextarea) shippingAddressTextarea.value = '';
+            } else {
+                shippingAddressContainer.style.display = 'block';
+            }
+        }
+        toggleShippingAddress();
+        sameAsBillingCheckbox.addEventListener('change', toggleShippingAddress);
+    }
+
+    // When global markup changes, cascade to all location markup inputs
+    var globalMarkupInput = document.querySelector('[name="default_markup_pct"]');
+    if (globalMarkupInput) {
+        globalMarkupInput.addEventListener('input', function() {
+            var val = this.value;
+            document.querySelectorAll('.loc-markup-pct').forEach(function(locInput) {
+                locInput.value = val;
+            });
+            document.querySelectorAll('.location-form:not([style*="display: none"])').forEach(function(loc) {
+                updateClientPricingTable(loc);
+            });
+        });
+    }
+
+    // Commercial type pill toggle
+    (function() {
+        const pills = document.querySelectorAll('#commercial-type-toggle .toggle-pill');
+        const hiddenInput = document.getElementById('commercial_type_input');
+
+        function setActivePill(value) {
+            pills.forEach(function(pill) {
+                const isActive = pill.dataset.value === value;
+                pill.classList.toggle('bg-blue-600', isActive);
+                pill.classList.toggle('text-white', isActive);
+                pill.classList.toggle('bg-white', !isActive);
+                pill.classList.toggle('text-gray-700', !isActive);
+                pill.classList.toggle('hover:bg-gray-50', !isActive);
+            });
+            hiddenInput.value = value;
+            // Update column header labels in cost tables if they exist
+            document.querySelectorAll('.cost-type-label').forEach(function(el) {
+                el.textContent = value === 'vendor_rate' ? 'Vendor Rate' : 'Market Rate';
+            });
+        }
+
+        // Initialize from hidden input value (for edit mode with existing value)
+        setActivePill(hiddenInput.value || 'vendor_rate');
+
+        pills.forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                setActivePill(pill.dataset.value);
+            });
+        });
+    })();
+});
+</script>
+{% endblock %}

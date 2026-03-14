@@ -1,0 +1,1986 @@
+[
+  {
+  "model": "dropdown_master_data.storageunit",
+  "pk": "sqft",
+  "fields": {"label": "Square Feet", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.storageunit",
+    "pk": "pallet",
+    "fields": {"label": "Pallet", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.storageunit",
+    "pk": "unit",
+    "fields": {"label": "Unit", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.storageunit",
+    "pk": "order",
+    "fields": {"label": "Order", "is_active": true, "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.storageunit",
+    "pk": "lumpsum",
+    "fields": {"label": "Lumpsum", "is_active": true, "display_order": 5}
+  },
+
+  {
+    "model": "dropdown_master_data.billingunit",
+    "pk": "sqft",
+    "fields": {
+      "label": "Square Feet",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingunit",
+    "pk": "pallet",
+    "fields": {
+      "label": "Pallet",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingunit",
+    "pk": "unit",
+    "fields": {
+      "label": "Unit",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingunit",
+    "pk": "order",
+    "fields": {
+      "label": "Order",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingunit",
+    "pk": "lumpsum",
+    "fields": {
+      "label": "Lumpsum",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  
+  {
+    "model": "dropdown_master_data.handlingunit",
+    "pk": "boxes",
+    "fields": {
+      "label": "Boxes",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingunit",
+    "pk": "tons",
+    "fields": {
+      "label": "Tons",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingunit",
+    "pk": "pieces",
+    "fields": {
+      "label": "Pieces",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "local_transport",
+    "fields": {
+      "label": "Local Transport",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "bike",
+    "fields": {
+      "label": "Bike",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "pick_up",
+    "fields": {
+      "label": "Pick Up",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "14_ft",
+    "fields": {
+      "label": "14 Ft",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "20_ft",
+    "fields": {
+      "label": "20 Ft",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "32_ft",
+    "fields": {
+      "label": "32 Ft",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "tata_ace",
+    "fields": {
+      "label": "Tata Ace",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "max_2mp",
+    "fields": {
+      "label": "Max 2MP",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "tata_407",
+    "fields": {
+      "label": "Tata 407",
+      "is_active": true,
+      "display_order": 9
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "tata_709",
+    "fields": {
+      "label": "Tata 709",
+      "is_active": true,
+      "display_order": 10
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "tata_909",
+    "fields": {
+      "label": "Tata 909",
+      "is_active": true,
+      "display_order": 11
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "ftl_1109",
+    "fields": {
+      "label": "FTL 1109",
+      "is_active": true,
+      "display_order": 12
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "17_ft",
+    "fields": {
+      "label": "17 Ft",
+      "is_active": true,
+      "display_order": 13
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "3_wheeler",
+    "fields": {
+      "label": "3 Wheeler",
+      "is_active": true,
+      "display_order": 14
+    }
+  },
+  {
+    "model": "dropdown_master_data.vehicletype",
+    "pk": "porter",
+    "fields": {
+      "label": "Porter",
+      "is_active": true,
+      "display_order": 15
+    }
+  },
+  {
+    "model": "dropdown_master_data.priority",
+    "pk": "low",
+    "fields": {
+      "label": "Low",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.priority",
+    "pk": "medium",
+    "fields": {
+      "label": "Medium",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.priority",
+    "pk": "high",
+    "fields": {
+      "label": "High",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.priority",
+    "pk": "critical",
+    "fields": {
+      "label": "Critical",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.approvalstatus",
+    "pk": "draft",
+    "fields": {
+      "label": "Draft",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.approvalstatus",
+    "pk": "pending_approval",
+    "fields": {
+      "label": "Pending Approval",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.approvalstatus",
+    "pk": "approved",
+    "fields": {
+      "label": "Approved",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.approvalstatus",
+    "pk": "rejected",
+    "fields": {
+      "label": "Rejected",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingstatus",
+    "pk": "pending",
+    "fields": {
+      "label": "Pending",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingstatus",
+    "pk": "billed",
+    "fields": {
+      "label": "Billed",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.billingstatus",
+    "pk": "cancelled",
+    "fields": {
+      "label": "Cancelled",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+  "model": "dropdown_master_data.escalationstatus",
+  "pk": "pending",
+  "fields": {"label": "Pending", "is_active": true, "display_order": 1}
+},
+{
+  "model": "dropdown_master_data.escalationstatus",
+  "pk": "in_progress",
+  "fields": {"label": "In Progress", "is_active": true, "display_order": 2}
+},
+{
+  "model": "dropdown_master_data.escalationstatus",
+  "pk": "client_acknowledged",
+  "fields": {"label": "Client Acknowledged", "is_active": true, "display_order": 3}
+},
+{
+  "model": "dropdown_master_data.escalationstatus",
+  "pk": "escalation_applied",
+  "fields": {"label": "Escalation Applied", "is_active": true, "display_order": 4}
+},
+{
+  "model": "dropdown_master_data.escalationstatus",
+  "pk": "disputed",
+  "fields": {"label": "Disputed", "is_active": true, "display_order": 5}
+},
+{
+  "model": "dropdown_master_data.escalationstatus",
+  "pk": "cancelled",
+  "fields": {"label": "Cancelled", "is_active": true, "display_order": 6}
+},
+  {
+    "model": "dropdown_master_data.ticketstatus",
+    "pk": "pending",
+    "fields": {
+      "label": "Pending",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.ticketstatus",
+    "pk": "approved",
+    "fields": {
+      "label": "Approved",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.ticketstatus",
+    "pk": "rejected",
+    "fields": {
+      "label": "Rejected",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.ticketstatus",
+    "pk": "in_progress",
+    "fields": {
+      "label": "In Progress",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.ticketstatus",
+    "pk": "resolved",
+    "fields": {
+      "label": "Resolved",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.ticketstatus",
+    "pk": "closed",
+    "fields": {
+      "label": "Closed",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.querycategory",
+    "pk": "storage_space",
+    "fields": {
+      "label": "Storage Space",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.querycategory",
+    "pk": "handling",
+    "fields": {
+      "label": "Handling",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.querycategory",
+    "pk": "manpower_ot",
+    "fields": {
+      "label": "Manpower OT",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.querycategory",
+    "pk": "operations",
+    "fields": {
+      "label": "Operations",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.querycategory",
+    "pk": "mis_stock",
+    "fields": {
+      "label": "MIS Stock",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.querycategory",
+    "pk": "billing",
+    "fields": {
+      "label": "Billing",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.holidaytype",
+    "pk": "national",
+    "fields": {
+      "label": "National Holiday",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.holidaytype",
+    "pk": "regional",
+    "fields": {
+      "label": "Regional Holiday",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.holidaytype",
+    "pk": "warehouse_closure",
+    "fields": {
+      "label": "Warehouse Closure",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.holidaytype",
+    "pk": "project_specific",
+    "fields": {
+      "label": "Project Specific",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "extra_storage",
+    "fields": {
+      "label": "Extra Storage",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "extra_manpower",
+    "fields": {
+      "label": "Extra Manpower",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "extra_handling",
+    "fields": {
+      "label": "Extra Handling",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "overtime",
+    "fields": {
+      "label": "Overtime",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "vas",
+    "fields": {
+      "label": "VAS",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "transport",
+    "fields": {
+      "label": "Transport",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "equipment",
+    "fields": {
+      "label": "Equipment",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "other",
+    "fields": {
+      "label": "Other",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.escalationactiontype",
+    "pk": "tracker_created",
+    "fields": {
+       "label": "Tracker Created", 
+       "is_active": true, 
+       "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.escalationactiontype",
+    "pk": "initial_intimation",
+    "fields": {
+       "label": "Initial Intimation", 
+       "is_active": true, 
+       "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.escalationactiontype",
+    "pk": "reminder_1",
+    "fields": {
+       "label": "Reminder 1", 
+       "is_active": true, 
+       "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.escalationactiontype",
+    "pk": "reminder_2",
+    "fields": {
+       "label": "Reminder 2", 
+       "is_active": true, 
+       "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.escalationactiontype",
+    "pk": "final_notice",
+    "fields": {
+       "label": "Final Notice", 
+       "is_active": true, 
+       "display_order": 5}
+ },
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "sales_informed",
+  "fields": {"label": "Sales Informed", "is_active": true, "display_order": 6}
+},
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "finance_informed",
+  "fields": {"label": "Finance Informed", "is_active": true, "display_order": 7}
+},
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "client_acknowledged",
+  "fields": {"label": "Client Acknowledged", "is_active": true, "display_order": 8}
+},
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "status_changed",
+  "fields": {"label": "Status Changed", "is_active": true, "display_order": 9}
+},
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "note_added",
+  "fields": {"label": "Note Added", "is_active": true, "display_order": 10}
+},
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "escalation_applied",
+  "fields": {"label": "Escalation Applied", "is_active": true, "display_order": 11}
+},
+{
+  "model": "dropdown_master_data.escalationactiontype",
+  "pk": "cancelled",
+  "fields": {"label": "Cancelled", "is_active": true, "display_order": 12}
+},
+{
+  "model": "dropdown_master_data.escalationterms",
+  "pk": "FIXED",
+  "fields": {"label": "Fixed Percentage", "is_active": true, "display_order": 1}
+},
+{
+  "model": "dropdown_master_data.escalationterms",
+  "pk": "MUTUALLY_AGREED",
+  "fields": {"label": "Mutually Agreed", "is_active": true, "display_order": 2}
+},
+  {
+    "model": "dropdown_master_data.saleschannel",
+    "pk": "b2b",
+    "fields": {
+      "label": "B2B",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.saleschannel",
+    "pk": "b2c",
+    "fields": {
+      "label": "B2C",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.saleschannel",
+    "pk": "d2c",
+    "fields": {
+      "label": "D2C",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.saleschannel",
+    "pk": "rto",
+    "fields": {
+      "label": "RTO",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.saleschannel",
+    "pk": "rtv",
+    "fields": {
+      "label": "RTV",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_unit",
+    "fields": {
+      "label": "Per Unit",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_kg",
+    "fields": {
+      "label": "Per KG",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_tonne",
+    "fields": {
+      "label": "Per Tonne",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_box",
+    "fields": {
+      "label": "Per Box",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_pallet",
+    "fields": {
+      "label": "Per Pallet",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_order",
+    "fields": {
+      "label": "Per Order",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_line_item",
+    "fields": {
+      "label": "Per Line Item",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.handlingbasetype",
+    "pk": "per_roll",
+    "fields": {
+      "label": "Per Roll",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "labeling",
+    "fields": {
+      "label": "Labeling",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "kitting",
+    "fields": {
+      "label": "Kitting",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "repacking",
+    "fields": {
+      "label": "Repacking",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "quality_check",
+    "fields": {
+      "label": "Quality Check",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "photography",
+    "fields": {
+      "label": "Photography",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "gift_wrapping",
+    "fields": {
+      "label": "Gift Wrapping",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "manpower",
+    "fields": {
+      "label": "Manpower",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "forklift",
+    "fields": {
+      "label": "Forklift",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "hydra",
+    "fields": {
+      "label": "Hydra",
+      "is_active": true,
+      "display_order": 9
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "barcoding",
+    "fields": {
+      "label": "Barcoding",
+      "is_active": true,
+      "display_order": 10
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "qc_inspection",
+    "fields": {
+      "label": "QC Inspection",
+      "is_active": true,
+      "display_order": 11
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasservicetype",
+    "pk": "other",
+    "fields": {
+      "label": "Other",
+      "is_active": true,
+      "display_order": 12
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasunit",
+    "pk": "per_hour",
+    "fields": {
+      "label": "Per Hour",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasunit",
+    "pk": "per_day",
+    "fields": {
+      "label": "Per Day",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasunit",
+    "pk": "per_month",
+    "fields": {
+      "label": "Per Month",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasunit",
+    "pk": "per_unit",
+    "fields": {
+      "label": "Per Unit",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasunit",
+    "pk": "lumpsum",
+    "fields": {
+      "label": "Lumpsum",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.vasunit",
+    "pk": "at_actual",
+    "fields": {
+      "label": "At Actual",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "equipment",
+    "fields": {
+      "label": "Equipment",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "utilities",
+    "fields": {
+      "label": "Utilities",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "rent",
+    "fields": {
+      "label": "Rent",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "insurance",
+    "fields": {
+      "label": "Insurance",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "security",
+    "fields": {
+      "label": "Security",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "management_fee",
+    "fields": {
+      "label": "Management Fee",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "electricity",
+    "fields": {
+      "label": "Electricity",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationalcosttype",
+    "pk": "other",
+    "fields": {
+      "label": "Other",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.noticeperiodduration",
+    "pk": "15_days",
+    "fields": {
+      "label": "15 Days",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.noticeperiodduration",
+    "pk": "30_days",
+    "fields": {
+      "label": "1 Month (30 Days)",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.noticeperiodduration",
+    "pk": "60_days",
+    "fields": {
+      "label": "2 Months (60 Days)",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.noticeperiodduration",
+    "pk": "90_days",
+    "fields": {
+      "label": "3 Months (90 Days)",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationmode",
+    "pk": "auto_mode",
+    "fields": {
+      "label": "Auto Mode",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationmode",
+    "pk": "data_sharing",
+    "fields": {
+      "label": "Data Sharing",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.operationmode",
+    "pk": "active_engagement",
+    "fields": {
+      "label": "Active Engagement",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.misstatus",
+    "pk": "mis_daily",
+    "fields": {
+      "label": "MIS Daily",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.misstatus",
+    "pk": "mis_weekly",
+    "fields": {
+      "label": "MIS Weekly",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.misstatus",
+    "pk": "mis_monthly",
+    "fields": {
+      "label": "MIS Monthly",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.misstatus",
+    "pk": "inciflo",
+    "fields": {
+      "label": "Inciflo",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.misstatus",
+    "pk": "mis_automode",
+    "fields": {
+      "label": "MIS Automode",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.misstatus",
+    "pk": "mis_not_required",
+    "fields": {
+      "label": "MIS Not Required",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.warehousegrade",
+    "pk": "grade_a",
+    "fields": {
+      "label": "Grade A",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.warehousegrade",
+    "pk": "grade_b",
+    "fields": {
+      "label": "Grade B",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.warehousegrade",
+    "pk": "grade_c",
+    "fields": {
+      "label": "Grade C",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.businesstype",
+    "pk": "b2b",
+    "fields": {
+      "label": "B2B",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.businesstype",
+    "pk": "b2c",
+    "fields": {
+      "label": "B2C",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.businesstype",
+    "pk": "both",
+    "fields": {
+      "label": "Both",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.propertytype",
+    "pk": "in_shed",
+    "fields": {
+      "label": "In-Shed",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.propertytype",
+    "pk": "open",
+    "fields": {
+      "label": "Open",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.propertytype",
+    "pk": "covered",
+    "fields": {
+      "label": "Covered",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.propertytype",
+    "pk": "temperature_controlled",
+    "fields": {
+      "label": "Temperature Controlled",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.slastatus",
+    "pk": "signed",
+    "fields": {
+      "label": "Signed",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.slastatus",
+    "pk": "not_signed",
+    "fields": {
+      "label": "Not Signed",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.slastatus",
+    "pk": "under_negotiation",
+    "fields": {
+      "label": "Under Negotiation",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.slastatus",
+    "pk": "expired",
+    "fields": {
+      "label": "Expired",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.tickettype",
+    "pk": "client_approval",
+    "fields": {
+      "label": "Client Approval",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.tickettype",
+    "pk": "client_escalation",
+    "fields": {
+      "label": "Client Escalation",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.tickettype",
+    "pk": "vendor_escalation",
+    "fields": {
+      "label": "Vendor Escalation",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.tickettype",
+    "pk": "internal",
+    "fields": {
+      "label": "Internal",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.warehousecontactdepartment",
+    "pk": "operations",
+    "fields": {
+      "label": "Operations",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.warehousecontactdepartment",
+    "pk": "management",
+    "fields": {
+      "label": "Management",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "admin",
+    "fields": {"label": "Admin", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "super_user",
+    "fields": {"label": "Super User", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "director",
+    "fields": {"label": "Director", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "finance_manager",
+    "fields": {"label": "Finance Manager", "is_active": true, "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "operation_controller",
+    "fields": {"label": "Operation Controller", "is_active": true, "display_order": 5}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "operation_manager",
+    "fields": {"label": "Operation Manager", "is_active": true, "display_order": 6}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "sales_manager",
+    "fields": {"label": "Sales Manager", "is_active": true, "display_order": 7}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "supply_manager",
+    "fields": {"label": "Supply Manager", "is_active": true, "display_order": 8}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "operation_coordinator",
+    "fields": {"label": "Operation Coordinator", "is_active": true, "display_order": 9}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "warehouse_manager",
+    "fields": {"label": "Warehouse Manager", "is_active": true, "display_order": 10}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "backoffice",
+    "fields": {"label": "Backoffice", "is_active": true, "display_order": 11}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "crm_executive",
+    "fields": {"label": "CRM Executive", "is_active": true, "display_order": 12}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "client",
+    "fields": {"label": "Client", "is_active": true, "display_order": 13}
+  },
+  {
+    "model": "dropdown_master_data.userrole",
+    "pk": "vendor",
+    "fields": {"label": "Vendor", "is_active": true, "display_order": 14}
+  },
+  
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "dispute_raised",
+    "fields": {"label": "Dispute Raised", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "dispute_assigned",
+    "fields": {"label": "Dispute Assigned", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "dispute_resolved",
+    "fields": {"label": "Dispute Resolved", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "query_raised",
+    "fields": {"label": "Query Raised", "is_active": true, "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "query_assigned",
+    "fields": {"label": "Query Assigned", "is_active": true, "display_order": 5}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "query_resolved",
+    "fields": {"label": "Query Resolved", "is_active": true, "display_order": 6}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "data_entry_missing",
+    "fields": {"label": "Data Entry Missing", "is_active": true, "display_order": 7}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "daily_summary",
+    "fields": {"label": "Daily Summary", "is_active": true, "display_order": 8}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "assignment",
+    "fields": {"label": "Assignment", "is_active": true, "display_order": 9}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "mention",
+    "fields": {"label": "Mention", "is_active": true, "display_order": 10}
+  },
+  {
+    "model": "dropdown_master_data.notificationtype",
+    "pk": "system",
+    "fields": {"label": "System", "is_active": true, "display_order": 11}
+  },
+  
+  {
+    "model": "dropdown_master_data.monthlybillingstatus",
+    "pk": "draft",
+    "fields": {"label": "Draft", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.monthlybillingstatus",
+    "pk": "pending_controller",
+    "fields": {"label": "Pending Controller Review", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.monthlybillingstatus",
+    "pk": "controller_rejected",
+    "fields": {"label": "Controller Rejected", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.monthlybillingstatus",
+    "pk": "pending_finance",
+    "fields": {"label": "Pending Finance Review", "is_active": true, "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.monthlybillingstatus",
+    "pk": "finance_rejected",
+    "fields": {"label": "Finance Rejected", "is_active": true, "display_order": 5}
+  },
+  {
+    "model": "dropdown_master_data.monthlybillingstatus",
+    "pk": "approved",
+    "fields": {"label": "Approved", "is_active": true, "display_order": 6}
+  },
+  
+  {
+    "model": "dropdown_master_data.approvalaction",
+    "pk": "pending",
+    "fields": {"label": "Pending", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.approvalaction",
+    "pk": "approved",
+    "fields": {"label": "Approved", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.approvalaction",
+    "pk": "rejected",
+    "fields": {"label": "Rejected", "is_active": true, "display_order": 3}
+  },
+  
+  {
+    "model": "dropdown_master_data.alerttype",
+    "pk": "coordinator_reminder",
+    "fields": {"label": "Coordinator Reminder", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.alerttype",
+    "pk": "manager_notification",
+    "fields": {"label": "Manager Notification", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.alerttype",
+    "pk": "system_alert",
+    "fields": {"label": "System Alert", "is_active": true, "display_order": 3}
+  },
+  
+  {
+    "model": "dropdown_master_data.severity",
+    "pk": "info",
+    "fields": {"label": "Info", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.severity",
+    "pk": "warning",
+    "fields": {"label": "Warning", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.severity",
+    "pk": "critical",
+    "fields": {"label": "Critical", "is_active": true, "display_order": 3}
+  },
+  
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "created",
+    "fields": {"label": "Created", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "status_changed",
+    "fields": {"label": "Status Changed", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "assigned",
+    "fields": {"label": "Assigned", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "priority_changed",
+    "fields": {"label": "Priority Changed", "is_active": true, "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "commented",
+    "fields": {"label": "Commented", "is_active": true, "display_order": 5}
+  },
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "attachment_added",
+    "fields": {"label": "Attachment Added", "is_active": true, "display_order": 6}
+  },
+  {
+    "model": "dropdown_master_data.activitytype",
+    "pk": "resolved",
+    "fields": {"label": "Resolved", "is_active": true, "display_order": 7}
+  },
+  
+  {
+    "model": "dropdown_master_data.transactionside",
+    "pk": "client",
+    "fields": {"label": "Client", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.transactionside",
+    "pk": "vendor",
+    "fields": {"label": "Vendor", "is_active": true, "display_order": 2}
+  },
+  
+  {
+    "model": "dropdown_master_data.disputestatus",
+    "pk": "open",
+    "fields": {"label": "Open", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.disputestatus",
+    "pk": "in_progress",
+    "fields": {"label": "In Progress", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.disputestatus",
+    "pk": "resolved",
+    "fields": {"label": "Resolved", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.disputestatus",
+    "pk": "dispute",
+    "fields": {"label": "Dispute", "is_active": true, "display_order": 4}
+  },
+  {
+    "model": "dropdown_master_data.disputestatus",
+    "pk": "closed",
+    "fields": {"label": "Closed", "is_active": true, "display_order": 5}
+  },
+  
+  {
+    "model": "dropdown_master_data.seriestype",
+    "pk": "WAAS",
+    "fields": {"label": "Warehouse as a Service", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.seriestype",
+    "pk": "SAAS",
+    "fields": {"label": "Storage as a Service", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.seriestype",
+    "pk": "GW",
+    "fields": {"label": "Godamwale", "is_active": true, "display_order": 3}
+  },
+  
+  {
+    "model": "dropdown_master_data.projectstatus",
+    "pk": "operation_not_started",
+    "fields": {"label": "Operation Not Started", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.projectstatus",
+    "pk": "active",
+    "fields": {"label": "Active", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.projectstatus",
+    "pk": "notice_period",
+    "fields": {"label": "Notice Period", "is_active": true, "display_order": 3}
+  },
+  {
+    "model": "dropdown_master_data.projectstatus",
+    "pk": "inactive",
+    "fields": {"label": "Inactive", "is_active": true, "display_order": 4}
+  },
+  
+  {
+    "model": "dropdown_master_data.rateapplicability",
+    "pk": "client",
+    "fields": {"label": "Client", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.rateapplicability",
+    "pk": "vendor",
+    "fields": {"label": "Vendor", "is_active": true, "display_order": 2}
+  },
+  
+  {
+    "model": "dropdown_master_data.handlingdirection",
+    "pk": "inbound",
+    "fields": {"label": "Inbound", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.handlingdirection",
+    "pk": "outbound",
+    "fields": {"label": "Outbound", "is_active": true, "display_order": 2}
+  },
+  
+  {
+    "model": "dropdown_master_data.filetype",
+    "pk": "photo",
+    "fields": {"label": "Photo", "is_active": true, "display_order": 1}
+  },
+  {
+    "model": "dropdown_master_data.filetype",
+    "pk": "video",
+    "fields": {"label": "Video", "is_active": true, "display_order": 2}
+  },
+  {
+    "model": "dropdown_master_data.adhocbillingstatus",
+    "pk": "pending",
+    "fields": {
+      "label": "Pending",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocbillingstatus",
+    "pk": "billed",
+    "fields": {
+      "label": "Billed",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocbillingstatus",
+    "pk": "cancelled",
+    "fields": {
+      "label": "Cancelled",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "extra_storage",
+    "fields": {
+      "label": "Extra Storage",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "extra_manpower",
+    "fields": {
+      "label": "Extra Manpower",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "extra_handling",
+    "fields": {
+      "label": "Extra Handling",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "overtime",
+    "fields": {
+      "label": "Overtime",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "vas",
+    "fields": {
+      "label": "VAS",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "transport",
+    "fields": {
+      "label": "Transport",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "equipment",
+    "fields": {
+      "label": "Equipment",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.adhocchargetype",
+    "pk": "other",
+    "fields": {
+      "label": "Other",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.disputecategory",
+    "pk": "storage_space",
+    "fields": {
+      "label": "Storage Space",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.disputecategory",
+    "pk": "handling",
+    "fields": {
+      "label": "Handling",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.disputecategory",
+    "pk": "manpower_ot",
+    "fields": {
+      "label": "Manpower/OT",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.disputecategory",
+    "pk": "operations",
+    "fields": {
+      "label": "Operations",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.disputecategory",
+    "pk": "mis_stock",
+    "fields": {
+      "label": "MIS / Stock Issue",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.disputecategory",
+    "pk": "billing",
+    "fields": {
+      "label": "Billing Issue",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalstatus",
+    "pk": "pending",
+    "fields": {
+      "label": "Pending - Not Started",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalstatus",
+    "pk": "in_progress",
+    "fields": {
+      "label": "In Progress",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalstatus",
+    "pk": "client_responded",
+    "fields": {
+      "label": "Client Responded",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalstatus",
+    "pk": "renewed",
+    "fields": {
+      "label": "Renewed",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalstatus",
+    "pk": "not_renewed",
+    "fields": {
+      "label": "Not Renewed",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalstatus",
+    "pk": "cancelled",
+    "fields": {
+      "label": "Cancelled",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "tracker_created",
+    "fields": {
+      "label": "Tracker Created",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "initial_email",
+    "fields": {
+      "label": "Initial Email Sent",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "reminder_1",
+    "fields": {
+      "label": "1st Reminder Sent",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "reminder_2",
+    "fields": {
+      "label": "2nd Reminder Sent",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "reminder_3",
+    "fields": {
+      "label": "3rd Reminder Sent",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "final_intimation",
+    "fields": {
+      "label": "Final Intimation Sent",
+      "is_active": true,
+      "display_order": 6
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "sales_informed_1",
+    "fields": {
+      "label": "Sales Manager Informed (1st)",
+      "is_active": true,
+      "display_order": 7
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "sales_informed_2",
+    "fields": {
+      "label": "Sales Manager Informed (2nd)",
+      "is_active": true,
+      "display_order": 8
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "client_response",
+    "fields": {
+      "label": "Client Response Received",
+      "is_active": true,
+      "display_order": 9
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "status_changed",
+    "fields": {
+      "label": "Status Changed",
+      "is_active": true,
+      "display_order": 10
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "note_added",
+    "fields": {
+      "label": "Note Added",
+      "is_active": true,
+      "display_order": 11
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "renewed",
+    "fields": {
+      "label": "Agreement Renewed",
+      "is_active": true,
+      "display_order": 12
+    }
+  },
+  {
+    "model": "dropdown_master_data.renewalactiontype",
+    "pk": "cancelled",
+    "fields": {
+      "label": "Cancelled",
+      "is_active": true,
+      "display_order": 13
+    }
+  }
+]

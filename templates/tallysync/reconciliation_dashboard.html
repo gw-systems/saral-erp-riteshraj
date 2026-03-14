@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tally ↔ ERP Reconciliation{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Tally ↔ ERP Reconciliation</h1>
+            <p class="text-gray-600">Compare Tally vouchers with ERP billings for complete financial visibility</p>
+        </div>
+
+        <!-- Filters Card -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Month</label>
+                    <select name="month" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Months</option>
+                        <option value="1" {% if selected_month == "1" %}selected{% endif %}>January</option>
+                        <option value="2" {% if selected_month == "2" %}selected{% endif %}>February</option>
+                        <option value="3" {% if selected_month == "3" %}selected{% endif %}>March</option>
+                        <option value="4" {% if selected_month == "4" %}selected{% endif %}>April</option>
+                        <option value="5" {% if selected_month == "5" %}selected{% endif %}>May</option>
+                        <option value="6" {% if selected_month == "6" %}selected{% endif %}>June</option>
+                        <option value="7" {% if selected_month == "7" %}selected{% endif %}>July</option>
+                        <option value="8" {% if selected_month == "8" %}selected{% endif %}>August</option>
+                        <option value="9" {% if selected_month == "9" %}selected{% endif %}>September</option>
+                        <option value="10" {% if selected_month == "10" %}selected{% endif %}>October</option>
+                        <option value="11" {% if selected_month == "11" %}selected{% endif %}>November</option>
+                        <option value="12" {% if selected_month == "12" %}selected{% endif %}>December</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Year</label>
+                    <select name="year" id="yearSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Company</label>
+                    <select name="company" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Companies</option>
+                        {% for company in companies %}
+                        <option value="{{ company.id }}" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>
+                            {{ company.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition shadow-md hover:shadow-lg">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <!-- Tally Total -->
+            <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md hover:shadow-xl transition p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-semibold text-blue-50 uppercase">Tally Total</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">₹{{ tally_total|floatformat:0 }}</p>
+                    <p class="text-sm text-blue-100">{{ total_vouchers }} vouchers</p>
+                </div>
+            </div>
+
+            <!-- ERP Total -->
+            <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl shadow-md hover:shadow-xl transition p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-semibold text-emerald-50 uppercase">ERP Total</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">₹{{ erp_total|floatformat:0 }}</p>
+                    <p class="text-sm text-emerald-100">{{ total_erp }} billings</p>
+                </div>
+            </div>
+
+            <!-- Variance -->
+            <div class="bg-gradient-to-br from-{% if variance > 100000 %}rose{% else %}amber{% endif %}-400 to-{% if variance > 100000 %}rose{% else %}amber{% endif %}-500 rounded-xl shadow-md hover:shadow-xl transition p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-semibold text-white uppercase opacity-90">Variance</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">₹{{ variance|floatformat:0 }}</p>
+                    <p class="text-sm opacity-90">{{ variance_pct|floatformat:1 }}% difference</p>
+                </div>
+            </div>
+
+            <!-- Match Rate -->
+            <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md hover:shadow-xl transition p-6">
+                <div class="text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-semibold text-purple-50 uppercase">Match Rate</p>
+                        <div class="bg-white bg-opacity-20 rounded-full p-2">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{% if total_vouchers > 0 %}{% widthratio matched_vouchers total_vouchers 100 %}%{% else %}0%{% endif %}</p>
+                    <p class="text-sm text-purple-100">{{ matched_vouchers }}/{{ total_vouchers }} matched</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Status Progress Bars -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Tally Vouchers Status -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Tally Vouchers Status
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-semibold text-gray-700">Matched</span>
+                            <span class="text-emerald-600 font-bold">{{ matched_vouchers }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-3 rounded-full transition" style="width: {% if total_vouchers > 0 %}{% widthratio matched_vouchers total_vouchers 100 %}%{% else %}0%{% endif %}"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-semibold text-gray-700">Unmatched</span>
+                            <span class="text-amber-600 font-bold">{{ unmatched_vouchers }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full transition" style="width: {% if total_vouchers > 0 %}{% widthratio unmatched_vouchers total_vouchers 100 %}%{% else %}0%{% endif %}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ERP Billings Status -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    ERP Billings Status
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-semibold text-gray-700">Matched</span>
+                            <span class="text-emerald-600 font-bold">{{ matched_erp }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-3 rounded-full transition" style="width: {% if total_erp > 0 %}{% widthratio matched_erp total_erp 100 %}%{% else %}0%{% endif %}"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-semibold text-gray-700">Unmatched</span>
+                            <span class="text-amber-600 font-bold">{{ unmatched_erp }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full transition" style="width: {% if total_erp > 0 %}{% widthratio unmatched_erp total_erp 100 %}%{% else %}0%{% endif %}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="text-center mb-6">
+            <a href="{% url 'tallysync:reconciliation_detail' %}{% if selected_month %}?month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}" 
+               class="inline-block bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-bold px-8 py-3 rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <svg width="20" height="20" aria-hidden="true" class="inline h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                View Detailed Reconciliation
+            </a>
+        </div>
+
+        <!-- Recent Alerts -->
+        {% if recent_alerts %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-rose-500 to-rose-600">
+                <h3 class="text-lg font-bold text-white flex items-center">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Recent Variance Alerts
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% for alert in recent_alerts %}
+                    <div class="flex items-center justify-between p-4 border-l-4 {% if alert.severity == 'high' %}border-rose-500 bg-rose-50{% elif alert.severity == 'medium' %}border-amber-500 bg-amber-50{% else %}border-blue-500 bg-blue-50{% endif %} rounded-lg">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-block px-2 py-1 text-xs font-semibold rounded {% if alert.severity == 'high' %}bg-rose-200 text-rose-800{% elif alert.severity == 'medium' %}bg-amber-200 text-amber-800{% else %}bg-blue-200 text-blue-800{% endif %}">
+                                    {{ alert.alert_type|upper }}
+                                </span>
+                                <span class="text-xs text-gray-500">{{ alert.created_at|date:"d M Y" }}</span>
+                            </div>
+                            <p class="text-sm text-gray-700">{{ alert.description|truncatewords:20 }}</p>
+                        </div>
+                        <div class="text-right ml-4">
+                            <p class="text-lg font-bold {% if alert.severity == 'high' %}text-rose-600{% elif alert.severity == 'medium' %}text-amber-600{% else %}text-blue-600{% endif %}">
+                                ₹{{ alert.variance_amount|floatformat:0 }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+// Dynamic year dropdown — current year down to 2024
+(function() {
+    const sel = document.getElementById('yearSelect');
+    const currentYear = new Date().getFullYear();
+    const selectedYear = '{{ selected_year|default:"" }}';
+    for (let y = currentYear; y >= 2024; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (selectedYear === String(y)) opt.selected = true;
+        sel.appendChild(opt);
+    }
+})();
+</script>
+{% endblock %}

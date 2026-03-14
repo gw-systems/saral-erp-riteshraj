@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vendor Profitability Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Vendor Profitability Dashboard</h1>
+                <p class="text-gray-600">Vendor-level P&L analysis from Tally</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="refreshDashboard()" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">
+                    Refresh
+                </button>
+                <a href="{% url 'accounts:finance_manager_dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    Back to Hub
+                </a>
+            </div>
+        </div>
+
+        <!-- Nav Tabs -->
+        <div class="flex gap-2 mb-6">
+            <a href="{% url 'tallysync:project_profitability_dashboard' %}" class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100 font-semibold border">Project</a>
+            <a href="{% url 'tallysync:client_profitability_dashboard' %}" class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100 font-semibold border">Client</a>
+            <a href="{% url 'tallysync:vendor_profitability_dashboard' %}" class="px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold">Vendor</a>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
+                    <input type="date" id="fromDate" value="{{ default_from_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
+                    <input type="date" id="toDate" value="{{ default_to_date }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Search Vendor</label>
+                    <input type="text" id="vendorSearch" placeholder="Search by name..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Filter</label>
+                    <select id="profitFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                        <option value="all">All Vendors</option>
+                        <option value="profitable">Profitable Only</option>
+                        <option value="loss">Loss Making</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-semibold">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            <div class="col-span-2 md:col-span-6 text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+                <p class="text-gray-600 mt-4">Loading vendor data...</p>
+            </div>
+        </div>
+
+        <!-- Top/Bottom Performers -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Top 5 Profitable Vendors</h3>
+                <div id="topPerformers" class="space-y-3"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Loss Making Vendors</h3>
+                <div id="lossVendors" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- All Vendors Table -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">All Vendors Profitability</h3>
+                <button onclick="exportToExcel()" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm">
+                    Export Excel
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table id="vendorsTable" class="min-w-full">
+                    <thead class="bg-gradient-to-r from-amber-50 to-orange-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('vendor_name')">
+                                Vendor Name
+                            </th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('project_count')">
+                                Projects
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('revenue')">
+                                Revenue
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('purchase')">
+                                Purchase
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('expenses')">
+                                Expenses
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('payments')">
+                                Payments
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('collections')">
+                                Collections
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('profit')">
+                                Profit
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase cursor-pointer" onclick="sortTable('margin')">
+                                Margin %
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendorsBody" class="divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+let allVendors = [];
+let currentSort = { field: 'vendor_name', direction: 'asc' };
+
+function initDashboard() {
+    if (typeof TallySyncCommon !== 'undefined' && TallySyncCommon.setDefaultPreviousMonth) {
+        TallySyncCommon.setDefaultPreviousMonth();
+    }
+    loadDashboard();
+}
+initDashboard();
+window.addEventListener('pageshow', function(e) { if (e.persisted) initDashboard(); });
+
+function refreshDashboard() { loadDashboard(); }
+function applyFilters() { loadDashboard(); }
+
+async function loadDashboard() {
+    TallySyncCommon.setLoading('summaryCards', true);
+    try {
+        const filters = {
+            start_date: document.getElementById('fromDate')?.value || '',
+            end_date: document.getElementById('toDate')?.value || ''
+        };
+        const data = await TallySyncCommon.apiCall('vendor-profitability', filters);
+        allVendors = data.vendors;
+        renderSummaryCards();
+        renderTopPerformers();
+        renderLossVendors();
+        renderFilteredVendors();
+    } catch (error) {
+        console.error('Error loading vendors:', error);
+        TallySyncCommon.showError('Failed to load vendor data', 'summaryCards');
+    }
+}
+
+function renderSummaryCards() {
+    const totalRevenue = allVendors.reduce((sum, v) => sum + (parseFloat(v.lifetime_revenue) || 0), 0);
+    const totalPurchase = allVendors.reduce((sum, v) => sum + (parseFloat(v.lifetime_purchase) || 0), 0);
+    const totalExpenses = allVendors.reduce((sum, v) => sum + Math.abs(parseFloat(v.lifetime_expenses) || 0), 0);
+    const totalPayments = allVendors.reduce((sum, v) => sum + (parseFloat(v.lifetime_payments) || 0), 0);
+    const totalCollections = allVendors.reduce((sum, v) => sum + (parseFloat(v.lifetime_collections) || 0), 0);
+    const totalProfit = allVendors.reduce((sum, v) => sum + (parseFloat(v.lifetime_profit) || 0), 0);
+    const avgMargin = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+
+    document.getElementById('summaryCards').innerHTML = `
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-4 border-l-4 border-green-500">
+            <p class="text-xs font-semibold text-green-700 mb-1">Revenue</p>
+            <p class="text-xl font-bold text-green-800">${TallySyncCommon.formatCurrency(totalRevenue)}</p>
+            <p class="text-xs text-green-600 mt-1">${allVendors.length} vendors</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-lg p-4 border-l-4 border-red-500">
+            <p class="text-xs font-semibold text-red-700 mb-1">Purchase</p>
+            <p class="text-xl font-bold text-red-800">${TallySyncCommon.formatCurrency(totalPurchase)}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-4 border-l-4 border-orange-400">
+            <p class="text-xs font-semibold text-orange-700 mb-1">Expenses</p>
+            <p class="text-xl font-bold text-orange-800">${TallySyncCommon.formatCurrency(totalExpenses)}</p>
+        </div>
+        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-lg p-4 border-l-4 border-yellow-500">
+            <p class="text-xs font-semibold text-yellow-700 mb-1">Payments</p>
+            <p class="text-xl font-bold text-yellow-800">${TallySyncCommon.formatCurrency(totalPayments)}</p>
+        </div>
+        <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl shadow-lg p-4 border-l-4 border-cyan-500">
+            <p class="text-xs font-semibold text-cyan-700 mb-1">Collections</p>
+            <p class="text-xl font-bold text-cyan-800">${TallySyncCommon.formatCurrency(totalCollections)}</p>
+        </div>
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
+            <p class="text-xs font-semibold text-blue-700 mb-1">Profit <span class="font-normal text-blue-500">(Rev-Purchase)</span></p>
+            <p class="text-xl font-bold text-blue-800">${TallySyncCommon.formatCurrency(totalProfit)} <span class="text-sm font-normal">${avgMargin.toFixed(1)}%</span></p>
+        </div>
+    `;
+}
+
+function renderTopPerformers() {
+    const profitable = allVendors
+        .filter(v => parseFloat(v.lifetime_profit) > 0)
+        .sort((a, b) => parseFloat(b.lifetime_profit) - parseFloat(a.lifetime_profit))
+        .slice(0, 5);
+
+    let html = '';
+    profitable.forEach((vendor, index) => {
+        html += `
+            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                <div class="flex-1">
+                    <a href="/tallysync/project-profitability/?vendor_names=${encodeURIComponent((vendor.raw_names || [vendor.vendor_name]).join(','))}" class="font-bold text-gray-800 hover:text-amber-600 hover:underline">${index + 1}. ${vendor.vendor_name}</a>
+                    <p class="text-sm text-gray-600">${vendor.project_count} projects</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-green-700">${TallySyncCommon.formatCurrency(vendor.lifetime_profit)}</p>
+                    <p class="text-xs text-green-600">${TallySyncCommon.formatPercentage(vendor.profit_margin || 0)} margin</p>
+                </div>
+            </div>
+        `;
+    });
+    document.getElementById('topPerformers').innerHTML = html || '<p class="text-gray-500 text-center py-4">No profitable vendors</p>';
+}
+
+function renderLossVendors() {
+    const lossmaking = allVendors
+        .filter(v => parseFloat(v.lifetime_profit) < 0)
+        .sort((a, b) => parseFloat(a.lifetime_profit) - parseFloat(b.lifetime_profit))
+        .slice(0, 5);
+
+    let html = '';
+    lossmaking.forEach(vendor => {
+        html += `
+            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                <div class="flex-1">
+                    <a href="/tallysync/project-profitability/?vendor_names=${encodeURIComponent((vendor.raw_names || [vendor.vendor_name]).join(','))}" class="font-bold text-gray-800 hover:text-amber-600 hover:underline">${vendor.vendor_name}</a>
+                    <p class="text-sm text-gray-600">${vendor.project_count} projects</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-red-700">${TallySyncCommon.formatCurrency(vendor.lifetime_profit)}</p>
+                    <p class="text-xs text-red-600">${TallySyncCommon.formatPercentage(vendor.profit_margin || 0)} margin</p>
+                </div>
+            </div>
+        `;
+    });
+    document.getElementById('lossVendors').innerHTML = html || '<p class="text-gray-500 text-center py-4">No loss-making vendors</p>';
+}
+
+function renderFilteredVendors() {
+    let filtered = [...allVendors];
+
+    const profitFilter = document.getElementById('profitFilter').value;
+    if (profitFilter === 'profitable') {
+        filtered = filtered.filter(v => parseFloat(v.lifetime_profit) > 0);
+    } else if (profitFilter === 'loss') {
+        filtered = filtered.filter(v => parseFloat(v.lifetime_profit) < 0);
+    }
+
+    const search = document.getElementById('vendorSearch').value.toLowerCase();
+    if (search) {
+        filtered = filtered.filter(v =>
+            (v.vendor_name || '').toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => {
+        let aVal, bVal;
+        if (currentSort.field === 'vendor_name') {
+            aVal = (a.vendor_name || '').toLowerCase();
+            bVal = (b.vendor_name || '').toLowerCase();
+            return currentSort.direction === 'desc' ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+        }
+        const fieldMap = { revenue: 'lifetime_revenue', purchase: 'lifetime_purchase', expenses: 'lifetime_expenses', payments: 'lifetime_payments', collections: 'lifetime_collections', profit: 'lifetime_profit', margin: 'profit_margin', project_count: 'project_count' };
+        const key = fieldMap[currentSort.field] || currentSort.field;
+        aVal = parseFloat(a[key]) || 0;
+        bVal = parseFloat(b[key]) || 0;
+        return currentSort.direction === 'desc' ? bVal - aVal : aVal - bVal;
+    });
+
+    let html = '';
+    filtered.forEach(vendor => {
+        const profit = parseFloat(vendor.lifetime_profit) || 0;
+        const profitClass = profit >= 0 ? 'text-green-700' : 'text-red-700';
+        html += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <a href="/tallysync/project-profitability/?vendor_names=${encodeURIComponent((vendor.raw_names || [vendor.vendor_name]).join(','))}" class="font-bold text-amber-600 hover:text-amber-800 hover:underline">${vendor.vendor_name || 'Unknown'}</a>
+                </td>
+                <td class="px-4 py-3 text-sm text-center text-gray-700">${vendor.project_count}</td>
+                <td class="px-4 py-3 text-sm text-right text-green-700 font-semibold">${TallySyncCommon.formatCurrency(vendor.lifetime_revenue)}</td>
+                <td class="px-4 py-3 text-sm text-right text-red-700 font-semibold">${TallySyncCommon.formatCurrency(vendor.lifetime_purchase)}</td>
+                <td class="px-4 py-3 text-sm text-right text-orange-600">${TallySyncCommon.formatCurrency(Math.abs(parseFloat(vendor.lifetime_expenses) || 0))}</td>
+                <td class="px-4 py-3 text-sm text-right text-yellow-700">${TallySyncCommon.formatCurrency(vendor.lifetime_payments)}</td>
+                <td class="px-4 py-3 text-sm text-right text-cyan-700">${TallySyncCommon.formatCurrency(vendor.lifetime_collections)}</td>
+                <td class="px-4 py-3 text-sm text-right ${profitClass} font-bold">${TallySyncCommon.formatCurrency(profit)}</td>
+                <td class="px-4 py-3 text-sm text-right ${profitClass} font-semibold">${TallySyncCommon.formatPercentage(vendor.profit_margin || 0)}</td>
+            </tr>
+        `;
+    });
+    document.getElementById('vendorsBody').innerHTML = html || '<tr><td colspan="9" class="text-center py-8 text-gray-500">No vendors found</td></tr>';
+}
+
+function sortTable(field) {
+    if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
+    } else {
+        currentSort.field = field;
+        currentSort.direction = 'desc';
+    }
+    renderFilteredVendors();
+}
+
+function exportToExcel() {
+    const headers = ['Vendor Name', 'Projects', 'Revenue', 'Purchase', 'Expenses (Journals)', 'Payments', 'Collections', 'Profit', 'Margin %'];
+    const rows = allVendors.map(v => [
+        v.vendor_name || '',
+        v.project_count || 0,
+        parseFloat(v.lifetime_revenue) || 0,
+        parseFloat(v.lifetime_purchase) || 0,
+        parseFloat(v.lifetime_expenses) || 0,
+        parseFloat(v.lifetime_payments) || 0,
+        parseFloat(v.lifetime_collections) || 0,
+        parseFloat(v.lifetime_profit) || 0,
+        parseFloat((v.profit_margin || 0).toFixed(2))
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{ wch: 30 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let r = 1; r <= range.e.r; r++) {
+        for (let c = 2; c <= 7; c++) {
+            const cell = ws[XLSX.utils.encode_cell({ r, c })];
+            if (cell) cell.z = '#,##0.00';
+        }
+        const pctCell = ws[XLSX.utils.encode_cell({ r, c: 8 })];
+        if (pctCell) pctCell.z = '0.00"%"';
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Vendor Profitability');
+    XLSX.writeFile(wb, 'vendor_profitability.xlsx');
+}
+</script>
+
+{% endblock %}

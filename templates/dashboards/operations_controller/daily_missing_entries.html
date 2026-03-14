@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Missing Entries - {{ selected_date|date:"M d, Y" }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <a href="{% url 'accounts:operation_controller_dashboard' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 flex items-center mb-2 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <svg aria-hidden="true" width="20" height="20" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Missing Entries</h1>
+                    <p class="text-gray-600 mt-1">Active projects without entries on {{ selected_date|date:"l, F d, Y" }}</p>
+                </div>
+
+                <!-- Filters -->
+                <form method="get" class="flex items-center space-x-2">
+                    <label for="coordinator" class="text-sm text-gray-600">Coordinator:</label>
+                    <select
+                        id="coordinator"
+                        name="coordinator"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                        <option value="">All Coordinators</option>
+                        {% for coord in all_coordinators %}
+                        <option value="{{ coord }}" {% if coord == selected_coordinator %}selected{% endif %}>{{ coord }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="selected_date" class="text-sm text-gray-600 ml-4">Date:</label>
+                    <input
+                        type="date"
+                        id="selected_date"
+                        name="selected_date"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        max="{{ today|date:'Y-m-d' }}"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('selected_date').value='{{ today|date:'Y-m-d' }}'; this.form.submit();" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Today
+                    </button>
+                </form>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Missing Entries</p>
+                        <p class="text-4xl font-bold text-red-600">{{ total_missing }}</p>
+                    </div>
+                    <div class="bg-red-500 p-4 rounded-full">
+                        <svg aria-hidden="true" width="32" height="32" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Table -->
+        {% if projects_data %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coordinator</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Last Entry Date</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Days Missing</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for data in projects_data %}
+                        <tr class="hover:bg-gray-50 {% if data.consecutive_days > 3 %}bg-red-50{% endif %}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ data.project.project_code }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if data.project.operation_coordinator %}
+                                <div class="text-sm text-gray-900">{{ data.project.operation_coordinator }}</div>
+                                {% else %}
+                                <span class="text-xs text-red-600 font-medium">Not Assigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                {% if data.last_entry_date %}
+                                <div class="text-sm text-gray-900">{{ data.last_entry_date|date:"M d, Y" }}</div>
+                                {% else %}
+                                <span class="text-xs text-gray-500">No entries</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold {% if data.consecutive_days > 3 %}text-red-600{% elif data.consecutive_days > 1 %}text-orange-600{% else %}text-gray-900{% endif %}">
+                                    {{ data.consecutive_days }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                {% if data.consecutive_days > 3 %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Critical</span>
+                                {% elif data.consecutive_days > 1 %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">Warning</span>
+                                {% else %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+            <svg aria-hidden="true" width="64" height="64" class="mx-auto h-16 w-16 text-green-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-gray-500 text-lg flex items-center justify-center gap-2">
+                All active projects have submitted entries!
+                <svg aria-hidden="true" width="20" height="20" class="inline h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l2.09 6.26L21 9.27l-5 4.87 1.18 6.88L12 17.77l-5.18 3.25L8 14.14 3 9.27l6.91-1.01L12 2z"/>
+                </svg>
+            </p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

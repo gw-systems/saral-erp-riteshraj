@@ -1,0 +1,853 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Director Dashboard - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section data cards: specific transition for shadow + transform */
+    .data-card {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Director Dashboard</h1>
+                <p class="text-gray-600 mt-2">Executive Overview &amp; Business Intelligence</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm">
+                    <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
+                <a href="{% url 'accounts:director_analytics' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm">
+                    <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Advanced Analytics
+                </a>
+                <span class="text-xs text-gray-500">{{ current_time }}</span>
+            </div>
+        </div>
+
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+
+            <!-- Revenue YTD -->
+            <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-blue-50 uppercase">Revenue (YTD)</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">₹{{ total_revenue_ytd|floatformat:0|intcomma }}</p>
+                        <p class="text-xs text-blue-50 mt-1">{{ current_year }} Total</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Revenue MRR -->
+            <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-indigo-50 uppercase">MRR</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">₹{{ mrr|floatformat:0|intcomma }}</p>
+                        <p class="text-xs text-indigo-50 mt-1">Monthly Recurring</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Active Projects -->
+            <a href="{% url 'projects:project_list_all' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-emerald-50 uppercase">Projects</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_active_projects }}</p>
+                        <p class="text-xs text-emerald-50 mt-1">Active</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Clients -->
+            <a href="{% url 'projects:client_card_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-pink-50 uppercase">Clients</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_clients }}</p>
+                        <p class="text-xs text-pink-50 mt-1">Active Clients</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Vendors -->
+            <a href="{% url 'supply:vendor_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-amber-50 uppercase">Vendors</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_vendors }}</p>
+                        <p class="text-xs text-amber-50 mt-1">Partner Vendors</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Warehouses -->
+            <a href="{% url 'supply:warehouse_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-purple-50 uppercase">Warehouses</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ total_warehouses }}</p>
+                        <p class="text-xs text-purple-50 mt-1">Operational</p>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Operations & Approvals Section -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+
+            <!-- Adobe Sign Approvals -->
+            <a href="{% url 'adobe_sign:dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-red-50 uppercase">Adobe Sign</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ pending_approvals }}</p>
+                        <p class="text-xs text-red-50 mt-1">
+                            {% if pending_approvals > 0 %}Pending Review{% else %}All Clear{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Disputes -->
+            <a href="{% url 'operations:dispute_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-orange-50 uppercase">Disputes</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ outstanding_disputes }}</p>
+                        <p class="text-xs text-orange-50 mt-1">Open</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Adhoc Billing -->
+            <a href="{% url 'operations:adhoc_billing_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-teal-50 uppercase">Adhoc Billing</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ adhoc_pending }}</p>
+                        <p class="text-xs text-teal-50 mt-1">Pending</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Renewals -->
+            <a href="{% url 'projects:renewal_tracker_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-yellow-50 uppercase">Renewals</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ upcoming_renewals }}</p>
+                        <p class="text-xs text-yellow-50 mt-1">Next 60 Days</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Capacity Utilization -->
+            <a href="{% url 'supply:supply_analytics' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-cyan-50 uppercase">Capacity</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold metric-number">{{ capacity_utilization }}%</p>
+                        <p class="text-xs text-cyan-50 mt-1">Utilization</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Quotations Card -->
+            <a href="{% url 'projects:quotation_list' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <div class="smooth-card bg-gradient-to-br from-orange-400 to-amber-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                    <div class="text-white">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-orange-50 uppercase">Quotations</p>
+                            <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center mt-1 mb-1">
+                            <svg class="h-8 w-8 text-white" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-orange-50 mt-1">Send Quotations</p>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Integrations Section -->
+        <div class="mb-6">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center mb-4">
+                <svg class="h-5 w-5 text-blue-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Integrations &amp; Lead Management
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+
+                <!-- Bigin CRM -->
+                <a href="{% url 'bigin:bigin_dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="smooth-card bg-gradient-to-br from-violet-400 to-violet-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                        <div class="text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-semibold text-violet-50 uppercase">Bigin CRM</p>
+                                <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                    <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold metric-number">{{ bigin_leads_count }}</p>
+                            <p class="text-xs text-violet-50 mt-1">Total Leads</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Callyzer -->
+                <a href="{% url 'callyzer:dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="smooth-card bg-gradient-to-br from-green-400 to-green-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                        <div class="text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-semibold text-green-50 uppercase">Callyzer</p>
+                                <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                    <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold metric-number">{{ callyzer_calls_today }}</p>
+                            <p class="text-xs text-green-50 mt-1">Calls Today</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Google Ads -->
+                <a href="{% url 'google_ads:dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="smooth-card bg-gradient-to-br from-rose-400 to-rose-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                        <div class="text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-semibold text-rose-50 uppercase">Google Ads</p>
+                                <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                    <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold metric-number">{{ google_ads_clicks_month }}</p>
+                            <p class="text-xs text-rose-50 mt-1">Clicks This Month</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Gmail Leads -->
+                <a href="{% url 'gmail_leads:dashboard' %}" class="block group outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <div class="smooth-card bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer p-5">
+                        <div class="text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-semibold text-slate-50 uppercase">Gmail Leads</p>
+                                <div class="bg-white bg-opacity-20 rounded-full p-1.5">
+                                    <svg class="h-4 w-4 text-white" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold metric-number">{{ gmail_leads_month }}</p>
+                            <p class="text-xs text-slate-50 mt-1">This Month</p>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- Disputes Overview Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-red-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    Disputes Overview
+                </h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- 1. Open -->
+                <a href="{% url 'operations:dispute_list' %}?status=open" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-yellow-600">{{ open_disputes }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Open</p>
+                        <p class="text-xs text-yellow-500 font-medium">Not Started</p>
+                    </div>
+                </a>
+                <!-- 2. In Progress -->
+                <a href="{% url 'operations:dispute_list' %}?status=in_progress" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-blue-600">{{ in_progress_disputes }}</p>
+                        <p class="text-xs text-gray-600 mt-1">In Progress</p>
+                        <p class="text-xs text-blue-500 font-medium">Being Worked</p>
+                    </div>
+                </a>
+                <!-- 3. Resolved -->
+                <a href="{% url 'operations:dispute_list' %}?status=resolved" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-green-600">{{ resolved_disputes_month }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Resolved</p>
+                        <p class="text-xs text-green-500 font-medium">This Month</p>
+                    </div>
+                </a>
+                <!-- 4. Critical >7 Days -->
+                <a href="{% url 'operations:dispute_list' %}?status=open" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-red-600">{{ critical_disputes_7days }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Critical >7 Days</p>
+                        <p class="text-xs text-red-500 font-medium">Overdue</p>
+                    </div>
+                </a>
+                <!-- 5. Daily Dispute % -->
+                <a href="{% url 'operations:dispute_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-orange-600">{{ daily_dispute_percentage }}%</p>
+                        <p class="text-xs text-gray-600 mt-1">Daily Dispute %</p>
+                        <p class="text-xs text-orange-500 font-medium">Projects Affected</p>
+                    </div>
+                </a>
+                <!-- 6. Monthly Dispute % -->
+                <a href="{% url 'operations:dispute_analysis' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-purple-600">{{ monthly_dispute_percentage }}%</p>
+                        <p class="text-xs text-gray-600 mt-1">Monthly Dispute %</p>
+                        <p class="text-xs text-purple-500 font-medium">View by Project</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Daily Operations Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-blue-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Daily Operations
+                </h3>
+                <form method="get" class="flex items-center space-x-2" id="daily-ops-filter-form">
+                    <label for="selected_date" class="text-sm text-gray-600">Date:</label>
+                    <input
+                        type="date"
+                        id="selected_date"
+                        name="selected_date"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        max="{{ today|date:'Y-m-d' }}"
+                        class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('selected_date').value='{{ today|date:'Y-m-d' }}'; this.form.submit();" class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Today
+                    </button>
+                </form>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- 1. Missing Entries -->
+                <a href="{% url 'accounts:daily_missing_entries_detail' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-red-600">{{ entries_missing_today }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Missing Entries</p>
+                        <p class="text-xs text-red-500 font-medium">{{ selected_date|date:"M d, Y" }}</p>
+                    </div>
+                </a>
+                <!-- 2. Total Space -->
+                <a href="{% url 'accounts:daily_space_utilization_detail' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-green-600">{{ total_space_today_lakhs|floatformat:2 }} Sq. Ft.</p>
+                        <p class="text-xs text-gray-600 mt-1">Total Space</p>
+                        <p class="text-xs text-green-500 font-medium">Lakhs</p>
+                    </div>
+                </a>
+                <!-- 3. Total Inventory -->
+                <a href="{% url 'accounts:daily_space_utilization_detail' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-amber-600">₹{{ total_inventory_today|floatformat:2 }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total Inventory</p>
+                        <p class="text-xs text-amber-500 font-medium">Crores</p>
+                    </div>
+                </a>
+                <!-- 4. Variance Alerts -->
+                <a href="{% url 'accounts:daily_variance_alerts_detail' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="block group relative rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-orange-600">{{ space_variance_alerts }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Variance Alerts</p>
+                        <p class="text-xs text-orange-500 font-medium">>30% Change</p>
+                        {% if space_variance_projects %}
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-50 pointer-events-none">
+                            <div class="bg-gray-900 text-white text-sm rounded-lg p-4 shadow-xl w-96">
+                                <p class="font-bold mb-3 text-base border-b border-gray-700 pb-2">Projects with >30% Space Change</p>
+                                <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
+                                    {% for proj in space_variance_projects %}
+                                    <div class="border-b border-gray-700 pb-2 mb-2 last:border-b-0">
+                                        <div class="flex items-start justify-between mb-1">
+                                            <p class="font-bold text-white">{{ proj.project_code }}</p>
+                                            <span class="px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full font-semibold">{{ proj.change_pct }}%</span>
+                                        </div>
+                                        <p class="text-gray-300 text-sm mb-1">{{ proj.client_name }}</p>
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-500">Yesterday: {{ proj.yesterday_space|floatformat:0 }} sq ft</span>
+                                            <span class="text-gray-500 mx-2">→</span>
+                                            <span class="text-gray-500">Today: {{ proj.today_space|floatformat:0 }} sq ft</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+                <!-- 5. Inventory Turnover -->
+                <a href="{% url 'accounts:daily_inventory_turnover_detail' %}?selected_date={{ selected_date|date:'Y-m-d' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number {% if inventory_turnover > 0 %}text-green-600{% elif inventory_turnover < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                            {% if inventory_turnover > 0 %}+{% endif %}{{ inventory_turnover|floatformat:2 }}%
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1">Inventory Turnover</p>
+                        <p class="text-xs text-purple-500 font-medium">
+                            {% if inventory_turnover_previous_date %}
+                                vs {{ inventory_turnover_previous_date|date:"M d" }}
+                            {% else %}
+                                vs Previous Data
+                            {% endif %}
+                        </p>
+                    </div>
+                </a>
+                <!-- 6. Data Quality -->
+                <div class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:shadow-lg data-card hover:-translate-y-1">
+                        <p class="text-2xl font-bold metric-number {% if data_quality_score_daily >= 90 %}text-green-600{% elif data_quality_score_daily >= 75 %}text-blue-600{% elif data_quality_score_daily >= 50 %}text-orange-600{% else %}text-red-600{% endif %}">
+                            {{ data_quality_score_daily }}%
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1">Data Quality</p>
+                        <p class="text-xs text-blue-500 font-medium">Entry Compliance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Operations Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-indigo-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Monthly Operations
+                </h3>
+                <form method="get" class="flex items-center space-x-2">
+                    <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+                    <label for="selected_month" class="text-sm text-gray-600">Month:</label>
+                    <input
+                        type="month"
+                        id="selected_month"
+                        name="selected_month"
+                        value="{{ selected_month_start|date:'Y-m' }}"
+                        max="{{ today|date:'Y-m' }}"
+                        class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('selected_month').value='{{ today|date:'Y-m' }}'; this.form.submit();" class="px-3 py-1 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">
+                        Current Month
+                    </button>
+                </form>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- 1. Total Adhoc Billing -->
+                <a href="{% url 'operations:adhoc_billing_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-orange-600">{{ adhoc_month_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Adhoc Billing</p>
+                        <p class="text-xs text-orange-500 font-medium">₹{{ adhoc_month_value_lakhs|floatformat:2 }}L</p>
+                    </div>
+                </a>
+                <!-- 2. Total Monthly Billing -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-green-600">{{ monthly_billing_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Monthly Billing</p>
+                        <p class="text-xs text-green-500 font-medium">₹{{ monthly_billing_value_lakhs|floatformat:2 }}L</p>
+                    </div>
+                </a>
+                <!-- 3. Average Margin -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-blue-600">{{ avg_margin }}%</p>
+                        <p class="text-xs text-gray-600 mt-1">Avg Margin</p>
+                        <p class="text-xs text-blue-500 font-medium">From Billing</p>
+                    </div>
+                </a>
+                <!-- 4. Total Disputes -->
+                <a href="{% url 'operations:dispute_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-red-600">{{ disputes_month_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total Disputes</p>
+                        <p class="text-xs text-red-500 font-medium">{{ disputes_open_month }} Open</p>
+                    </div>
+                </a>
+                <!-- 5. Max Space -->
+                <a href="{% url 'accounts:monthly_max_inventory_detail' %}?selected_month={{ selected_month_start|date:'Y-m' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg border border-teal-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-teal-600">{{ max_space_month_lakhs|floatformat:2 }} Sq. Ft.</p>
+                        <p class="text-xs text-gray-600 mt-1">Max Space</p>
+                        <p class="text-xs text-teal-500 font-medium">Lakhs</p>
+                    </div>
+                </a>
+                <!-- 6. Max Inventory -->
+                <a href="{% url 'accounts:monthly_max_inventory_detail' %}?selected_month={{ selected_month_start|date:'Y-m' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-amber-600">₹{{ max_inventory_month_crores|floatformat:2 }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Max Inventory</p>
+                        <p class="text-xs text-amber-500 font-medium">Crores</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Monthly Billing Approvals Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-purple-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Monthly Billing Approvals
+                </h3>
+                <form method="get" class="flex items-center space-x-2">
+                    <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+                    <input type="hidden" name="selected_month" value="{{ selected_month_start|date:'Y-m' }}">
+                    <label for="billing_month" class="text-sm text-gray-600">Month:</label>
+                    <input
+                        type="month"
+                        id="billing_month"
+                        name="billing_month"
+                        value="{{ billing_month_start|date:'Y-m' }}"
+                        max="{{ today|date:'Y-m' }}"
+                        class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('billing_month').value='{{ today|date:'Y-m' }}'; this.form.submit();" class="px-3 py-1 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                        Current Month
+                    </button>
+                </form>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- 1. Controller Approved -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-green-600">{{ controller_approved }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Controller Approved</p>
+                        <p class="text-xs text-green-500 font-medium">Current Month</p>
+                    </div>
+                </a>
+                <!-- 2. Controller Pending -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-yellow-600">{{ controller_pending }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Controller Pending</p>
+                        <p class="text-xs text-yellow-500 font-medium">Awaiting Review</p>
+                    </div>
+                </a>
+                <!-- 3. Controller Rejected -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-red-600">{{ controller_rejected }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Controller Rejected</p>
+                        <p class="text-xs text-red-500 font-medium">Needs Review</p>
+                    </div>
+                </a>
+                <!-- 4. Finance Approved -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-emerald-600">{{ finance_approved }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Finance Approved</p>
+                        <p class="text-xs text-emerald-500 font-medium">Ready to Invoice</p>
+                    </div>
+                </a>
+                <!-- 5. Finance Pending -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-amber-600">{{ finance_pending }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Finance Pending</p>
+                        <p class="text-xs text-amber-500 font-medium">In Queue</p>
+                    </div>
+                </a>
+                <!-- 6. Finance Rejected -->
+                <a href="{% url 'operations:monthly_billing_dashboard' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-rose-50 to-rose-100 rounded-lg border border-rose-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-rose-600">{{ finance_rejected }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Finance Rejected</p>
+                        <p class="text-xs text-rose-500 font-medium">Action Required</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Adhoc Billing Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-teal-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    Adhoc Billing
+                </h3>
+                <form method="get" class="flex items-center space-x-2">
+                    <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+                    <input type="hidden" name="selected_month" value="{{ selected_month_start|date:'Y-m' }}">
+                    <input type="hidden" name="billing_month" value="{{ billing_month_start|date:'Y-m' }}">
+                    <label for="adhoc_month" class="text-sm text-gray-600">Month:</label>
+                    <input
+                        type="month"
+                        id="adhoc_month"
+                        name="adhoc_month"
+                        value="{{ adhoc_section_month_start|date:'Y-m' }}"
+                        max="{{ today|date:'Y-m' }}"
+                        class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('adhoc_month').value='{{ today|date:'Y-m' }}'; this.form.submit();" class="px-3 py-1 text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600">
+                        Current Month
+                    </button>
+                </form>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- 1. Total Entries -->
+                <a href="{% url 'operations:adhoc_billing_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-blue-600">{{ adhoc_total_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total Entries</p>
+                        <p class="text-xs text-blue-500 font-medium">All Events</p>
+                    </div>
+                </a>
+                <!-- 2. Total Receivable -->
+                <a href="{% url 'operations:adhoc_billing_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-indigo-600">₹{{ adhoc_total_receivable_lakhs|floatformat:2 }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total Receivable</p>
+                        <p class="text-xs text-indigo-500 font-medium">In Lakhs</p>
+                    </div>
+                </a>
+                <!-- 3. Total Payable -->
+                <a href="{% url 'operations:adhoc_billing_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg border border-violet-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-violet-600">₹{{ adhoc_total_payable_lakhs|floatformat:2 }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total Payable</p>
+                        <p class="text-xs text-violet-500 font-medium">In Lakhs</p>
+                    </div>
+                </a>
+                <!-- 4. By Event Type -->
+                <a href="{% url 'operations:adhoc_billing_list' %}?charge_type={{ adhoc_most_common_type_code }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-purple-600">{{ adhoc_most_common_type_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">{{ adhoc_most_common_type }}</p>
+                        <p class="text-xs text-purple-500 font-medium">Most Common</p>
+                    </div>
+                </a>
+                <!-- 5. High Value Entries -->
+                <a href="{% url 'operations:adhoc_billing_list' %}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-amber-600">{{ adhoc_high_value_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">High Value Entries</p>
+                        <p class="text-xs text-amber-500 font-medium">>₹50K Receivable</p>
+                    </div>
+                </a>
+                <!-- 6. Aging -->
+                <a href="{% url 'operations:adhoc_billing_list' %}?status=pending" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-red-600">{{ adhoc_aging_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Aging >40 Days</p>
+                        <p class="text-xs text-red-500 font-medium">Pending</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- MIS Metrics Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-blue-600 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    MIS Metrics
+                </h3>
+                <form method="get" class="flex items-center space-x-2">
+                    <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+                    <input type="hidden" name="selected_month" value="{{ selected_month_start|date:'Y-m' }}">
+                    <input type="hidden" name="billing_month" value="{{ billing_month_start|date:'Y-m' }}">
+                    <input type="hidden" name="adhoc_month" value="{{ adhoc_section_month_start|date:'Y-m' }}">
+                    <label for="mis_month" class="text-sm text-gray-600">Month:</label>
+                    <input
+                        type="month"
+                        id="mis_month"
+                        name="mis_month"
+                        value="{{ mis_month_start|date:'Y-m' }}"
+                        max="{{ today|date:'Y-m' }}"
+                        class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onchange="this.form.submit()"
+                    >
+                    <button type="button" onclick="document.getElementById('mis_month').value='{{ today|date:'Y-m' }}'; this.form.submit();" class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Current Month
+                    </button>
+                </form>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- 1. MIS Pending Today -->
+                <a href="{% url 'operations:mis_dashboard' %}?date={{ today|date:'Y-m-d' }}&status=pending" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-red-600">{{ mis_pending_count }}</p>
+                        <p class="text-xs text-gray-600 mt-1">MIS Pending Today</p>
+                        <p class="text-xs text-red-500 font-medium">Missing Entries</p>
+                    </div>
+                </a>
+                <!-- 2. MIS Daily -->
+                <a href="{% url 'operations:mis_dashboard' %}?date={{ today|date:'Y-m-d' }}&frequency=MIS Daily" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-blue-600">{{ mis_daily_projects }}</p>
+                        <p class="text-xs text-gray-600 mt-1">MIS Daily</p>
+                        <p class="text-xs text-blue-500 font-medium">Projects</p>
+                    </div>
+                </a>
+                <!-- 3. MIS Weekly -->
+                <a href="{% url 'operations:mis_dashboard' %}?date={{ today|date:'Y-m-d' }}&frequency=MIS Weekly" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-purple-600">{{ mis_weekly_projects }}</p>
+                        <p class="text-xs text-gray-600 mt-1">MIS Weekly</p>
+                        <p class="text-xs text-purple-500 font-medium">Projects</p>
+                    </div>
+                </a>
+                <!-- 4. MIS Monthly -->
+                <a href="{% url 'operations:mis_dashboard' %}?date={{ today|date:'Y-m-d' }}&frequency=MIS Monthly" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-indigo-600">{{ mis_monthly_projects }}</p>
+                        <p class="text-xs text-gray-600 mt-1">MIS Monthly</p>
+                        <p class="text-xs text-indigo-500 font-medium">Projects</p>
+                    </div>
+                </a>
+                <!-- 5. Projects >3 Missing -->
+                <a href="{% url 'operations:mis_dashboard' %}?date={{ today|date:'Y-m-d' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-amber-600">{{ projects_with_high_mis_gaps }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Projects >3 Missing</p>
+                        <p class="text-xs text-amber-500 font-medium">High Gaps</p>
+                    </div>
+                </a>
+                <!-- 6. Team Avg Completion -->
+                <a href="{% url 'operations:mis_dashboard' %}?date={{ today|date:'Y-m-d' }}" class="block group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 hover:shadow-lg data-card hover:-translate-y-1 cursor-pointer">
+                        <p class="text-2xl font-bold metric-number text-green-600">{{ team_avg_mis_completion }}%</p>
+                        <p class="text-xs text-gray-600 mt-1">Team Avg Completion</p>
+                        <p class="text-xs text-green-500 font-medium">Overall Rate</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

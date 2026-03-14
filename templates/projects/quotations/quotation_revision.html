@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quotation.quotation_number }} Rev {{ revision.revision_number }} — Read-Only Snapshot{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ quotation.quotation_number }} — Revision {{ revision.revision_number }}</h1>
+            <p class="text-sm text-gray-500 mt-1">
+                Snapshot taken on {{ revision.created_at|date:"d M Y, h:i A" }}
+                {% if revision.created_by %}by {{ revision.created_by.get_full_name }}{% endif %}
+                {% if revision.reason %}— "{{ revision.reason }}"{% endif %}
+            </p>
+        </div>
+        <a href="{% url 'projects:quotation_detail' quotation.quotation_id %}"
+           class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm transition">
+            ← Back to Quotation
+        </a>
+    </div>
+
+    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+        <p class="text-sm text-yellow-800 font-medium">📸 This is a read-only historical snapshot of the quotation before it was modified.</p>
+    </div>
+
+    <!-- Snapshot Content -->
+    {% if snapshot %}
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quotation Details at Time of Revision</h2>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="font-medium text-gray-600">Status:</span>
+                <span class="ml-2 text-gray-900">{{ snapshot.status }}</span>
+            </div>
+            <div>
+                <span class="font-medium text-gray-600">Client:</span>
+                <span class="ml-2 text-gray-900">{{ snapshot.client_company }}</span>
+            </div>
+            <div>
+                <span class="font-medium text-gray-600">Commercial Type:</span>
+                <span class="ml-2 text-gray-900">{{ snapshot.commercial_type }}</span>
+            </div>
+            <div>
+                <span class="font-medium text-gray-600">Markup %:</span>
+                <span class="ml-2 text-gray-900">{{ snapshot.default_markup_pct }}%</span>
+            </div>
+        </div>
+    </div>
+
+    {% for location in snapshot.locations %}
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+        <h3 class="font-semibold text-gray-800 mb-3">{{ location.location_name }}</h3>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-xs text-gray-500 border-b">
+                    <th class="text-left pb-2">Service</th>
+                    <th class="text-right pb-2">Client Rate</th>
+                    <th class="text-right pb-2">Qty</th>
+                    <th class="text-right pb-2">Client Total</th>
+                    <th class="text-right pb-2">Vendor Rate</th>
+                    <th class="text-right pb-2">Vendor Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in location.items %}
+                <tr class="border-b border-gray-100">
+                    <td class="py-2">{{ item.item_description }}{% if item.custom_description %} ({{ item.custom_description }}){% endif %}</td>
+                    <td class="text-right py-2">{{ item.unit_cost }}</td>
+                    <td class="text-right py-2">{{ item.quantity }}</td>
+                    <td class="text-right py-2 font-medium">—</td>
+                    <td class="text-right py-2 text-orange-600">{{ item.vendor_unit_cost }}</td>
+                    <td class="text-right py-2 text-orange-600">{{ item.vendor_quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+</div>
+{% endblock %}

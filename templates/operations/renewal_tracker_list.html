@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Agreement Renewals - Saral ERP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Agreement Renewals</h1>
+            <p class="text-gray-600 mt-1">Track and manage contract renewals</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="toggleGrouping()" id="groupBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Group by Client
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm text-gray-600">Total Active</p>
+            <p class="text-2xl font-bold text-gray-900">{{ total_count }}</p>
+        </div>
+        <div class="bg-red-50 rounded-lg shadow p-4">
+            <p class="text-sm text-red-600 flex items-center gap-1"><svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Overdue</p>
+            <p class="text-2xl font-bold text-red-600">{{ overdue_count }}</p>
+        </div>
+        <div class="bg-orange-50 rounded-lg shadow p-4">
+            <p class="text-sm text-orange-600">Upcoming (60 days)</p>
+            <p class="text-2xl font-bold text-orange-600">{{ upcoming_count }}</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg shadow p-4">
+            <p class="text-sm text-blue-600">In Progress</p>
+            <p class="text-2xl font-bold text-blue-600">{{ in_progress_count }}</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow mb-6 p-4">
+        <form method="get" class="flex gap-4 items-end">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                <select name="filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All</option>
+                    <option value="overdue" {% if filter_type == 'overdue' %}selected{% endif %}>Overdue Only</option>
+                    <option value="upcoming" {% if filter_type == 'upcoming' %}selected{% endif %}>Upcoming Only</option>
+                    <option value="in_progress" {% if filter_type == 'in_progress' %}selected{% endif %}>In Progress</option>
+                </select>
+            </div>
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <input type="text" name="search" value="{{ search_query }}" 
+                       placeholder="Project code or client name"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Apply
+            </button>
+        </form>
+    </div>
+
+    <!-- OVERDUE SECTION (if any) -->
+    {% if overdue_trackers %}
+    <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-red-600 mb-4 flex items-center gap-2"><svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> OVERDUE RENEWALS ({{ overdue_trackers|length }})</h2>
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-red-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Client</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Expired On</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Overdue By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for tracker in overdue_trackers %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" 
+                               class="text-blue-600 hover:text-blue-800 font-medium">
+                                {{ tracker.project_card.project.project_code }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">{{ tracker.project_card.project.client_name|truncatewords:5 }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-red-600 font-semibold">{{ tracker.project_card.agreement_end_date|date:"d M Y" }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-bold text-red-600">{{ tracker.days_overdue }} days</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if tracker.status.code == 'pending' %}bg-gray-100 text-gray-800
+                                {% elif tracker.status.code == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% elif tracker.status.code == 'client_responded' %}bg-green-100 text-green-800
+                                {% endif %}">
+                                {{ tracker.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" 
+                               class="text-blue-600 hover:text-blue-800">
+                                Take Action →
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- UPCOMING SECTION -->
+    {% if upcoming_trackers %}
+    <div class="bg-white rounded-lg shadow mb-6" id="ungrouped-view">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Upcoming Renewals ({{ upcoming_trackers|length }})</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires On</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days Left</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for tracker in upcoming_trackers %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" 
+                               class="text-blue-600 hover:text-blue-800 font-medium">
+                                {{ tracker.project_card.project.project_code }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">{{ tracker.project_card.project.client_name|truncatewords:5 }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ tracker.project_card.agreement_end_date|date:"d M Y" }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if tracker.days_left <= 15 %}
+                                <span class="text-sm font-bold text-red-600">{{ tracker.days_left }} days</span>
+                            {% elif tracker.days_left <= 30 %}
+                                <span class="text-sm font-semibold text-orange-600">{{ tracker.days_left }} days</span>
+                            {% else %}
+                                <span class="text-sm text-gray-600">{{ tracker.days_left }} days</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if tracker.status.code == 'pending' %}bg-gray-100 text-gray-800
+                                {% elif tracker.status.code == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% elif tracker.status.code == 'client_responded' %}bg-green-100 text-green-800
+                                {% endif %}">
+                                {{ tracker.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" 
+                               class="text-blue-600 hover:text-blue-800">
+                                View Details →
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CLIENT-GROUPED VIEW (initially hidden) -->
+    <div class="hidden" id="grouped-view">
+        {% regroup upcoming_trackers by project_card.project.client_name as client_groups %}
+        {% for client in client_groups %}
+        <div class="bg-white rounded-lg shadow mb-4">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100"
+                 onclick="toggleClient('client-{{ forloop.counter }}')">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900">{{ client.grouper }}</h3>
+                    <span class="text-sm text-gray-600">{{ client.list|length }} project(s)</span>
+                </div>
+            </div>
+            <div id="client-{{ forloop.counter }}" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires On</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days Left</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for tracker in client.list %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" 
+                                   class="text-blue-600 hover:text-blue-800 font-medium">
+                                    {{ tracker.project_card.project.project_code }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900">{{ tracker.project_card.agreement_end_date|date:"d M Y" }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if tracker.days_left <= 15 %}
+                                    <span class="text-sm font-bold text-red-600">{{ tracker.days_left }} days</span>
+                                {% elif tracker.days_left <= 30 %}
+                                    <span class="text-sm font-semibold text-orange-600">{{ tracker.days_left }} days</span>
+                                {% else %}
+                                    <span class="text-sm text-gray-600">{{ tracker.days_left }} days</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                    {% if tracker.status.code == 'pending' %}bg-gray-100 text-gray-800
+                                    {% elif tracker.status.code == 'in_progress' %}bg-blue-100 text-blue-800
+                                    {% elif tracker.status.code == 'client_responded' %}bg-green-100 text-green-800
+                                    {% endif %}">
+                                    {{ tracker.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" 
+                                   class="text-blue-600 hover:text-blue-800">
+                                    View Details →
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not overdue_trackers and not upcoming_trackers %}
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <svg width="48" height="48" aria-hidden="true" class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No renewals found</h3>
+        <p class="mt-1 text-sm text-gray-500">All agreements are up to date!</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+function toggleGrouping() {
+    const ungrouped = document.getElementById('ungrouped-view');
+    const grouped = document.getElementById('grouped-view');
+    const btn = document.getElementById('groupBtn');
+    
+    if (ungrouped.classList.contains('hidden')) {
+        ungrouped.classList.remove('hidden');
+        grouped.classList.add('hidden');
+        btn.textContent = 'Group by Client';
+    } else {
+        ungrouped.classList.add('hidden');
+        grouped.classList.remove('hidden');
+        btn.textContent = 'Show All';
+    }
+}
+
+function toggleClient(id) {
+    const element = document.getElementById(id);
+    element.classList.toggle('hidden');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supply Chain Hub - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                    <svg class="h-8 w-8 text-gray-700" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    Supply Chain Hub
+                </h1>
+                <p class="text-gray-600 mt-2">Vendor and warehouse management</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'supply:vendor_create' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    New Vendor
+                </a>
+                <a href="{% url 'supply:warehouse_create' %}" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                    <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    New Warehouse
+                </a>
+            </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-indigo-50 uppercase">Total Vendors</p>
+                <p class="text-3xl font-bold mt-2">{{ total_vendors }}</p>
+                <p class="text-xs text-indigo-50 mt-1">{{ active_vendors }} active</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-purple-50 uppercase">Warehouses</p>
+                <p class="text-3xl font-bold mt-2">{{ total_warehouses }}</p>
+                <p class="text-xs text-purple-50 mt-1">{{ active_warehouses }} active</p>
+            </div>
+            <div class="bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-pink-50 uppercase">Locations</p>
+                <p class="text-3xl font-bold mt-2">{{ total_locations }}</p>
+                <p class="text-xs text-pink-50 mt-1">Cities covered</p>
+            </div>
+            <div class="bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl shadow-md p-5 text-white">
+                <p class="text-xs font-semibold text-teal-50 uppercase">Utilization</p>
+                <p class="text-3xl font-bold mt-2">{{ utilization_rate }}%</p>
+                <p class="text-xs text-teal-50 mt-1">Overall</p>
+            </div>
+        </div>
+
+        <!-- Vendors Section -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    Vendors
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 border border-indigo-200">
+                        <p class="text-xs font-medium text-indigo-700">Total Vendors</p>
+                        <p class="text-2xl font-bold text-indigo-900">{{ total_vendors }}</p>
+                        <p class="text-xs text-indigo-600 mt-1">Vendor cards</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                        <p class="text-xs font-medium text-green-700">Active</p>
+                        <p class="text-2xl font-bold text-green-900">{{ active_vendors }}</p>
+                        <p class="text-xs text-green-600 mt-1">Currently operational</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                        <p class="text-xs font-medium text-gray-700">Inactive</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ inactive_vendors }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Not in use</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'supply:vendor_list' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        View All Vendors
+                        <svg class="ml-2 h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </a>
+                    <a href="{% url 'supply:vendor_create' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create Vendor
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warehouses Section -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                    </svg>
+                    Warehouses
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                        <p class="text-xs font-medium text-purple-700">Total Warehouses</p>
+                        <p class="text-2xl font-bold text-purple-900">{{ total_warehouses }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                        <p class="text-xs font-medium text-green-700">Active</p>
+                        <p class="text-2xl font-bold text-green-900">{{ active_warehouses }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <p class="text-xs font-medium text-blue-700">Available Space</p>
+                        <p class="text-2xl font-bold text-blue-900">{{ available_space }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                        <p class="text-xs font-medium text-orange-700">Occupied</p>
+                        <p class="text-2xl font-bold text-orange-900">{{ occupied_space }}</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'supply:warehouse_list' %}" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        View All Warehouses
+                        <svg class="ml-2 h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </a>
+                    <a href="{% url 'supply:warehouse_create' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create Warehouse
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Locations & Analytics Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- Locations -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+                    <h3 class="text-lg font-bold text-white">Locations</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3 mb-4">
+                        <div class="flex items-center justify-between p-3 bg-teal-50 rounded-lg border border-teal-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Total Locations</p>
+                                <p class="text-xs text-gray-500">Cities covered</p>
+                            </div>
+                            <span class="text-2xl font-bold text-teal-600">{{ total_locations }}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Top Location</p>
+                                <p class="text-xs text-gray-500">{{ top_location_name }}</p>
+                            </div>
+                            <span class="text-2xl font-bold text-blue-600">{{ top_location_count }}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <a href="{% url 'supply:location_list' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                            View All Locations
+                        </a>
+                        <a href="{% url 'supply:location_create' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                            <svg class="h-4 w-4 mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add Location
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-4">
+                    <h3 class="text-lg font-bold text-white">Analytics</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3 mb-4">
+                        <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Utilization Rate</p>
+                                <p class="text-xs text-gray-500">Overall capacity</p>
+                            </div>
+                            <span class="text-2xl font-bold text-emerald-600">{{ utilization_rate }}%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Performance Score</p>
+                                <p class="text-xs text-gray-500">Vendor ratings</p>
+                            </div>
+                            <span class="text-2xl font-bold text-green-600">{{ performance_score }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'supply:supply_analytics' %}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        View Analytics Dashboard
+                        <svg class="ml-2 h-4 w-4" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Quick Links -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <a href="{% url 'supply:warehouse_availability' %}" class="block smooth-card bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl shadow-md hover:shadow-xl transition p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <p class="text-xs font-semibold text-blue-50 uppercase">Availability</p>
+                <p class="text-2xl font-bold mt-2">Calendar</p>
+                <p class="text-xs text-blue-50 mt-1">Check availability</p>
+            </a>
+
+            <a href="{% url 'supply:supply_map' %}" class="block smooth-card bg-gradient-to-br from-rose-400 to-pink-500 rounded-xl shadow-md hover:shadow-xl transition p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <p class="text-xs font-semibold text-rose-50 uppercase">Map View</p>
+                <p class="text-2xl font-bold mt-2">Locations</p>
+                <p class="text-xs text-rose-50 mt-1">Geographic view</p>
+            </a>
+
+            <a href="{% url 'supply:dashboard' %}" class="block smooth-card bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-md hover:shadow-xl transition p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <p class="text-xs font-semibold text-amber-50 uppercase">Dashboard</p>
+                <p class="text-2xl font-bold mt-2">Full View</p>
+                <p class="text-xs text-amber-50 mt-1">Complete dashboard</p>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

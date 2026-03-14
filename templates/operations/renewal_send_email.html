@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Send {{ email_type|title }} Email - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}" class="text-gray-500 hover:text-gray-600">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Record Email Sent: {{ email_type|title|replace:"_, " }}
+                </h1>
+            </div>
+            <p class="text-gray-600 mt-1">
+                Project: {{ tracker.project_card.project.project_code }}
+            </p>
+        </div>
+
+        <!-- Project Info Card -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        <strong>Client:</strong> {{ tracker.project_card.project.client_name }}<br>
+                        <strong>Agreement Expires:</strong> {{ tracker.project_card.agreement_end_date|date:"d M Y" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Email Recipients -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Sent To <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="email_to" required
+                           placeholder="client@example.com, contact@client.com"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Separate multiple emails with commas</p>
+                </div>
+
+                <!-- Email Subject -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Subject <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="email_subject" required
+                           placeholder="RE: Agreement Renewal - {{ tracker.project_card.project.project_code }}"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Notes / Email Content Summary
+                    </label>
+                    <textarea name="notes" rows="6"
+                              placeholder="Brief summary of email content or any important points discussed..."
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Optional: Add key points from the email for record</p>
+                </div>
+
+                <!-- Email Date (auto-filled to today) -->
+                <input type="hidden" name="email_date" value="{{ today|date:'Y-m-d' }}">
+
+                <!-- Buttons -->
+                <div class="flex justify-end gap-3">
+                    <a href="{% url 'projects:renewal_tracker_detail' tracker.id %}"
+                       class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <svg width="16" height="16" aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Mark Email as Sent
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Email Templates (Helper) -->
+        <div class="bg-gray-50 rounded-lg p-4 mt-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Email Template Suggestions
+            </h3>
+            <div class="space-y-2 text-xs text-gray-600">
+                {% if email_type == 'initial' %}
+                <p><strong>Initial Email:</strong> "Dear [Client], Your agreement with us expires on {{ tracker.project_card.agreement_end_date|date:"d M Y" }}. We would like to discuss renewal terms..."</p>
+                {% elif email_type == 'reminder_1' %}
+                <p><strong>1st Reminder:</strong> "This is a reminder regarding your agreement expiring on {{ tracker.project_card.agreement_end_date|date:"d M Y" }}. Please let us know your decision..."</p>
+                {% elif email_type == 'reminder_2' %}
+                <p><strong>2nd Reminder:</strong> "We have not received a response regarding the renewal. The agreement expires in [X] days. Please respond at your earliest..."</p>
+                {% elif email_type == 'reminder_3' %}
+                <p><strong>3rd Reminder:</strong> "Final reminder: Agreement expires on {{ tracker.project_card.agreement_end_date|date:"d M Y" }}. We need your confirmation urgently..."</p>
+                {% elif email_type == 'final' %}
+                <p><strong>Final Intimation:</strong> "As we have not received confirmation, we understand you do not wish to renew. Operations will cease after {{ tracker.project_card.agreement_end_date|date:"d M Y" }}..."</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gmail Integration - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Gmail Integration</h1>
+                    <p class="mt-2 text-sm text-gray-600">Connect your Gmail account to send RFQ emails and track communications</p>
+                </div>
+                <div class="flex gap-3">
+                    {% if user.role in 'admin,director' %}
+                    <button onclick="syncAllAccounts()"
+                            class="inline-flex items-center px-6 py-3 border-2 border-blue-500 rounded-lg text-base font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Sync All Accounts
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'gmail:email_list' %}"
+                       class="inline-flex items-center px-6 py-3 border-2 border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        View Emails
+                    </a>
+                    <a href="{% url 'gmail:connect' %}"
+                       class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-lg text-base font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition transform hover:scale-105">
+                        <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Connect Gmail Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6 mb-8">
+            <div class="flex items-start">
+                <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-blue-600 mt-0.5 mr-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">How Gmail Integration Works</h3>
+                    <ul class="text-sm text-blue-800 space-y-2">
+                        <li class="flex items-start">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>One-Time Setup:</strong> Click "Connect Gmail Account" and log in with your Google account once</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Secure OAuth2:</strong> We never store your password - Google handles authentication</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Send RFQ Emails:</strong> Use your connected Gmail to send professional RFQ emails to vendors</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Multiple Accounts:</strong> You can connect multiple Gmail accounts to your profile</span>
+                        </li>
+                        {% if user.role in 'admin,director' %}
+                        <li class="flex items-start">
+                            <svg width="20" height="20" aria-hidden="true" class="h-5 w-5 text-purple-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <span><strong>Admin Access:</strong> As admin/director, you can send from ANY connected account in the system</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected Accounts Section -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Connected Gmail Accounts
+                </h2>
+            </div>
+
+            {% if accounts %}
+            <div class="divide-y divide-gray-200">
+                {% for account in accounts %}
+                <div class="p-6 hover:bg-gray-50 transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <!-- Gmail Icon -->
+                                <div class="bg-red-100 rounded-full p-2">
+                                    <svg width="24" height="24" aria-hidden="true" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+
+                                <!-- Email Address -->
+                                <div>
+                                    <p class="text-lg font-bold text-gray-900">{{ account.email_account }}</p>
+                                    <p class="text-sm text-gray-500">
+                                        Connected by: <span class="font-medium text-gray-700">{{ account.user.get_full_name }}</span>
+                                        {% if account.user.role %}
+                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full
+                                            {% if account.user.role in 'admin,director' %}bg-purple-100 text-purple-800
+                                            {% elif account.user.role in 'sales_manager,supply_manager' %}bg-blue-100 text-blue-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ account.user.get_role_display }}
+                                        </span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+
+                                <!-- Status Badge -->
+                                {% if account.is_active %}
+                                <span class="px-3 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
+                                    ✓ Active
+                                </span>
+                                {% else %}
+                                <span class="px-3 py-1 text-xs font-semibold text-gray-600 bg-gray-100 rounded-full">
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Metadata -->
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 text-sm">
+                                <div>
+                                    <p class="text-xs text-gray-500">Connected On</p>
+                                    <p class="font-medium text-gray-900">{{ account.created_at|date:"M d, Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Last Synced</p>
+                                    <p class="font-medium text-gray-900">{{ account.last_sync_at|date:"M d, Y"|default:"Never" }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Last Updated</p>
+                                    <p class="font-medium text-gray-900">{{ account.updated_at|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="ml-6 flex flex-col gap-2">
+                            {% if account.user == user or user.role in 'admin,director' %}
+                            <button onclick="syncAccount({{ account.id }}, '{{ account.email_account }}')"
+                                    class="px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition text-sm font-medium flex items-center justify-center"
+                                    id="sync-btn-{{ account.id }}">
+                                <svg width="16" height="16" aria-hidden="true" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Sync Now
+                            </button>
+                            <form method="post" action="{% url 'gmail:disconnect' account.id %}" onsubmit="return confirm('Are you sure you want to disconnect {{ account.email_account }}?');">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="w-full px-4 py-2 border-2 border-red-300 text-red-700 rounded-lg hover:bg-red-50 hover:border-red-500 transition text-sm font-medium">
+                                    Disconnect
+                                </button>
+                            </form>
+                            {% else %}
+                            <p class="text-xs text-gray-500 italic">View Only</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-12 text-center">
+                <svg width="80" height="80" aria-hidden="true" class="mx-auto h-20 w-20 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">No Gmail Accounts Connected</h3>
+                <p class="text-gray-500 mb-6">Connect your Gmail account to start sending RFQ emails</p>
+                <a href="{% url 'gmail:connect' %}"
+                   class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 transition">
+                    <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Connect Your First Account
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="font-semibold text-gray-900 mb-1">❓ Do I need to log in every time?</p>
+                    <p class="text-sm text-gray-600">No! After the one-time connection, your access token is securely stored. You never need to log in again.</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 mb-1">❓ Is my password stored?</p>
+                    <p class="text-sm text-gray-600">No. We use Google's OAuth2 system - your password is never shared with us. Google handles all authentication.</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 mb-1">❓ Can I use multiple Gmail accounts?</p>
+                    <p class="text-sm text-gray-600">Yes! You can connect multiple Gmail accounts and choose which one to send from.</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 mb-1">❓ How do I revoke access?</p>
+                    <p class="text-sm text-gray-600">Click "Disconnect" on any account here, or revoke access from your Google Account settings at <a href="https://myaccount.google.com/permissions" target="_blank" class="text-blue-600 hover:underline">myaccount.google.com/permissions</a></p>
+                </div>
+                {% if user.role not in 'admin,director' %}
+                <div>
+                    <p class="font-semibold text-gray-900 mb-1">❓ Why do I see other people's accounts?</p>
+                    <p class="text-sm text-gray-600">For transparency and collaboration. You can only send from your own accounts. Admin/Director can send from any account.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Sync single account
+function syncAccount(accountId, emailAccount) {
+    const btn = document.getElementById(`sync-btn-${accountId}`);
+    const originalText = btn.innerHTML;
+
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg width="16" height="16" aria-hidden="true" class="animate-spin h-4 w-4 mr-2 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Syncing...
+    `;
+
+    // Send sync request
+    fetch(`/gmail/ajax/sync/${accountId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        if (data.status === 'completed' || data.status === 'started') {
+            // Show success message
+            const message = data.stats ? `Synced ${data.stats.synced} emails` : data.message;
+            showNotification(message, 'success');
+
+            // Reload page after short delay to show updated sync time
+            setTimeout(() => window.location.reload(), 1500);
+        } else if (data.error) {
+            showNotification(`Sync failed: ${data.error}`, 'error');
+        } else {
+            showNotification(data.message || 'Sync failed', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Sync error:', error);  // Debug logging
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showNotification('Sync failed: ' + error.message, 'error');
+    });
+}
+
+// Sync all accounts (admin only)
+function syncAllAccounts() {
+    if (!confirm('Sync all Gmail accounts? This may take a few minutes.')) {
+        return;
+    }
+
+    // Show loading notification
+    showNotification('Starting sync for all accounts...', 'info');
+
+    // Send sync request
+    fetch('/gmail/ajax/sync-all/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'completed' || data.status === 'started') {
+            const message = data.stats
+                ? `Synced ${data.stats.successful}/${data.stats.total_accounts} accounts`
+                : data.message;
+            showNotification(message, 'success');
+
+            // Reload page after delay
+            setTimeout(() => window.location.reload(), 2000);
+        } else if (data.error) {
+            showNotification(`Sync failed: ${data.error}`, 'error');
+        } else {
+            showNotification(data.message || 'Sync failed', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Sync all error:', error);  // Debug logging
+        showNotification('Sync failed: ' + error.message, 'error');
+    });
+}
+
+// Show notification
+function showNotification(message, type) {
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+    };
+
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition transform`;
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('opacity-0');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+
+{% endblock %}

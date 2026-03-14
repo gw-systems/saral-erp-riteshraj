@@ -1,0 +1,746 @@
+{% extends "base.html" %}
+{% load static %}
+{% load bigin_filters %}
+
+{% block title %}Sales Manager Dashboard - Saral ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 1. Lead Pipeline Summary -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                <!-- target / crosshair icon -->
+                                <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0v-3m0-12v3m9 6h-3M3 12h3"/>
+                                </svg>
+                                Lead Pipeline Summary
+                            </h2>
+                            <p class="text-purple-100 text-sm">Live data from Bigin CRM</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="date" id="biginStartDate"
+                                   class="px-3 py-1.5 border border-purple-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-300"
+                                   onchange="loadBiginData()">
+                            <input type="date" id="biginEndDate"
+                                   class="px-3 py-1.5 border border-purple-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-300"
+                                   onchange="loadBiginData()">
+                        </div>
+                    </div>
+                    <a href="{% url 'bigin:bigin_leads' %}"
+                       class="bg-white text-purple-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-50 transition outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-purple-600">
+                        View All Leads &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Status Summary -->
+            <div class="p-6 border-b">
+                <h3 class="text-sm font-bold text-gray-700 uppercase mb-4">Lead Status</h3>
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4" id="biginStatusSummary">
+                    <div class="text-center p-4 bg-gray-200 animate-pulse rounded-xl"></div>
+                </div>
+            </div>
+
+            <!-- Stage Summary -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-700 uppercase mb-4">Lead Stages (Hot + Warm filtered)</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="biginStageSummary">
+                    <div class="h-24 bg-gray-200 animate-pulse rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Area Breakdown (from Bigin) -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <!-- cube / box icon -->
+                        <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 shrink-0 text-gray-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+                        </svg>
+                        Area Breakdown (My 3PL Leads)
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">Lead distribution by area range - synced with your Lead Pipeline date filter</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <button onclick="toggleSMSalesView('sqft')" id="smSalesViewSqft" class="px-3 py-1 bg-purple-600 text-white rounded text-sm font-semibold">Sq.Ft.</button>
+                    <button onclick="toggleSMSalesView('count')" id="smSalesViewCount" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Leads</button>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mb-4">
+                <span class="text-sm text-gray-600">Status:</span>
+                <button onclick="filterSMSalesStatus('all')" id="smSalesStatusAll" class="px-3 py-1 bg-blue-600 text-white rounded text-sm font-semibold">All</button>
+                <!-- Hot -->
+                <button onclick="filterSMSalesStatus('hot')" id="smSalesStatusHot" class="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">
+                    <!-- fire icon -->
+                    <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/>
+                    </svg>
+                    Hot
+                </button>
+                <!-- Warm -->
+                <button onclick="filterSMSalesStatus('warm')" id="smSalesStatusWarm" class="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">
+                    <!-- sun icon -->
+                    <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+                    </svg>
+                    Warm
+                </button>
+                <!-- Cold -->
+                <button onclick="filterSMSalesStatus('cold')" id="smSalesStatusCold" class="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">
+                    <!-- snowflake icon -->
+                    <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18M5.636 5.636l12.728 12.728M18.364 5.636 5.636 18.364"/>
+                    </svg>
+                    Cold
+                </button>
+                <!-- Converted -->
+                <button onclick="filterSMSalesStatus('converted')" id="smSalesStatusConverted" class="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">
+                    <!-- check-circle icon -->
+                    <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Conv
+                </button>
+                <!-- Closed -->
+                <button onclick="filterSMSalesStatus('closed')" id="smSalesStatusClosed" class="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">
+                    <!-- lock-closed icon -->
+                    <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                    </svg>
+                    Closed
+                </button>
+                <!-- Junk -->
+                <button onclick="filterSMSalesStatus('junk')" id="smSalesStatusJunk" class="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">
+                    <!-- trash icon -->
+                    <svg aria-hidden="true" width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                    </svg>
+                    Junk
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-r">Sales Manager</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">Blanks</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">0-1000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">1001-3000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">3001-5000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">5001-10000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">10001-20000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">20001-30000</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700">30001+</th>
+                            <th class="px-3 py-3 text-center font-semibold text-purple-700 border-l bg-purple-50">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200" id="areaBreakdownBody">
+                        <tr>
+                            <td colspan="10" class="px-3 py-8 text-center text-gray-500">
+                                <div class="animate-pulse">Loading area breakdown data...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. Navigation Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+
+            <!-- Gmail Setup -->
+            <a href="/gmail/"
+               class="block bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg p-8 hover:shadow-2xl smooth-card group outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2">
+                <div class="text-white">
+                    <div class="mb-4">
+                        <!-- envelope icon -->
+                        <svg aria-hidden="true" width="36" height="36" class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Gmail Setup</h3>
+                    <p class="text-red-100 text-sm mb-4">Connect your Gmail to send RFQ emails</p>
+                    <div class="inline-flex items-center text-sm font-medium group-hover:translate-x-2 transition">
+                        Setup Gmail
+                        <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'tallysync:sales_financial_detail' %}"
+               class="block bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-8 hover:shadow-2xl smooth-card group outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+                <div class="text-white">
+                    <div class="mb-4">
+                        <!-- chart-bar icon -->
+                        <svg aria-hidden="true" width="36" height="36" class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Detailed Financial Report</h3>
+                    <p class="text-blue-100 text-sm mb-4">View complete project-wise Tally financial data</p>
+                    <div class="inline-flex items-center text-sm font-medium group-hover:translate-x-2 transition">
+                        View Report
+                        <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'bigin:bigin_leads' %}?status=hot,warm&contact_type=3pl"
+               class="block bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-8 hover:shadow-2xl smooth-card group outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2">
+                <div class="text-white">
+                    <div class="mb-4">
+                        <!-- target / crosshair icon -->
+                        <svg aria-hidden="true" width="36" height="36" class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0v-3m0-12v3m9 6h-3M3 12h3"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Lead Pipeline Details</h3>
+                    <p class="text-purple-100 text-sm mb-4">Manage all leads with Hot+Warm pre-filtered</p>
+                    <div class="inline-flex items-center text-sm font-medium group-hover:translate-x-2 transition">
+                        View Leads
+                        <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'supply:warehouse_availability' %}"
+               class="block bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl shadow-lg p-8 hover:shadow-2xl smooth-card group outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
+                <div class="text-white">
+                    <div class="mb-4">
+                        <!-- building-office-2 / warehouse icon -->
+                        <svg aria-hidden="true" width="36" height="36" class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Warehouse Availability</h3>
+                    <p class="text-teal-100 text-sm mb-4">Browse available warehouse space</p>
+                    <div class="inline-flex items-center text-sm font-medium group-hover:translate-x-2 transition">
+                        Search Warehouses
+                        <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'projects:quotation_list' %}"
+               class="block bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl shadow-lg p-8 hover:shadow-2xl smooth-card group outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2">
+                <div class="text-white">
+                    <div class="mb-4">
+                        <!-- document-text icon -->
+                        <svg aria-hidden="true" width="36" height="36" class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Quotations</h3>
+                    <p class="text-orange-100 text-sm mb-4">Create &amp; send quotations to clients</p>
+                    <div class="inline-flex items-center text-sm font-medium group-hover:translate-x-2 transition">
+                        Manage Quotations
+                        <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- 4. Tally Financial Data -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <!-- chart-bar icon -->
+                    <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 shrink-0 text-gray-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+                    </svg>
+                    Tally Financial Data
+                </h2>
+                <div class="flex items-center gap-3">
+                    <input type="date" id="tallyStartDate"
+                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                           onchange="loadTallyData()">
+                    <input type="date" id="tallyEndDate"
+                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                           onchange="loadTallyData()">
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                    <p class="text-xs font-medium text-blue-700 mb-1">Total Projects</p>
+                    <p class="text-3xl font-bold text-blue-900 metric-number" id="projectCount">
+                        <span class="inline-block w-12 h-8 bg-blue-200 animate-pulse rounded"></span>
+                    </p>
+                    <p class="text-xs text-blue-600 mt-1">From Tally</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                    <p class="text-xs font-medium text-green-700 mb-1">Total Revenue</p>
+                    <p class="text-3xl font-bold text-green-900 metric-number" id="tallyRevenue">
+                        <span class="inline-block w-16 h-8 bg-green-200 animate-pulse rounded"></span>
+                    </p>
+                    <p class="text-xs text-green-600 mt-1">Actual billed</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                    <p class="text-xs font-medium text-purple-700 mb-1">Net Profit</p>
+                    <p class="text-3xl font-bold metric-number" id="tallyProfit">
+                        <span class="inline-block w-16 h-8 bg-purple-200 animate-pulse rounded"></span>
+                    </p>
+                    <p class="text-xs mt-1">
+                        <span class="font-semibold" id="tallyMargin">--%</span> margin
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                    <p class="text-xs font-medium text-orange-700 mb-1">Outstanding</p>
+                    <p class="text-3xl font-bold text-orange-900 metric-number" id="tallyOutstanding">
+                        <span class="inline-block w-16 h-8 bg-orange-200 animate-pulse rounded"></span>
+                    </p>
+                    <p class="text-xs text-orange-600 mt-1">Receivables</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 5. High Outstanding Alert -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-orange-600 to-amber-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <!-- currency-rupee icon -->
+                    <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25H9m6 3H9m3 6-3-3h1.5a3 3 0 1 0 0-6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    High Outstanding (&gt;&#8377;50K)
+                </h2>
+            </div>
+            <div class="p-6">
+                <div id="highOutstanding">
+                    <div class="h-16 bg-gray-200 animate-pulse rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Performance Highlights -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Top Performers -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <!-- trophy icon -->
+                        <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.175-1.125-1.175h-6.75c-.622 0-1.125.554-1.125 1.125V18.75m12-13.5V3.75A2.25 2.25 0 0 0 19.5 1.5h-15A2.25 2.25 0 0 0 2.25 3.75v1.5M21.75 5.25H2.25M6.75 5.25V21M17.25 5.25V21"/>
+                        </svg>
+                        Top 5 Profitable Projects
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div id="topProfitable" class="space-y-3">
+                        <div class="h-20 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attention Required -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-red-600 to-rose-600 px-6 py-4">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <!-- exclamation-triangle icon -->
+                        <svg aria-hidden="true" width="20" height="20" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                        </svg>
+                        Top 5 Loss-Making Projects
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div id="topLossMaking" class="space-y-3">
+                        <div class="h-20 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+let tallyData = null;
+let biginData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDateFilters();
+    loadTallyData();
+    loadBiginData();
+});
+
+function initializeDateFilters() {
+    const today = new Date();
+
+    // Helper function to format date as YYYY-MM-DD without timezone issues
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Tally: Previous month (01/12/2025 to 31/12/2025)
+    const prevMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+    document.getElementById('tallyStartDate').value = formatDate(prevMonthStart);
+    document.getElementById('tallyEndDate').value = formatDate(prevMonthEnd);
+
+    // Bigin: Current month (01/01/2026 to 31/01/2026)
+    const currMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const currMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    document.getElementById('biginStartDate').value = formatDate(currMonthStart);
+    document.getElementById('biginEndDate').value = formatDate(currMonthEnd);
+}
+
+async function loadTallyData() {
+    const startDate = document.getElementById('tallyStartDate').value;
+    const endDate = document.getElementById('tallyEndDate').value;
+
+    try {
+        const response = await fetch(`/tallysync/api/salesperson-financial-summary/?start_date=${startDate}&end_date=${endDate}`);
+        tallyData = await response.json();
+
+        if (tallyData.error) {
+            console.error('Tally API Error:', tallyData.error);
+            return;
+        }
+
+        updateTallyKPI();
+        updatePerformanceHighlights();
+        updateHighOutstanding();
+
+    } catch (error) {
+        console.error('Failed to load Tally data:', error);
+    }
+}
+
+async function loadBiginData() {
+    const startDate = document.getElementById('biginStartDate').value;
+    const endDate = document.getElementById('biginEndDate').value;
+
+    try {
+        const response = await fetch(`/integrations/bigin/api/sales-lead-summary/?start_date=${startDate}&end_date=${endDate}`);
+        biginData = await response.json();
+
+        if (biginData.error) {
+            console.error('Bigin API Error:', biginData.error);
+            return;
+        }
+
+        updateBiginSummary();
+        loadAreaBreakdown();  // Load area breakdown with same date range
+
+    } catch (error) {
+        console.error('Failed to load Bigin data:', error);
+    }
+}
+
+function updateTallyKPI() {
+    const formatLakhs = (amount) => '₹' + (amount / 100000).toFixed(2) + 'L';
+
+    document.getElementById('projectCount').textContent = tallyData.summary.project_count;
+    document.getElementById('tallyRevenue').textContent = formatLakhs(tallyData.summary.total_revenue);
+
+    const profitEl = document.getElementById('tallyProfit');
+    profitEl.textContent = formatLakhs(tallyData.summary.total_profit);
+    profitEl.className = tallyData.summary.total_profit >= 0 ?
+        'text-3xl font-bold text-green-600 metric-number' :
+        'text-3xl font-bold text-red-600 metric-number';
+
+    document.getElementById('tallyMargin').textContent = tallyData.summary.avg_margin_pct.toFixed(2) + '%';
+    document.getElementById('tallyOutstanding').textContent = formatLakhs(tallyData.summary.total_outstanding);
+}
+
+function updatePerformanceHighlights() {
+    const formatCurrency = (amount) => '₹' + (amount / 100000).toFixed(2) + 'L';
+
+    // Top Profitable
+    const topProfitableEl = document.getElementById('topProfitable');
+    if (tallyData.top_profitable.length === 0) {
+        topProfitableEl.innerHTML = '<p class="text-gray-500 text-center py-4">No profitable projects in selected period</p>';
+    } else {
+        topProfitableEl.innerHTML = tallyData.top_profitable.map(p => `
+            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition">
+                <div>
+                    <a href="/projects/${p.project_id}/" class="text-blue-600 hover:text-blue-800 font-semibold">${p.project_code}</a>
+                    <p class="text-xs text-gray-600 mt-1">${p.margin_pct.toFixed(1)}% margin</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-green-600 metric-number">${formatCurrency(p.profit)}</p>
+                    <p class="text-xs text-gray-500">Profit</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Top Loss-Making
+    const topLossEl = document.getElementById('topLossMaking');
+    if (tallyData.top_loss_making.length === 0) {
+        topLossEl.innerHTML = '<p class="text-gray-500 text-center py-4">No loss-making projects in selected period</p>';
+    } else {
+        topLossEl.innerHTML = tallyData.top_loss_making.map(p => `
+            <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition">
+                <div>
+                    <a href="/projects/${p.project_id}/" class="text-blue-600 hover:text-blue-800 font-semibold">${p.project_code}</a>
+                    <p class="text-xs text-gray-600 mt-1">Needs attention</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-red-600 metric-number">-${formatCurrency(p.loss)}</p>
+                    <p class="text-xs text-gray-500">Loss</p>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+function updateHighOutstanding() {
+    const formatCurrency = (amount) => '₹' + (amount / 100000).toFixed(2) + 'L';
+    const highOutstandingEl = document.getElementById('highOutstanding');
+
+    if (tallyData.high_outstanding.length === 0) {
+        highOutstandingEl.innerHTML = `
+            <p class="text-gray-500 text-center py-4 flex items-center justify-center gap-2">
+                <svg aria-hidden="true" width="16" height="16" class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                No projects with outstanding &gt;&#8377;50K
+            </p>`;
+    } else {
+        highOutstandingEl.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${tallyData.high_outstanding.map(p => `
+                    <div class="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <div>
+                            <a href="/projects/${p.project_id}/" class="text-blue-600 hover:text-blue-800 font-semibold">${p.project_code}</a>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-orange-600 metric-number">${formatCurrency(p.outstanding)}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+}
+
+function updateBiginSummary() {
+    const formatSqft = (sqft) => sqft.toLocaleString();
+    const totalSqft = biginData.summary.total_sqft;
+
+    // Get current date range
+    const biginStartDate = document.getElementById('biginStartDate').value;
+    const biginEndDate = document.getElementById('biginEndDate').value;
+
+    // Status Summary with fixed classes
+    const statusEl = document.getElementById('biginStatusSummary');
+    const statusData = [
+        { key: 'hot', label: 'Hot', colorClasses: 'bg-red-50 border-red-200 text-red-700',
+          icon: `<svg aria-hidden="true" width="16" height="16" class="w-4 h-4 inline shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>` },
+        { key: 'warm', label: 'Warm', colorClasses: 'bg-orange-50 border-orange-200 text-orange-700',
+          icon: `<svg aria-hidden="true" width="16" height="16" class="w-4 h-4 inline shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>` },
+        { key: 'cold', label: 'Cold', colorClasses: 'bg-blue-50 border-blue-200 text-blue-700',
+          icon: `<svg aria-hidden="true" width="16" height="16" class="w-4 h-4 inline shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18M5.636 5.636l12.728 12.728M18.364 5.636 5.636 18.364"/></svg>` },
+        { key: 'converted', label: 'Converted', colorClasses: 'bg-green-50 border-green-200 text-green-700',
+          icon: `<svg aria-hidden="true" width="16" height="16" class="w-4 h-4 inline shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>` },
+        { key: 'closed', label: 'Closed', colorClasses: 'bg-gray-50 border-gray-200 text-gray-700',
+          icon: `<svg aria-hidden="true" width="16" height="16" class="w-4 h-4 inline shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>` },
+        { key: 'junk', label: 'Junk', colorClasses: 'bg-purple-50 border-purple-200 text-purple-700',
+          icon: `<svg aria-hidden="true" width="16" height="16" class="w-4 h-4 inline shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>` }
+    ];
+
+    statusEl.innerHTML = statusData.map(({ key, label, icon, colorClasses }) => {
+        const data = biginData.status_summary[key];
+        const percentage = totalSqft > 0 ? ((data.total_sqft / totalSqft) * 100).toFixed(1) : 0;
+        const filterUrl = `/integrations/bigin/leads/?status=${key}&contact_type=3pl&start_date=${biginStartDate}&end_date=${biginEndDate}`;
+
+        return `
+            <a href="${filterUrl}" class="block text-center p-4 ${colorClasses} border-2 rounded-xl smooth-card outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
+                <p class="text-4xl font-bold mb-1 metric-number">${formatSqft(data.total_sqft)}</p>
+                <p class="text-xs font-semibold uppercase flex items-center justify-center gap-1">${icon} ${label} (${data.count})</p>
+                <p class="text-xs mt-1">${percentage}%</p>
+            </a>
+        `;
+    }).join('');
+
+    // Stage Summary
+    const stageEl = document.getElementById('biginStageSummary');
+    const stages = Object.entries(biginData.stage_summary);
+
+    if (stages.length === 0) {
+        stageEl.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-4">No leads in selected period</p>';
+    } else {
+        stageEl.innerHTML = stages.map(([stage, data]) => {
+            const percentage = totalSqft > 0 ? ((data.total_sqft / totalSqft) * 100).toFixed(1) : 0;
+            const filterUrl = `/integrations/bigin/leads/?lead_stage=${encodeURIComponent(stage)}&status=hot,warm&contact_type=3pl&start_date=${biginStartDate}&end_date=${biginEndDate}`;
+
+            return `
+                <a href="${filterUrl}" class="block p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 smooth-card outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+                    <p class="text-3xl font-bold text-blue-700 mb-1 metric-number">${formatSqft(data.total_sqft)}</p>
+                    <p class="text-xs font-medium text-gray-700 mb-1">${stage} (${data.count})</p>
+                    <p class="text-xs text-blue-600 font-semibold">${percentage}%</p>
+                </a>
+            `;
+        }).join('');
+    }
+}
+
+// ==================== AREA BREAKDOWN FUNCTIONS ====================
+
+let areaBreakdownData = null;
+let currentAreaView = 'sqft';  // Track current view (sqft or count)
+let currentStatusFilter = 'all';  // Track current status filter
+
+// Load Area Breakdown data from API
+async function loadAreaBreakdown() {
+    const startDate = document.getElementById('biginStartDate').value;
+    const endDate = document.getElementById('biginEndDate').value;
+
+    try {
+        const response = await fetch(`/integrations/bigin/api/area-breakdown/?start_date=${startDate}&end_date=${endDate}`);
+        areaBreakdownData = await response.json();
+
+        if (areaBreakdownData.error) {
+            console.error('Area Breakdown API Error:', areaBreakdownData.error);
+            return;
+        }
+
+        updateAreaBreakdownTable();
+
+    } catch (error) {
+        console.error('Failed to load Area Breakdown data:', error);
+    }
+}
+
+// Update Area Breakdown table
+function updateAreaBreakdownTable() {
+    if (!areaBreakdownData) return;
+
+    const tbody = document.getElementById('areaBreakdownBody');
+    const breakdown = areaBreakdownData.breakdown[currentStatusFilter];
+
+    if (!breakdown) {
+        tbody.innerHTML = '<tr><td colspan="10" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>';
+        return;
+    }
+
+    // Format number with Indian comma standard
+    const formatIndian = (num) => {
+        if (num === 0) return '0';
+        const numStr = String(Math.abs(num));
+        if (numStr.length <= 3) return numStr;
+        const lastThree = numStr.substring(numStr.length - 3);
+        const rest = numStr.substring(0, numStr.length - 3);
+        return rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree;
+    };
+
+    const viewKey = currentAreaView;  // 'sqft' or 'count'
+
+    // Build table row with data attributes for toggle functionality
+    let html = '<tr class="hover:bg-gray-50">';
+    html += `<td class="px-3 py-3 font-medium text-gray-900 border-r">${breakdown.name}</td>`;
+
+    // Blanks column - ALWAYS show count only (both views)
+    html += `<td class="px-3 py-3 text-center font-mono">${breakdown.blanks_count}</td>`;
+
+    // Other columns - show sqft or count based on toggle, store both in data attributes
+    const ranges = ['range_0_1000', 'range_1001_3000', 'range_3001_5000', 'range_5001_10000', 'range_10001_20000', 'range_20001_30000', 'range_30001_plus'];
+    ranges.forEach(range => {
+        const sqftValue = formatIndian(breakdown[range + '_sqft']);
+        const countValue = breakdown[range + '_count'];
+        const displayValue = viewKey === 'sqft' ? sqftValue : countValue;
+        html += `<td class="px-3 py-3 text-center font-mono sm-area-cell" data-sqft="${sqftValue}" data-count="${countValue}">${displayValue}</td>`;
+    });
+
+    // Total column
+    const totalSqft = formatIndian(breakdown.total_sqft);
+    const totalCount = breakdown.total_count;
+    const totalDisplay = viewKey === 'sqft' ? totalSqft : totalCount;
+    html += `<td class="px-3 py-3 text-center font-mono border-l bg-purple-50 sm-area-cell" data-sqft="${totalSqft}" data-count="${totalCount}">${totalDisplay}</td>`;
+    html += '</tr>';
+
+    tbody.innerHTML = html;
+}
+
+// Toggle Area Breakdown view (Sq.Ft / Leads)
+function toggleSMSalesView(view) {
+    currentAreaView = view;
+
+    const sqftBtn = document.getElementById('smSalesViewSqft');
+    const countBtn = document.getElementById('smSalesViewCount');
+    const cells = document.querySelectorAll('.sm-area-cell');
+
+    if (view === 'sqft') {
+        sqftBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        sqftBtn.classList.add('bg-purple-600', 'text-white', 'font-semibold');
+        countBtn.classList.remove('bg-purple-600', 'text-white', 'font-semibold');
+        countBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+        // Update cell values to show sqft
+        cells.forEach(cell => {
+            cell.textContent = cell.dataset.sqft;
+        });
+    } else {
+        countBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        countBtn.classList.add('bg-purple-600', 'text-white', 'font-semibold');
+        sqftBtn.classList.remove('bg-purple-600', 'text-white', 'font-semibold');
+        sqftBtn.classList.add('bg-gray-200', 'text-gray-700');
+
+        // Update cell values to show count
+        cells.forEach(cell => {
+            cell.textContent = cell.dataset.count;
+        });
+    }
+}
+
+// Filter Area Breakdown by status
+function filterSMSalesStatus(status) {
+    currentStatusFilter = status;
+
+    // Update button states
+    const buttons = ['all', 'hot', 'warm', 'cold', 'converted', 'closed', 'junk'];
+    buttons.forEach(btn => {
+        const btnId = 'smSalesStatus' + btn.charAt(0).toUpperCase() + btn.slice(1);
+        const btnEl = document.getElementById(btnId);
+        if (btnEl) {
+            if (btn === status) {
+                btnEl.classList.remove('bg-gray-200', 'text-gray-700');
+                btnEl.classList.add('bg-blue-600', 'text-white', 'font-semibold');
+            } else {
+                btnEl.classList.remove('bg-blue-600', 'text-white', 'font-semibold');
+                btnEl.classList.add('bg-gray-200', 'text-gray-700');
+            }
+        }
+    });
+
+    updateAreaBreakdownTable();
+}
+</script>
+
+{% endblock %}

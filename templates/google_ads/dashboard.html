@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Table styling */
+    .performance-table {
+        font-size: 13px;
+    }
+
+    .performance-table th {
+        background: #f9fafb;
+        font-weight: 600;
+        padding: 12px 8px;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .performance-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .performance-table tr:hover {
+        background: #eff6ff;
+    }
+
+    /* Badge styles */
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .badge-enabled {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-paused {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-removed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-added {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-excluded {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-none {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .badge-overbudget {
+        background: #fee2e2;
+        color: #991b1b;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Stats cards */
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Chart container */
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 24px;
+    }
+
+    /* Loading state */
+    .loading-spinner {
+        border: 2px solid #f3f4f6;
+        border-top: 2px solid #3b82f6;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Currency formatting */
+    .currency {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                📊 Google Ads Dashboard
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Campaign performance overview and insights</p>
+        </div>
+    </div>
+
+    <!-- Sub Navigation -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-2">
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'google_ads:dashboard' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium transition">
+                📊 Dashboard
+            </a>
+            <a href="{% url 'google_ads:detailed_report' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                📑 Detailed Report
+            </a>
+            <a href="{% url 'google_ads:search_terms' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                🔍 Search Terms
+            </a>
+            <a href="{% url 'google_ads:sync_logs' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                📋 Sync Logs
+            </a>
+            {% if request.user.role == 'admin' %}
+            <a href="{% url 'accounts:admin_dashboard_integrations' %}?tab=google_ads" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
+                ⚙️ Settings
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-4">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <div class="flex items-end">
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Impressions</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ summary_stats.total_impressions|default:0|floatformat:0 }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Clicks</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ summary_stats.total_clicks|default:0|floatformat:0 }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Cost</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1 currency">₹{{ summary_stats.total_cost|default:0|floatformat:2 }}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Conversions</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ summary_stats.total_conversions|default:0|floatformat:0 }}</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Avg Impr. Share</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ summary_stats.avg_impression_share|default:0|floatformat:1 }}%</p>
+                </div>
+                <div class="bg-indigo-100 p-3 rounded-full">
+                    <svg width="24" height="24" aria-hidden="true" class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Breakdown (Complete Performance Metrics) -->
+    {% if device_breakdown %}
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            📱 Device Performance Breakdown
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for device in device_breakdown %}
+            <div class="border border-gray-200 rounded-lg p-3 hover:shadow-lg transition-shadow">
+                <!-- Device Header -->
+                <div class="flex items-center mb-2 pb-2 border-b-2 {% if device.device == 'MOBILE' %}border-blue-500{% elif device.device == 'COMPUTER' or device.device == 'DESKTOP' %}border-green-500{% elif device.device == 'TABLET' %}border-purple-500{% else %}border-gray-500{% endif %}">
+                    <div class="flex items-center gap-2">
+                        {% if device.device == 'MOBILE' %}
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        <h4 class="text-base font-bold text-blue-700">Mobile</h4>
+                        {% elif device.device == 'COMPUTER' or device.device == 'DESKTOP' %}
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <h4 class="text-base font-bold text-green-700">Desktop</h4>
+                        {% elif device.device == 'TABLET' %}
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        <h4 class="text-base font-bold text-purple-700">Tablet</h4>
+                        {% else %}
+                        <svg width="20" height="20" aria-hidden="true" class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <h4 class="text-base font-bold text-gray-700">{{ device.device|title }}</h4>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Complete Metrics Grid -->
+                <div class="space-y-1">
+                    <!-- Impressions -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Impressions</span>
+                        <span class="text-sm font-bold text-gray-900">{{ device.impressions|floatformat:0 }}</span>
+                    </div>
+
+                    <!-- Clicks -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Clicks</span>
+                        <span class="text-sm font-bold text-blue-600">{{ device.clicks|floatformat:0 }}</span>
+                    </div>
+
+                    <!-- CTR -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">CTR</span>
+                        <span class="text-sm font-semibold text-gray-900">{{ device.ctr|floatformat:2 }}%</span>
+                    </div>
+
+                    <!-- Cost -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Cost</span>
+                        <span class="text-sm font-bold text-yellow-700">₹{{ device.cost|floatformat:2 }}</span>
+                    </div>
+
+                    <!-- Avg CPC -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Avg CPC</span>
+                        <span class="text-sm font-semibold text-gray-900">₹{{ device.avg_cpc|floatformat:2 }}</span>
+                    </div>
+
+                    <!-- Conversions -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Conversions</span>
+                        <span class="text-sm font-bold text-green-600">{{ device.conversions|floatformat:0 }}</span>
+                    </div>
+
+                    <!-- Conversion Rate -->
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Conv. Rate</span>
+                        <span class="text-sm font-semibold text-gray-900">{{ device.conversion_rate|floatformat:2 }}%</span>
+                    </div>
+
+                    <!-- Cost Per Conversion -->
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-xs font-medium text-gray-600">Cost/Conv.</span>
+                        <span class="text-sm font-semibold text-gray-900">₹{{ device.cost_per_conversion|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+        {% if campaign_performance %}
+        <div class="overflow-x-auto">
+            <table class="performance-table min-w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left">Campaign</th>
+                        <th class="text-left">Status</th>
+                        <th class="text-right">Daily Budget</th>
+                        <th class="text-right">Bidding Strategy</th>
+                        <th class="text-right">Impressions</th>
+                        <th class="text-right">Impr. Share</th>
+                        <th class="text-right">Clicks</th>
+                        <th class="text-right">CTR</th>
+                        <th class="text-right">Cost</th>
+                        <th class="text-right">Budget Util.</th>
+                        <th class="text-right">Avg CPC</th>
+                        <th class="text-right">Conversions</th>
+                        <th class="text-right">Conv Rate</th>
+                        <th class="text-right">Conv Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for perf in campaign_performance %}
+                    <tr>
+                        <td class="font-medium text-gray-900">{{ perf.campaign__campaign_name }}</td>
+                        <td>
+                            <span class="badge badge-{{ perf.campaign__campaign_status|lower }}">
+                                {{ perf.campaign__campaign_status }}
+                            </span>
+                        </td>
+                        <td class="text-right currency text-gray-600">
+                            {% if perf.campaign__daily_budget %}
+                                ₹{{ perf.campaign__daily_budget|floatformat:2 }}
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right text-xs text-gray-600">
+                            {% if perf.campaign__bidding_strategy_type %}
+                                {{ perf.campaign__bidding_strategy_type|truncatechars:15 }}
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">{{ perf.impressions|floatformat:0 }}</td>
+                        <td class="text-right">
+                            {% if perf.avg_impression_share %}
+                                <span class="font-semibold {% if perf.avg_impression_share < 0.5 %}text-red-600{% elif perf.avg_impression_share < 0.8 %}text-yellow-600{% else %}text-green-600{% endif %}">
+                                    {{ perf.avg_impression_share|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right font-semibold text-blue-600">{{ perf.clicks|floatformat:0 }}</td>
+                        <td class="text-right">{{ perf.avg_ctr|floatformat:2 }}%</td>
+                        <td class="text-right currency text-yellow-700">₹{{ perf.cost|floatformat:2 }}</td>
+                        <td class="text-right">
+                            {% if perf.avg_budget_utilization %}
+                                <span class="badge {% if perf.avg_budget_utilization > 1 %}badge-overbudget{% elif perf.avg_budget_utilization > 0.9 %}badge-paused{% else %}badge-enabled{% endif %}">
+                                    {{ perf.avg_budget_utilization|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right currency">₹{{ perf.avg_cpc|floatformat:2 }}</td>
+                        <td class="text-right font-semibold text-green-600">{{ perf.conversions|floatformat:0 }}</td>
+                        <td class="text-right">{{ perf.avg_conversion_rate|floatformat:2 }}%</td>
+                        <td class="text-right currency text-purple-700">₹{{ perf.conversion_value|default:0|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div class="text-sm text-gray-600">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} campaigns
+            </div>
+            <div class="flex gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page=1&token_id={{ selected_token_id }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}&token_id={{ selected_token_id }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Previous</a>
+                {% endif %}
+
+                <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ page_obj.number }}</span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&token_id={{ selected_token_id }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&token_id={{ selected_token_id }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Last</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="px-6 py-12 text-center text-gray-500">
+            <svg width="64" height="64" aria-hidden="true" class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-lg">No campaign performance data available</p>
+            <p class="text-sm mt-2">Try adjusting your filters or sync your Google Ads account</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- AJAX Scripts -->
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+</script>
+{% endblock %}
