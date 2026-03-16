@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'integrations.gmail_leads',  # Gmail Lead Fetcher
     'integrations.callyzer',  # Callyzer Call Tracking
     'integrations.google_ads',  # Google Ads Integration
+    'integrations.apollo',  # Apollo Outreach Integration
     'integrations.adobe_sign',  # Adobe Sign E-Signature Integration
     'integrations.expense_log',  # Google Sheets Expense Log
     'integrations.transport_sheet',  # Transport Sheet Sync
@@ -350,6 +351,7 @@ JOB_CREDITS_CONFIG = {
         'gmail': 5,              # Gmail API: same
         'google_ads': 1,         # Google Ads: 1 operation per SearchStream call
         'callyzer': 1,           # Callyzer: rate-limited 1 req/2s, no credit system
+        'apollo': 1,             # Apollo: one credit per API request (tracked as request count)
         'tallysync': 0,          # Tally: local XML server, no API credits
         'expense_log': 0,        # Internal: no external API
     },
@@ -361,10 +363,21 @@ JOB_CREDITS_CONFIG = {
         'gmail': 1200000,        # Gmail: same
         'google_ads': 15000,     # Google Ads: 15K ops/day (Basic access)
         'callyzer': 43200,       # Callyzer: ~30 req/min x 1440 min theoretical max
+        'apollo': None,          # Apollo plan-dependent; monitor raw call counts
         'tallysync': None,       # No limit (local server)
         'expense_log': None,     # No external API
     },
 }
+
+# =========================================
+# APOLLO API CONFIGURATION
+# =========================================
+APOLLO_API_KEY = config('APOLLO_API_KEY', default='')
+APOLLO_BASE_URL = config('APOLLO_BASE_URL', default='https://api.apollo.io/api/v1')
+APOLLO_REQUEST_TIMEOUT = config('APOLLO_REQUEST_TIMEOUT', default=30, cast=int)
+APOLLO_INCREMENTAL_LOOKBACK_DAYS = config('APOLLO_INCREMENTAL_LOOKBACK_DAYS', default=30, cast=int)
+APOLLO_ACTIVITY_DELAY_MS = config('APOLLO_ACTIVITY_DELAY_MS', default=100, cast=int)
+APOLLO_CALL_LIMIT = config('APOLLO_CALL_LIMIT', default=350, cast=int)
 
 # =========================================
 # 🔐 ZOHO BIGIN API CREDENTIALS
@@ -383,8 +396,6 @@ BIGIN_API_BASE = "https://www.zohoapis.com/bigin/v2/"
 # Disable Bigin auto-sync in local development mode
 # Set to True to prevent Cloud Scheduler triggers from running syncs locally
 DISABLE_BIGIN_SYNC_LOCAL = config('DISABLE_BIGIN_SYNC_LOCAL', default=True, cast=bool)
-
-
 
 # ============================================================================
 # GOOGLE CLOUD STORAGE CONFIGURATION

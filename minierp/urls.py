@@ -54,6 +54,7 @@ urlpatterns = [
     path('integrations/gmail-leads/', include('integrations.gmail_leads.urls', namespace='gmail_leads')),
     path('integrations/callyzer/', include('integrations.callyzer.urls', namespace='callyzer')),
     path('integrations/google-ads/', include('integrations.google_ads.urls', namespace='google_ads')),
+    path('integrations/apollo/', include('integrations.apollo.urls', namespace='apollo')),
     path('integrations/adobe-sign/', include('integrations.adobe_sign.urls', namespace='adobe_sign')),
     path('expense-log/', include('integrations.expense_log.urls', namespace='expense_log')),
     path('transport-sheet/', include('integrations.transport_sheet.urls', namespace='transport_sheet')),

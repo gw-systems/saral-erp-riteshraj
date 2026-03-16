@@ -20,6 +20,7 @@ class SyncLog(models.Model):
         ('gmail_leads', 'Gmail Leads'),
         ('google_ads', 'Google Ads'),
         ('callyzer', 'Callyzer'),
+        ('apollo', 'Apollo'),
         ('tallysync', 'TallySync'),
         ('expense_log', 'Expense Log'),
     ]
@@ -35,6 +36,8 @@ class SyncLog(models.Model):
         ('google_ads', 'Google Ads Sync'),
         ('google_ads_historical', 'Google Ads Historical Sync'),
         ('callyzer', 'Callyzer Sync'),
+        ('apollo_full', 'Apollo Full Sync'),
+        ('apollo_incremental', 'Apollo Incremental Sync'),
         ('tally_full', 'Tally Full Sync'),
         ('tally_incremental', 'Tally Incremental Sync'),
         ('tally_companies', 'Tally Companies Sync'),
@@ -154,12 +157,14 @@ class SyncLog(models.Model):
             sync_type=sync_type,
             log_kind='operation',
             batch=batch,
+            status='completed',
             level=level,
             operation=operation,
             message=message,
             details=details or {},
             sub_type=sub_type or '',
             duration_ms=duration_ms,
+            completed_at=timezone.now(),
         )
 
     @property
@@ -380,6 +385,7 @@ class ScheduledJob(models.Model):
         ('gmail_leads', 'Gmail Leads'),
         ('google_ads', 'Google Ads'),
         ('callyzer', 'Callyzer'),
+        ('apollo', 'Apollo'),
         ('tallysync', 'TallySync'),
         ('gmail', 'Gmail'),
         ('expense_log', 'Expense Log'),

@@ -75,7 +75,7 @@
     </div>
 
     <!-- Per-Integration Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-9 gap-4 mb-6">
         <a href="{% url 'gmail:inbox' %}" class="bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl shadow-md p-4 text-white hover:shadow-lg transition">
             <p class="text-xs font-semibold text-pink-50 uppercase tracking-wide">Gmail Inbox</p>
             <p class="text-3xl font-bold mt-1">{{ gmail_app_thread_count }}</p>
@@ -111,6 +111,11 @@
             <p class="text-3xl font-bold mt-1">{{ expense_log_count }}</p>
             <p class="text-xs text-yellow-50 mt-1">{{ expense_log_status }}</p>
         </div>
+        <a href="{% url 'apollo:dashboard' %}" class="bg-gradient-to-br from-blue-500 to-teal-500 rounded-xl shadow-md p-4 text-white hover:shadow-lg transition">
+            <p class="text-xs font-semibold text-blue-50 uppercase tracking-wide">Apollo</p>
+            <p class="text-3xl font-bold mt-1">{{ apollo_messages_count }}</p>
+            <p class="text-xs text-blue-50 mt-1">{{ apollo_status }}</p>
+        </a>
         <div class="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-md p-4 text-white">
             <p class="text-xs font-semibold text-purple-50 uppercase tracking-wide">Total Records</p>
             <p class="text-3xl font-bold mt-1">{{ total_api_calls }}</p>
@@ -121,7 +126,7 @@
     <!-- Tab Navigation -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6"
          x-data="{
-             activeTab: ['overview','sync_monitor','google_ads','gmail_app','gmail_leads','bigin','callyzer','tallysync','adobe_sign','expense_log','activity','health'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview',
+             activeTab: ['overview','sync_monitor','google_ads','gmail_app','gmail_leads','bigin','callyzer','tallysync','apollo','adobe_sign','expense_log','activity','health'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview',
              setTab(tab) { this.activeTab = tab; location.hash = tab; }
          }">
         <div class="border-b border-gray-200">
@@ -168,6 +173,11 @@
                     :class="activeTab === 'tallysync' ? 'border-green-500 text-green-600 bg-green-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
                     class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
                     TallySync
+                </button>
+                <button @click="setTab('apollo')"
+                    :class="activeTab === 'apollo' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    class="flex items-center whitespace-nowrap px-6 py-4 border-b-2 font-medium text-sm transition">
+                    Apollo
                 </button>
                 <button @click="setTab('adobe_sign')"
                     :class="activeTab === 'adobe_sign' ? 'border-pink-500 text-pink-600 bg-pink-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -361,6 +371,28 @@
                         <div class="flex gap-2 pt-2">
                             <a href="{% url 'tallysync:reconciliation_dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition">Dashboard</a>
                             <button @click="setTab('tallysync')" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apollo Card -->
+                <div class="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition duration-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-teal-600 px-5 py-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l14-7-4 14-3-6-7-1z"/></svg>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold text-white">{{ apollo_status }}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Apollo</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="flex justify-between p-2 bg-blue-50 rounded text-sm"><span class="text-gray-600">Messages</span><span class="font-bold text-blue-600">{{ apollo_messages_count }}</span></div>
+                        <div class="flex justify-between p-2 bg-teal-50 rounded text-sm"><span class="text-gray-600">Campaigns</span><span class="font-bold text-teal-600">{{ apollo_campaigns_count }}</span></div>
+                        <div class="flex justify-between p-2 bg-blue-50 rounded text-sm"><span class="text-gray-600">Last Sync</span><span class="font-bold text-blue-600 text-xs">{{ apollo_last_sync }}</span></div>
+                        <div class="flex gap-2 pt-2">
+                            <a href="{% url 'apollo:dashboard' %}" class="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">Dashboard</a>
+                            <button @click="setTab('apollo')" class="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition">Status</button>
                         </div>
                     </div>
                 </div>
@@ -2102,7 +2134,157 @@
         </div>
 
         <!-- ========================================
-             TAB 7: ADOBE SIGN
+             TAB 7: APOLLO
+             ======================================== -->
+        <div x-show="activeTab === 'apollo'" class="p-6">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Apollo Integration</h2>
+                <p class="text-gray-600">Historical outreach sync status, checkpoint progress, and recent batch history.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">Messages</p>
+                    <p class="text-5xl font-bold mt-2">{{ apollo_messages_count }}</p>
+                    <p class="text-sm text-blue-100 mt-3">All synced rows</p>
+                </div>
+                <div class="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl shadow-lg p-6 text-white">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-teal-100">Campaigns</p>
+                    <p class="text-5xl font-bold mt-2">{{ apollo_campaigns_count }}</p>
+                    <p class="text-sm text-teal-100 mt-3">Tracked campaigns</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-700 rounded-2xl shadow-lg p-6 text-white">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-blue-100">Replies</p>
+                    <p class="text-5xl font-bold mt-2">{{ apollo_replied_count }}</p>
+                    <p class="text-sm text-blue-100 mt-3">Replied messages</p>
+                </div>
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-2xl shadow-lg p-6 text-white">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-emerald-100">Warm Leads</p>
+                    <p class="text-5xl font-bold mt-2">{{ apollo_warm_count }}</p>
+                    <p class="text-sm text-emerald-100 mt-3">Lead category = WARM</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Apollo Status</h3>
+                            <p class="text-sm text-gray-500">The admin hub links to the dedicated Apollo dashboard for live controls.</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold {% if apollo_key_configured %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                            {% if apollo_key_configured %}API Key Configured{% else %}API Key Missing{% endif %}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="rounded-lg bg-gray-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Last Sync</p>
+                            <p class="mt-2 text-sm font-semibold text-gray-900">{{ apollo_last_sync }}</p>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Hourly Job</p>
+                            <p class="mt-2 text-sm font-semibold text-gray-900">Enabled via scheduled job</p>
+                        </div>
+                        <div class="rounded-lg bg-blue-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-blue-700 font-semibold">Checkpoint</p>
+                            <p class="mt-2 text-sm font-semibold text-blue-900">
+                                {% if apollo_sync_state %}
+                                    {{ apollo_sync_state.c_year }}-{{ apollo_sync_state.c_month|add:"1" }} | campaign {{ apollo_sync_state.c_camp_idx }} | page {{ apollo_sync_state.c_page }}
+                                {% else %}
+                                    Not initialized
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="rounded-lg bg-teal-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-teal-700 font-semibold">Window</p>
+                            <p class="mt-2 text-sm font-semibold text-teal-900">
+                                {% if apollo_sync_state %}
+                                    {{ apollo_sync_state.start_year }}-{{ apollo_sync_state.start_month|add:"1" }} to {{ apollo_sync_state.end_year }}-{{ apollo_sync_state.end_month|add:"1" }}
+                                {% else %}
+                                    Not initialized
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-6">
+                        <a href="{% url 'apollo:dashboard' %}" class="inline-flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">Open Apollo Dashboard</a>
+                        <a href="{% url 'integrations:scheduled_jobs' %}" class="inline-flex items-center px-5 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">View Scheduled Jobs</a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Checkpoint State</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                            <span class="text-gray-600">Start Month</span>
+                            <span class="font-semibold text-gray-900">
+                                {% if apollo_sync_state %}{{ apollo_sync_state.start_year }}-{{ apollo_sync_state.start_month|add:"1" }}{% else %}N/A{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                            <span class="text-gray-600">End Month</span>
+                            <span class="font-semibold text-gray-900">
+                                {% if apollo_sync_state %}{{ apollo_sync_state.end_year }}-{{ apollo_sync_state.end_month|add:"1" }}{% else %}N/A{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                            <span class="text-gray-600">Complete</span>
+                            <span class="font-semibold {% if apollo_sync_state and apollo_sync_state.is_complete %}text-green-700{% else %}text-amber-700{% endif %}">
+                                {% if apollo_sync_state and apollo_sync_state.is_complete %}Yes{% else %}No{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Apollo Syncs</h3>
+                </div>
+                {% if apollo_sync_logs %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Started</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Created</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Updated</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">API Calls</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for log in apollo_sync_logs %}
+                            <tr>
+                                <td class="px-4 py-3 text-gray-600">{{ log.started_at|date:"M d, g:i A" }}</td>
+                                <td class="px-4 py-3 text-gray-700">{{ log.sync_type|format_sync_type }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full
+                                        {% if log.status == 'completed' %}bg-green-100 text-green-800
+                                        {% elif log.status == 'running' %}bg-blue-100 text-blue-800
+                                        {% elif log.status == 'partial' %}bg-yellow-100 text-yellow-800
+                                        {% elif log.status == 'failed' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ log.status|upper }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-700">{{ log.records_created }}</td>
+                                <td class="px-4 py-3 text-gray-700">{{ log.records_updated }}</td>
+                                <td class="px-4 py-3 text-gray-700">{{ log.api_calls_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-6 py-10 text-center text-sm text-gray-500">No Apollo sync history yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ========================================
+             TAB 8: ADOBE SIGN
              ======================================== -->
         <div x-show="activeTab === 'adobe_sign'" class="p-6" x-data="{ showCredentials: false }">
             <div class="mb-6">
@@ -2646,6 +2828,8 @@
                                 <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                 {% elif integration.icon == 'file-text' %}
                                 <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                {% elif integration.icon == 'send' %}
+                                <svg width="32" height="32" aria-hidden="true" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l14-7-4 14-3-6-7-1z"/></svg>
                                 {% endif %}
                             </div>
                             {% if integration.is_syncing %}
@@ -2736,6 +2920,18 @@
                             <div class="flex items-center justify-between p-2.5 bg-yellow-50 rounded-lg">
                                 <span class="text-xs font-medium text-gray-600">Pending Sig.</span>
                                 <span class="text-sm font-bold text-yellow-600">{{ integration.pending_count }}</span>
+                            </div>
+                            {% endif %}
+                            {% if integration.campaigns_count is not None %}
+                            <div class="flex items-center justify-between p-2.5 bg-blue-50 rounded-lg">
+                                <span class="text-xs font-medium text-gray-600">Campaigns</span>
+                                <span class="text-sm font-bold text-blue-600">{{ integration.campaigns_count }}</span>
+                            </div>
+                            {% endif %}
+                            {% if integration.replied_count is not None %}
+                            <div class="flex items-center justify-between p-2.5 bg-teal-50 rounded-lg">
+                                <span class="text-xs font-medium text-gray-600">Replies</span>
+                                <span class="text-sm font-bold text-teal-600">{{ integration.replied_count }}</span>
                             </div>
                             {% endif %}
                             {% if integration.signed_count is not None %}
@@ -2868,6 +3064,7 @@
                                         {% elif log.integration == 'bigin' %}bg-indigo-100 text-indigo-800
                                         {% elif log.integration == 'tallysync' %}bg-green-100 text-green-800
                                         {% elif log.integration == 'gmail' %}bg-pink-100 text-pink-800
+                                        {% elif log.integration == 'apollo' %}bg-blue-100 text-blue-800
                                         {% elif log.integration == 'expense_log' %}bg-yellow-100 text-yellow-800
                                         {% else %}bg-gray-100 text-gray-800{% endif %}">
                                         {{ log.integration|format_integration_name|upper }}

@@ -1967,8 +1967,43 @@ def admin_dashboard_integrations(request):
         expense_log_status = 'Not Connected'
         expense_log_last_sync = 'Never'
 
+    # Apollo Integration
+    try:
+        from django.conf import settings as django_settings
+        from integrations.apollo.models import ApolloCampaign, ApolloMessage, ApolloSyncState
+        apollo_campaigns_count = ApolloCampaign.objects.count()
+        apollo_messages_count = ApolloMessage.objects.count()
+        apollo_replied_count = ApolloMessage.objects.filter(replied=True).count()
+        apollo_warm_count = ApolloMessage.objects.filter(lead_category='WARM').count()
+        apollo_key_configured = bool(getattr(django_settings, 'APOLLO_API_KEY', ''))
+        apollo_sync_state = ApolloSyncState.load('historical')
+        last_apollo_message = ApolloMessage.objects.order_by('-sent_at', '-updated_at').first()
+        apollo_last_sync = last_apollo_message.sent_at.strftime('%b %d, %I:%M %p') if last_apollo_message and last_apollo_message.sent_at else 'Never'
+        if apollo_messages_count > 0:
+            apollo_status = 'Active'
+        elif apollo_key_configured:
+            apollo_status = 'Configured'
+        else:
+            apollo_status = 'Not Configured'
+    except Exception:
+        apollo_campaigns_count = 0
+        apollo_messages_count = 0
+        apollo_replied_count = 0
+        apollo_warm_count = 0
+        apollo_key_configured = False
+        apollo_sync_state = None
+        apollo_status = 'Not Configured'
+        apollo_last_sync = 'Never'
+
     # Total API calls (sum of all integrations)
-    total_api_calls = gmail_leads_count + google_ads_count + callyzer_calls_count + bigin_synced_count + tally_synced_count
+    total_api_calls = (
+        gmail_leads_count
+        + google_ads_count
+        + callyzer_calls_count
+        + bigin_synced_count
+        + tally_synced_count
+        + apollo_messages_count
+    )
 
     # API health metrics (placeholder - can be enhanced with actual monitoring)
     api_uptime = 99.5
@@ -2074,7 +2109,7 @@ def admin_dashboard_integrations(request):
 
     # Recent sync per integration (for Tab 3 - last sync status)
     recent_syncs_per_integration = {}
-    for integration_name in ['google_ads', 'gmail_leads', 'bigin', 'callyzer', 'tallysync', 'adobe_sign', 'expense_log']:
+    for integration_name in ['google_ads', 'gmail_leads', 'bigin', 'callyzer', 'tallysync', 'apollo', 'adobe_sign', 'expense_log']:
         try:
             recent_syncs_per_integration[integration_name] = SyncLog.objects.filter(
                 integration=integration_name,
@@ -2389,6 +2424,32 @@ def admin_dashboard_integrations(request):
         logger.error(f"Sync Monitor Adobe Sign error: {_e}")
         sync_audit_integrations.append({'name': 'Adobe Sign', 'key': 'adobe_sign', 'icon': 'file-text', 'color': 'pink', 'status': 'error', 'error_message': str(_e)})
 
+    # Apollo
+    try:
+        from integrations.apollo.models import ApolloCampaign as _AC, ApolloMessage as _AM
+        _ap_total = _AM.objects.count()
+        _ap_today = _AM.objects.filter(created_at__date=_sync_audit_today).count()
+        _ap_campaigns = _AC.objects.count()
+        _ap_replied = _AM.objects.filter(replied=True).count()
+        _ap_running = SyncLog.objects.filter(integration='apollo', log_kind='batch', status='running').order_by('-started_at').first()
+        _ap_last = SyncLog.objects.filter(integration='apollo', log_kind='batch', status='completed').order_by('-completed_at').first()
+        sync_audit_integrations.append({
+            'name': 'Apollo', 'key': 'apollo', 'icon': 'send', 'color': 'blue',
+            'status': 'connected' if apollo_key_configured else 'disconnected',
+            'total_records': _ap_total, 'today_records': _ap_today,
+            'campaigns_count': _ap_campaigns, 'replied_count': _ap_replied,
+            'last_sync': _ap_last.completed_at if _ap_last else None,
+            'is_syncing': _ap_running is not None,
+            'sync_progress': _ap_running.overall_progress_percent if _ap_running else 0,
+            'sync_id': _ap_running.id if _ap_running else None,
+            'has_full_sync': False, 'has_incremental_sync': False,
+            'dashboard_url': 'apollo:dashboard',
+            'sync_audit_url': 'apollo:dashboard',
+        })
+    except Exception as _e:
+        logger.error(f"Sync Monitor Apollo error: {_e}")
+        sync_audit_integrations.append({'name': 'Apollo', 'key': 'apollo', 'icon': 'send', 'color': 'blue', 'status': 'error', 'error_message': str(_e)})
+
     # Unified sync history (last 50 batch logs across all integrations)
     sync_audit_recent_batch_logs = SyncLog.objects.filter(log_kind='batch').order_by('-started_at')[:50]
 
@@ -2461,6 +2522,16 @@ def admin_dashboard_integrations(request):
         'expense_log_pending': expense_log_pending,
         'expense_log_last_sync': expense_log_last_sync,
 
+        # Apollo
+        'apollo_campaigns_count': apollo_campaigns_count,
+        'apollo_messages_count': apollo_messages_count,
+        'apollo_replied_count': apollo_replied_count,
+        'apollo_warm_count': apollo_warm_count,
+        'apollo_key_configured': apollo_key_configured,
+        'apollo_status': apollo_status,
+        'apollo_last_sync': apollo_last_sync,
+        'apollo_sync_state': apollo_sync_state,
+
         # API Health
         'total_api_calls': total_api_calls,
         'api_uptime': api_uptime,
@@ -2488,6 +2559,10 @@ def admin_dashboard_integrations(request):
         'expense_log_settings': expense_log_settings,
         'expense_log_sync_logs': SyncLog.objects.filter(
             integration='expense_log',
+            log_kind='batch'
+        ).order_by('-started_at')[:20],
+        'apollo_sync_logs': SyncLog.objects.filter(
+            integration='apollo',
             log_kind='batch'
         ).order_by('-started_at')[:20],
         'bigin_token': bigin_token,
