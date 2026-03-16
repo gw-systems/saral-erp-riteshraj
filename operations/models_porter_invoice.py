@@ -13,8 +13,8 @@ class PorterInvoiceSession(models.Model):
     """Tracks each batch or single-edit session."""
 
     SESSION_TYPE_CHOICES = [
-        ('batch', 'Batch Processing'),
-        ('single', 'Single Edit'),
+        ('batch', 'Amount Editor'),
+        ('single', 'Details Editor'),
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),

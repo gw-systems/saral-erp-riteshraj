@@ -1,40 +1,95 @@
 {% extends "base.html" %}
 
-{% block title %}Batch Process — Porter Invoice Editor{% endblock %}
+{% block title %}Amount Editor - Porter Invoice Editor{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 py-6">
     <div class="mb-6">
         <a href="{% url 'operations:porter_invoice_dashboard' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Dashboard</a>
-        <h1 class="text-2xl font-bold text-gray-900 mt-2">Batch Process Invoices</h1>
-        <p class="text-sm text-gray-500 mt-1">Upload multiple Porter invoice PDFs for bulk escalation</p>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">Amount Editor</h1>
+        <p class="text-sm text-gray-500 mt-1">Upload multiple Porter invoice PDFs for bulk amount updates</p>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" class="space-y-6" x-data="{ submitting: false, fileCount: 0 }" @submit="submitting = true">
+    <form method="POST"
+          enctype="multipart/form-data"
+          class="space-y-6"
+          x-data="amountEditor()"
+          @submit="if (!beforeSubmit()) { $event.preventDefault(); return; } submitting = true">
         {% csrf_token %}
 
         <div class="bg-white rounded-lg shadow-sm border p-6 space-y-5">
-            <!-- PDF Files -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Invoice PDFs *</label>
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
                     <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                     <input type="file" name="pdf_files" multiple accept=".pdf" required
                            class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                           @change="fileCount = $event.target.files.length">
+                           @change="onPdfChange($event)">
                     <p class="text-xs text-gray-400 mt-2" x-show="fileCount > 0" x-text="fileCount + ' file(s) selected'"></p>
                 </div>
             </div>
 
-            <!-- Excel Mapping (Optional) -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Excel Mapping File <span class="text-gray-400">(Optional)</span></label>
                 <input type="file" name="excel_file" accept=".xlsx,.xls"
-                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
-                <p class="text-xs text-gray-400 mt-1">Excel with columns: CRN/Order Number + Total/Amount. Overrides multiplier for matched CRNs.</p>
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                       @change="onExcelChange($event)">
+                <p class="text-xs text-gray-400 mt-1">We read the first row, try to detect the CRN and New Total columns, and let you override them before processing.</p>
             </div>
 
-            <!-- Multiplier -->
+            <div x-show="excelHeaders.length > 0" x-transition class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-700">Excel column selection</p>
+                    <p class="text-xs text-gray-500 mt-1">Auto-detected columns are preselected from the first row. You can change them before running the amount edit.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CRN Column</label>
+                        <select name="excel_crn_column" x-model="selectedCrnColumn"
+                                class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                                :class="crnSelectionValid ? 'border-gray-300' : 'border-red-400 bg-red-50'"
+                                @change="updateColumnFeedback()">
+                            <option value="">Select CRN column</option>
+                            <template x-for="column in excelHeaders" :key="'crn-' + column.index">
+                                <option :value="String(column.index)" x-text="column.label"></option>
+                            </template>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1" x-show="detectedCrnColumn !== ''" x-text="'Detected: ' + columnLabel(detectedCrnColumn)"></p>
+                        <p class="text-xs text-gray-500 mt-1" x-show="detectedCrnColumn === '' && hasValue(selectedCrnColumn)" x-text="'Selected manually: ' + columnLabel(selectedCrnColumn)"></p>
+                        <p class="text-xs text-red-600 mt-1" x-show="!hasValue(selectedCrnColumn)">Not auto-detected. Please choose the CRN column manually.</p>
+                        <p class="text-xs mt-1" :class="crnSelectionValid ? 'text-green-600' : 'text-red-600'" x-show="hasValue(selectedCrnColumn) && crnValidationMessage" x-text="crnValidationMessage"></p>
+                        <p class="text-xs text-gray-500 mt-1" x-show="crnPreview.length > 0" x-text="'Preview: ' + crnPreview.join(', ')"></p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">New Total Column</label>
+                        <select name="excel_total_column" x-model="selectedTotalColumn"
+                                class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                                :class="totalSelectionValid ? 'border-gray-300' : 'border-red-400 bg-red-50'"
+                                @change="updateColumnFeedback()">
+                            <option value="">Select New Total column</option>
+                            <template x-for="column in excelHeaders" :key="'total-' + column.index">
+                                <option :value="String(column.index)" x-text="column.label"></option>
+                            </template>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1" x-show="detectedTotalColumn !== ''" x-text="'Detected: ' + columnLabel(detectedTotalColumn)"></p>
+                        <p class="text-xs text-gray-500 mt-1" x-show="detectedTotalColumn === '' && hasValue(selectedTotalColumn)" x-text="'Selected manually: ' + columnLabel(selectedTotalColumn)"></p>
+                        <p class="text-xs text-red-600 mt-1" x-show="!hasValue(selectedTotalColumn)">Not auto-detected. Please choose the New Total column manually.</p>
+                        <p class="text-xs mt-1" :class="totalSelectionValid ? 'text-green-600' : 'text-red-600'" x-show="hasValue(selectedTotalColumn) && totalValidationMessage" x-text="totalValidationMessage"></p>
+                        <p class="text-xs text-gray-500 mt-1" x-show="totalPreview.length > 0" x-text="'Preview: ' + totalPreview.join(', ')"></p>
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-500">
+                    <span class="font-medium">First-row columns:</span>
+                    <span x-text="excelHeaders.map((column) => column.label).join(' | ')"></span>
+                </div>
+            </div>
+
+            <div x-show="excelInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700" x-text="excelInfo"></div>
+            <div x-show="excelError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700" x-text="excelError"></div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Escalation Multiplier</label>
                 <input type="number" name="multiplier" value="1.20" step="0.01" min="0.01" max="10"
@@ -43,7 +98,6 @@
             </div>
         </div>
 
-        <!-- Submit -->
         <div class="flex justify-end">
             <button type="submit"
                     class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -51,7 +105,7 @@
                 <template x-if="!submitting">
                     <span class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        Process Invoices
+                        Run Amount Edit
                     </span>
                 </template>
                 <template x-if="submitting">
@@ -64,4 +118,256 @@
         </div>
     </form>
 </div>
+
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+function amountEditor() {
+    return {
+        submitting: false,
+        fileCount: 0,
+        excelHeaders: [],
+        excelRows: [],
+        selectedCrnColumn: '',
+        selectedTotalColumn: '',
+        detectedCrnColumn: '',
+        detectedTotalColumn: '',
+        excelInfo: '',
+        excelError: '',
+        excelSelected: false,
+        crnPreview: [],
+        totalPreview: [],
+        crnSelectionValid: false,
+        totalSelectionValid: false,
+        crnValidationMessage: '',
+        totalValidationMessage: '',
+        validationSampleSize: 20,
+        validationThreshold: 0.9,
+
+        onPdfChange(event) {
+            this.fileCount = event.target.files.length;
+        },
+
+        resetExcelState() {
+            this.excelHeaders = [];
+            this.excelRows = [];
+            this.selectedCrnColumn = '';
+            this.selectedTotalColumn = '';
+            this.detectedCrnColumn = '';
+            this.detectedTotalColumn = '';
+            this.excelInfo = '';
+            this.excelError = '';
+            this.excelSelected = false;
+            this.crnPreview = [];
+            this.totalPreview = [];
+            this.crnSelectionValid = false;
+            this.totalSelectionValid = false;
+            this.crnValidationMessage = '';
+            this.totalValidationMessage = '';
+        },
+
+        onExcelChange(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                this.resetExcelState();
+                return;
+            }
+
+            this.resetExcelState();
+            this.excelSelected = true;
+
+            if (typeof XLSX === 'undefined') {
+                this.excelError = 'Excel preview library did not load. Please refresh the page and try again.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (loadEvent) => {
+                try {
+                    const data = new Uint8Array(loadEvent.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '', blankrows: false });
+                    const headerRow = rows[0] || [];
+
+                    if (!headerRow.length) {
+                        this.excelError = 'The Excel file does not have a readable first row.';
+                        return;
+                    }
+
+                    this.excelHeaders = headerRow.map((value, index) => ({
+                        index,
+                        label: this.formatColumnLabel(value, index),
+                    }));
+                    this.excelRows = rows;
+
+                    this.detectedCrnColumn = this.detectColumn(headerRow, [
+                        'crn',
+                        'crn no',
+                        'crn number',
+                        'order id',
+                        'order no',
+                        'order number',
+                        'invoice id',
+                        'invoice no',
+                        'invoice number',
+                    ]);
+                    this.detectedTotalColumn = this.detectColumn(headerRow, [
+                        'new total',
+                        'total amount',
+                        'total',
+                        'amount',
+                        'price',
+                        'fare',
+                    ]);
+                    this.selectedCrnColumn = this.detectedCrnColumn;
+                    this.selectedTotalColumn = this.detectedTotalColumn;
+                    this.updateColumnFeedback();
+
+                    if (this.detectedCrnColumn !== '' && this.detectedTotalColumn !== '') {
+                        this.excelInfo = 'CRN and New Total columns were auto-detected from the first row. You can still change them above.';
+                    } else {
+                        this.excelInfo = 'We could not confidently detect both columns. Please choose the CRN and New Total columns below.';
+                    }
+                } catch (error) {
+                    this.excelError = 'Could not read the Excel file. Please upload a valid .xlsx or .xls file.';
+                }
+            };
+
+            reader.onerror = () => {
+                this.excelError = 'Could not read the selected Excel file.';
+            };
+
+            reader.readAsArrayBuffer(file);
+        },
+
+        formatColumnLabel(value, index) {
+            const text = String(value || '').trim();
+            return text ? 'Column ' + (index + 1) + ': ' + text : 'Column ' + (index + 1) + ': (blank header)';
+        },
+
+        normaliseHeader(value) {
+            return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        },
+
+        detectColumn(headerRow, candidates) {
+            for (let index = 0; index < headerRow.length; index += 1) {
+                const value = this.normaliseHeader(headerRow[index]);
+                if (candidates.some((candidate) => value.includes(candidate))) {
+                    return String(index);
+                }
+            }
+            return '';
+        },
+
+        columnLabel(indexValue) {
+            const column = this.excelHeaders.find((item) => String(item.index) === String(indexValue));
+            return column ? column.label : 'Column ' + (Number(indexValue) + 1);
+        },
+
+        collectNonEmptySamples(indexValue, sampleSize) {
+            if (!this.hasValue(indexValue) || !this.excelRows.length) {
+                return [];
+            }
+
+            const numericIndex = Number(indexValue);
+            const samples = [];
+            for (let rowIndex = 1; rowIndex < this.excelRows.length; rowIndex += 1) {
+                const row = this.excelRows[rowIndex] || [];
+                const value = row[numericIndex];
+                if (value === undefined || value === null || String(value).trim() === '') {
+                    continue;
+                }
+                samples.push(String(value).trim());
+                if (samples.length >= sampleSize) {
+                    break;
+                }
+            }
+            return samples;
+        },
+
+        looksLikeCrn(value) {
+            let text = String(value || '').trim().toUpperCase();
+            if (text.endsWith('.0')) {
+                text = text.slice(0, -2);
+            }
+            return text.startsWith('CRN') && text.length > 3;
+        },
+
+        updateColumnFeedback() {
+            const crnSamples = this.collectNonEmptySamples(this.selectedCrnColumn, this.validationSampleSize);
+            const totalSamples = this.collectNonEmptySamples(this.selectedTotalColumn, this.validationSampleSize);
+
+            this.crnPreview = crnSamples.slice(0, 5);
+            this.totalPreview = totalSamples.slice(0, 5);
+
+            if (!this.hasValue(this.selectedCrnColumn)) {
+                this.crnSelectionValid = false;
+                this.crnValidationMessage = '';
+            } else if (!crnSamples.length) {
+                this.crnSelectionValid = false;
+                this.crnValidationMessage = 'No non-empty sample values found in this column.';
+            } else {
+                const validCount = crnSamples.filter((value) => this.looksLikeCrn(value)).length;
+                const requiredCount = Math.max(1, Math.ceil(crnSamples.length * this.validationThreshold));
+                this.crnSelectionValid = validCount >= requiredCount;
+                this.crnValidationMessage =
+                    validCount + '/' + crnSamples.length + ' sampled values start with CRN. Need ' + requiredCount + ' or more.';
+            }
+
+            if (!this.hasValue(this.selectedTotalColumn)) {
+                this.totalSelectionValid = false;
+                this.totalValidationMessage = '';
+            } else if (!totalSamples.length) {
+                this.totalSelectionValid = false;
+                this.totalValidationMessage = 'No non-empty sample values found in this column.';
+            } else {
+                const validCount = totalSamples.filter((value) => this.looksLikeAmount(value)).length;
+                const requiredCount = Math.max(1, Math.ceil(totalSamples.length * this.validationThreshold));
+                this.totalSelectionValid = validCount >= requiredCount;
+                this.totalValidationMessage =
+                    validCount + '/' + totalSamples.length + ' sampled values look numeric. Need ' + requiredCount + ' or more.';
+            }
+        },
+
+        looksLikeAmount(value) {
+            const text = String(value || '').trim().replace(/,/g, '');
+            return text !== '' && !Number.isNaN(Number(text));
+        },
+
+        hasValue(value) {
+            return value !== '' && value !== null && value !== undefined;
+        },
+
+        beforeSubmit() {
+            this.excelError = '';
+
+            if (!this.excelSelected) {
+                return true;
+            }
+
+            if (!this.excelHeaders.length) {
+                this.excelError = 'Please wait for the Excel file to load before submitting.';
+                return false;
+            }
+
+            if (!this.hasValue(this.selectedCrnColumn) || !this.hasValue(this.selectedTotalColumn)) {
+                this.excelError = 'Please select both the CRN column and the New Total column.';
+                return false;
+            }
+
+            this.updateColumnFeedback();
+            if (!this.crnSelectionValid) {
+                this.excelError = 'Selected CRN column failed validation. At least 90% of the first 20 non-empty values must start with CRN.';
+                return false;
+            }
+            if (!this.totalSelectionValid) {
+                this.excelError = 'Selected New Total column failed validation. At least 90% of the first 20 non-empty values must be numeric.';
+                return false;
+            }
+
+            return true;
+        },
+    };
+}
+</script>
 {% endblock %}
