@@ -1,0 +1,8 @@
+{
+  "base_diesel_price": "90.00",
+  "default_servicable_csv": "BlueDart_Servicable Pincodes.csv",
+  "diesel_price_current": "90.00",
+  "escalation_rate": "0.20",
+  "fuel_surcharge_ratio": "0.625",
+  "gst_rate": "0.18"
+}

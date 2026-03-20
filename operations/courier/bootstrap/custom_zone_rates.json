@@ -1,0 +1,1352 @@
+[
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "7.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "10.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "11.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "7.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "8.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "8.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "8.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "9.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "10.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "12.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "15.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "10.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "11.00",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "12.50",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "CTL",
+    "rate_per_kg": "10.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "9.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "5.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "6.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "10.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "10.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "10.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "11.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "8.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "9.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "11.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "9.50",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "11.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "12.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "15.50",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E1",
+    "rate_per_kg": "12.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "11.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "6.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "6.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "12.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "12.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "12.50",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "13.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "9.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "10.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "12.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "14.50",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "13.50",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "13.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "15.50",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "E2",
+    "rate_per_kg": "14.50",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "8.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "14.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "16.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "6.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "6.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "6.50",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "8.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "9.00",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "10.00",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "12.00",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "17.50",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "11.50",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "12.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "13.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ1",
+    "rate_per_kg": "8.50",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "8.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "14.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "16.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "6.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "6.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "6.50",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "8.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "9.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "10.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "12.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "17.50",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "11.50",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "12.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "13.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "GJ2",
+    "rate_per_kg": "8.50",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "9.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "14.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "16.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "5.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "5.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "5.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "6.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "11.00",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "11.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "13.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "18.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "10.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "10.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "12.50",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH1",
+    "rate_per_kg": "7.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "9.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "14.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "17.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "6.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "7.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "6.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "6.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "11.00",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "11.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "13.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "20.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "10.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "10.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "13.50",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "MH2",
+    "rate_per_kg": "8.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "9.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "12.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "13.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "7.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "8.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "9.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "10.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "5.00",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "5.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "7.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "15.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "11.50",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "12.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "15.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N1",
+    "rate_per_kg": "11.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "10.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "12.50",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "13.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "8.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "9.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "10.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "11.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "5.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "6.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "8.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "16.50",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "12.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "13.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "15.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N2",
+    "rate_per_kg": "12.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "10.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "12.50",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "13.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "8.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "9.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "10.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "11.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "5.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "6.00",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "5.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "18.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "13.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "13.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "16.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "N3",
+    "rate_per_kg": "12.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.40",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "6.90",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "14.30",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "10.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "19.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "NE1",
+    "rate_per_kg": "18.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "9.00",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "12.50",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "14.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "8.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "9.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "7.50",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "8.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "10.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "12.00",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "14.00",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "18.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "5.50",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "6.00",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "7.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S1",
+    "rate_per_kg": "10.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "10.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "12.50",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "14.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "8.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "9.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "8.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "9.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "12.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "13.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "15.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "18.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "6.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "6.00",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "9.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S2",
+    "rate_per_kg": "10.00",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "11.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "13.50",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "15.00",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "9.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "10.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "9.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "10.00",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "13.50",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "14.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "16.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "19.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "6.50",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "7.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "6.00",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "S3",
+    "rate_per_kg": "11.50",
+    "to_zone": "W3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "10.50",
+    "to_zone": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "15.00",
+    "to_zone": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "17.50",
+    "to_zone": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "6.50",
+    "to_zone": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "7.50",
+    "to_zone": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "6.00",
+    "to_zone": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "7.50",
+    "to_zone": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "12.00",
+    "to_zone": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "12.50",
+    "to_zone": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "14.50",
+    "to_zone": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "18.00",
+    "to_zone": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "11.00",
+    "to_zone": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "11.50",
+    "to_zone": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "13.50",
+    "to_zone": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "from_zone": "W3",
+    "rate_per_kg": "6.00",
+    "to_zone": "W3"
+  }
+]

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.urls import include
 from . import views
 from . import views_adhoc
 from . import views_monthly_billing
@@ -129,4 +130,11 @@ urlpatterns = [
     path('porter-invoices/file/<int:file_id>/download/', views_porter_invoice.porter_invoice_download_file, name='porter_invoice_download_file'),
     path('porter-invoices/api/extract/', views_porter_invoice.porter_invoice_extract_api, name='porter_invoice_extract_api'),
     path('porter-invoices/api/edit/', views_porter_invoice.porter_invoice_edit_api, name='porter_invoice_edit_api'),
+    path('porter-invoices/api/edit-upload/', views_porter_invoice.porter_invoice_edit_upload_api, name='porter_invoice_edit_upload_api'),
+    path('porter-invoices/api/drive/subfolders/', views_porter_invoice.porter_invoice_drive_subfolders_api, name='porter_invoice_drive_subfolders_api'),
+    path('porter-invoices/api/drive/upload-batch/', views_porter_invoice.porter_invoice_drive_upload_batch_api, name='porter_invoice_drive_upload_batch_api'),
+    path(
+        'courier/',
+        include(('operations.courier.urls', 'courier'), namespace='courier'),
+    ),
 ]

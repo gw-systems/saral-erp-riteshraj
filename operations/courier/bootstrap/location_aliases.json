@@ -1,0 +1,137 @@
+[
+  {
+    "alias": "amd",
+    "category": "city",
+    "standard_name": "ahmedabad"
+  },
+  {
+    "alias": "bangalore",
+    "category": "city",
+    "standard_name": "bengaluru"
+  },
+  {
+    "alias": "bombay",
+    "category": "city",
+    "standard_name": "mumbai"
+  },
+  {
+    "alias": "calcutta",
+    "category": "city",
+    "standard_name": "kolkata"
+  },
+  {
+    "alias": "navi mumbai",
+    "category": "city",
+    "standard_name": "mumbai"
+  },
+  {
+    "alias": "vapi ahmedabad",
+    "category": "city",
+    "standard_name": "ahmedabad"
+  },
+  {
+    "alias": "dl",
+    "category": "state",
+    "standard_name": "delhi"
+  },
+  {
+    "alias": "gj",
+    "category": "state",
+    "standard_name": "gujarat"
+  },
+  {
+    "alias": "guj",
+    "category": "state",
+    "standard_name": "gujarat"
+  },
+  {
+    "alias": "gujrat",
+    "category": "state",
+    "standard_name": "gujarat"
+  },
+  {
+    "alias": "ka",
+    "category": "state",
+    "standard_name": "karnataka"
+  },
+  {
+    "alias": "karnatka",
+    "category": "state",
+    "standard_name": "karnataka"
+  },
+  {
+    "alias": "madhyapradesh",
+    "category": "state",
+    "standard_name": "madhya pradesh"
+  },
+  {
+    "alias": "mah",
+    "category": "state",
+    "standard_name": "maharashtra"
+  },
+  {
+    "alias": "maharastra",
+    "category": "state",
+    "standard_name": "maharashtra"
+  },
+  {
+    "alias": "mh",
+    "category": "state",
+    "standard_name": "maharashtra"
+  },
+  {
+    "alias": "mp",
+    "category": "state",
+    "standard_name": "madhya pradesh"
+  },
+  {
+    "alias": "nct",
+    "category": "state",
+    "standard_name": "delhi"
+  },
+  {
+    "alias": "new delhi",
+    "category": "state",
+    "standard_name": "delhi"
+  },
+  {
+    "alias": "tamilnadu",
+    "category": "state",
+    "standard_name": "tamil nadu"
+  },
+  {
+    "alias": "telengana",
+    "category": "state",
+    "standard_name": "telangana"
+  },
+  {
+    "alias": "tg",
+    "category": "state",
+    "standard_name": "telangana"
+  },
+  {
+    "alias": "tn",
+    "category": "state",
+    "standard_name": "tamil nadu"
+  },
+  {
+    "alias": "up",
+    "category": "state",
+    "standard_name": "uttar pradesh"
+  },
+  {
+    "alias": "uttarpradesh",
+    "category": "state",
+    "standard_name": "uttar pradesh"
+  },
+  {
+    "alias": "wb",
+    "category": "state",
+    "standard_name": "west bengal"
+  },
+  {
+    "alias": "westbangal",
+    "category": "state",
+    "standard_name": "west bengal"
+  }
+]

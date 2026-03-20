@@ -1,0 +1,105 @@
+{
+  "counts": {
+    "city_routes": 149,
+    "courier_zone_rates": 1072,
+    "couriers": 62,
+    "custom_zone_rates": 225,
+    "custom_zones": 36,
+    "delivery_slabs": 0,
+    "fee_structures": 62,
+    "ftl_rates": 130,
+    "fuel_configurations": 62,
+    "location_aliases": 27,
+    "pincodes": 19586,
+    "routing_logics": 62,
+    "service_constraints": 62,
+    "serviceable_pincodes": 25707,
+    "system_config": 1,
+    "zone_rules": 19
+  },
+  "exported_at": "2026-03-18T07:22:06.137509+00:00",
+  "files": {
+    "city_routes.json": {
+      "dataset": "city_routes",
+      "record_count": 149,
+      "sha256": "39cc78269d6b66fb71f1a9a150c5020df9ad001151b07344e5d18e24da6b3b69"
+    },
+    "courier_zone_rates.jsonl": {
+      "dataset": "courier_zone_rates",
+      "record_count": 1072,
+      "sha256": "124264a521aab11bc83d020da21d1062e99e8564e9700f80f94688cdfa06f091"
+    },
+    "couriers.json": {
+      "dataset": "couriers",
+      "record_count": 62,
+      "sha256": "a2f2103d1852c9ee5967470ea2865d33578e046e547cc15d3db9ff5b3477374f"
+    },
+    "custom_zone_rates.json": {
+      "dataset": "custom_zone_rates",
+      "record_count": 225,
+      "sha256": "14338fed2c5164063033c071ab53695506f3480d9f6f733db305abe40c55ebfe"
+    },
+    "custom_zones.json": {
+      "dataset": "custom_zones",
+      "record_count": 36,
+      "sha256": "0b31f0bbae2a5efb22ef2be95d60bb3a13355ce3014904a442745880684fd0ae"
+    },
+    "delivery_slabs.json": {
+      "dataset": "delivery_slabs",
+      "record_count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "fee_structures.json": {
+      "dataset": "fee_structures",
+      "record_count": 62,
+      "sha256": "9156f7b207d8d0bdc5284cdfe2c51fd7fb9ee1a018f5376c77536c6f0aa2f2a8"
+    },
+    "ftl_rates.json": {
+      "dataset": "ftl_rates",
+      "record_count": 130,
+      "sha256": "46a5844ec2a6d3449fef0ca0d18cbb87a1187092013a274737665fb475cba7fa"
+    },
+    "fuel_configurations.json": {
+      "dataset": "fuel_configurations",
+      "record_count": 62,
+      "sha256": "f228488f8b5ded3584691deedb725644049291b52e004264b6703162977f0b8b"
+    },
+    "location_aliases.json": {
+      "dataset": "location_aliases",
+      "record_count": 27,
+      "sha256": "838d1909191d4ea110fd2a73a2039497e021198d82ec91a4d7256d25c134bf36"
+    },
+    "pincodes.jsonl.gz": {
+      "dataset": "pincodes",
+      "record_count": 19586,
+      "sha256": "93138ab82bf83ef62582da46968c10668df27036a6bb1ab9a219746a9e44f7f3"
+    },
+    "routing_logics.json": {
+      "dataset": "routing_logics",
+      "record_count": 62,
+      "sha256": "977af74f54e38765176eed4c6e0f6f032ffa70c61f0c1aff7a789d114de22cd9"
+    },
+    "service_constraints.json": {
+      "dataset": "service_constraints",
+      "record_count": 62,
+      "sha256": "9fb92f7314310dd47519444d53c4b4be4c52d5365ac66e5d784ebb14e6335ef1"
+    },
+    "serviceable_pincodes.jsonl.gz": {
+      "dataset": "serviceable_pincodes",
+      "record_count": 25707,
+      "sha256": "ff6c2efbd47032d82dd0684da6cff89722061aae6606e97c862c94c32a503d11"
+    },
+    "system_config.json": {
+      "dataset": "system_config",
+      "record_count": 1,
+      "sha256": "1c67e7749a954447d623cf3cb57d11b08efdebc0a2fe24c46e18b5679d2e38a2"
+    },
+    "zone_rules.json": {
+      "dataset": "zone_rules",
+      "record_count": 19,
+      "sha256": "9e5ee10da579e25b34e81f92e8dee2673bc026af7f5b69f3a6d7475b11a84fea"
+    }
+  },
+  "snapshot_version": 1,
+  "source_app": "courier"
+}

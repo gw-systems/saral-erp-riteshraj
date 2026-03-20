@@ -1,0 +1,271 @@
+<div id="courier-toast-container" class="pointer-events-none fixed right-4 top-4 z-[120] space-y-2"></div>
+
+<div id="courier-order-modal" class="courier-modal courier-drawer-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-3 sm:p-4">
+    <div class="courier-drawer-frame">
+        <div class="courier-drawer-panel courier-drawer-panel--wide">
+            <div class="courier-drawer-header">
+                <div class="min-w-0">
+                    <h2 id="courier-order-modal-title" class="text-xl font-semibold text-gray-900">Create Order</h2>
+                    <p class="mt-1 text-sm text-gray-500">Draft orders stay editable until booked. Everything below uses the existing ERP order flow.</p>
+                </div>
+                <button type="button" class="courier-drawer-close rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-order-modal">X</button>
+            </div>
+            <form id="courier-order-form" class="courier-drawer-form" novalidate>
+                <input type="hidden" id="courier-order-edit-id">
+                <div class="courier-drawer-body">
+                    <section class="courier-form-card space-y-4">
+                        <div class="courier-form-card-head">
+                            <h3 class="courier-form-card-title">Recipient Details</h3>
+                            <p class="courier-form-card-copy">Capture the consignee contact and delivery location exactly as the carrier should see it.</p>
+                        </div>
+                        <div class="courier-form-card-grid">
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Recipient Name</span><input id="courier-order-recipient-name" name="recipient_name" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Recipient Contact</span><input id="courier-order-recipient-contact" name="recipient_contact" required maxlength="10" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Recipient Address</span><textarea id="courier-order-recipient-address" name="recipient_address" rows="2" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Recipient Pincode</span><input id="courier-order-recipient-pincode" name="recipient_pincode" required maxlength="6" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Recipient City</span><input id="courier-order-recipient-city" name="recipient_city" readonly tabindex="-1" aria-readonly="true" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-600 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Recipient State</span><input id="courier-order-recipient-state" name="recipient_state" readonly tabindex="-1" aria-readonly="true" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-600 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Recipient Email</span><input id="courier-order-recipient-email" name="recipient_email" type="email" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                        </div>
+                    </section>
+
+                    <div class="courier-form-card-row">
+                        <section class="courier-form-card space-y-4">
+                            <div class="courier-form-card-head">
+                                <h3 class="courier-form-card-title">Sender / Origin Details</h3>
+                                <p class="courier-form-card-copy">Link the shipment back to the right warehouse and pickup identity before booking.</p>
+                            </div>
+                            <div class="courier-form-card-grid">
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Sender Pincode</span><input id="courier-order-sender-pincode" name="sender_pincode" required maxlength="6" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Sender Name</span><input id="courier-order-sender-name" name="sender_name" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Warehouse</span><select id="courier-order-warehouse" name="warehouse" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select></label>
+                                <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Sender Address</span><textarea id="courier-order-sender-address" name="sender_address" rows="2" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                                <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Sender Phone</span><input id="courier-order-sender-phone" name="sender_phone" maxlength="10" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            </div>
+                        </section>
+
+                        <section class="courier-form-card space-y-4">
+                            <div class="courier-form-card-head">
+                                <h3 class="courier-form-card-title">Parcel Details</h3>
+                                <p class="courier-form-card-copy">These measurements drive pricing, volumetric checks, and carrier eligibility.</p>
+                            </div>
+                            <div class="courier-form-card-grid">
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Weight (kg)</span><input id="courier-order-weight" name="weight" type="number" min="0.01" step="0.01" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Length (cm)</span><input id="courier-order-length" name="length" type="number" min="0.1" step="0.1" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Width (cm)</span><input id="courier-order-width" name="width" type="number" min="0.1" step="0.1" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Height (cm)</span><input id="courier-order-height" name="height" type="number" min="0.1" step="0.1" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="courier-form-card space-y-4">
+                        <div class="courier-form-card-head">
+                            <h3 class="courier-form-card-title">Commercial / Order Metadata</h3>
+                            <p class="courier-form-card-copy">Keep payment, catalog, and reference details together so the order stays easy to review later.</p>
+                        </div>
+                        <div class="courier-form-card-grid">
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Payment Mode</span><select id="courier-order-payment-mode" name="payment_mode" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"><option value="prepaid">Prepaid</option><option value="cod">COD</option></select></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Order Value</span><input id="courier-order-value" name="order_value" type="number" min="0" step="0.01" value="0" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Item Type</span><input id="courier-order-item-type" name="item_type" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">SKU</span><input id="courier-order-sku" name="sku" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Quantity</span><input id="courier-order-quantity" name="quantity" type="number" min="1" step="1" value="1" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Item Amount</span><input id="courier-order-item-amount" name="item_amount" type="number" min="0" step="0.01" value="0" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+
+
+                        </div>
+                    </section>
+                </div>
+
+                <div class="courier-drawer-footer">
+                    <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-order-modal">Cancel</button>
+                    <button type="submit" id="courier-order-submit" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">Save Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="courier-ftl-modal" class="courier-modal courier-drawer-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-3 sm:p-4">
+    <div class="courier-drawer-frame">
+        <div class="courier-drawer-panel">
+            <div class="courier-drawer-header">
+                <div class="min-w-0">
+                    <h2 id="courier-ftl-modal-title" class="text-xl font-semibold text-gray-900">Create FTL Order</h2>
+                    <p class="mt-1 text-sm text-gray-500">Container pricing stays live inside the drawer so route choices remain visible while you complete the booking.</p>
+                </div>
+                <button type="button" class="courier-drawer-close rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-ftl-modal">X</button>
+            </div>
+            <form id="courier-ftl-form" class="courier-drawer-form">
+                <input type="hidden" id="courier-ftl-edit-id">
+                <div class="courier-drawer-body">
+                    <div class="courier-form-card-row">
+                        <section class="courier-form-card space-y-4">
+                            <div class="courier-form-card-head">
+                                <h3 class="courier-form-card-title">Contact Details</h3>
+                                <p class="courier-form-card-copy">Primary customer details for the FTL request.</p>
+                            </div>
+                            <div class="courier-form-card-grid">
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Name</span><input id="courier-ftl-name" name="name" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Phone</span><input id="courier-ftl-phone" name="phone" required maxlength="10" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Email</span><input id="courier-ftl-email" name="email" type="email" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                                <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Notes</span><textarea id="courier-ftl-notes" name="notes" rows="2" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                            </div>
+                        </section>
+
+                        <section class="courier-form-card space-y-4">
+                            <div class="courier-form-card-head">
+                                <h3 class="courier-form-card-title">Route & Shipment</h3>
+                                <p class="courier-form-card-copy">Pick the lane and container so the live route matrix can calculate commercials.</p>
+                            </div>
+                            <div class="courier-form-card-grid">
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Source City</span><select id="courier-ftl-source-city" name="source_city" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Destination City</span><select id="courier-ftl-destination-city" name="destination_city" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select></label>
+                                <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Container Type</span><select id="courier-ftl-container-type" name="container_type" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select></label>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div id="courier-ftl-pricing-preview" class="hidden courier-form-card rounded-2xl border border-blue-100 bg-blue-50 p-4"></div>
+
+                    <section class="courier-form-card space-y-4">
+                        <div class="courier-form-card-head">
+                            <h3 class="courier-form-card-title">Origin Details</h3>
+                            <p class="courier-form-card-copy">Pickup location details used for scheduling and vehicle placement.</p>
+                        </div>
+                        <div class="courier-form-card-grid">
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Source Pincode</span><input id="courier-ftl-source-pincode" name="source_pincode" maxlength="6" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <div class="hidden md:block"></div>
+                            <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Source Address</span><textarea id="courier-ftl-source-address" name="source_address" rows="2" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                        </div>
+                    </section>
+
+                    <section class="courier-form-card space-y-4">
+                        <div class="courier-form-card-head">
+                            <h3 class="courier-form-card-title">Destination Details</h3>
+                            <p class="courier-form-card-copy">Delivery lane address details for the destination branch or drop point.</p>
+                        </div>
+                        <div class="courier-form-card-grid">
+                            <label class="courier-form-field space-y-1"><span class="text-sm font-medium text-gray-700">Destination Pincode</span><input id="courier-ftl-destination-pincode" name="destination_pincode" maxlength="6" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                            <div class="hidden md:block"></div>
+                            <label class="courier-form-field space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Destination Address</span><textarea id="courier-ftl-destination-address" name="destination_address" rows="2" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="courier-drawer-footer">
+                    <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-ftl-modal">Cancel</button>
+                    <button type="submit" id="courier-ftl-submit" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">Save FTL Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="courier-warehouse-modal" class="courier-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-4">
+    <div class="mx-auto flex min-h-full max-w-2xl items-center justify-center">
+        <div class="w-full max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <div class="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Add Warehouse</h2>
+                    <p class="text-sm text-gray-500">This creates a courier-only warehouse used for booking and sync.</p>
+                </div>
+                <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-warehouse-modal">X</button>
+            </div>
+            <form id="courier-warehouse-form" class="space-y-4 p-6">
+                <div class="grid gap-4 md:grid-cols-2">
+                    <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Warehouse Name</span><input name="name" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                    <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Contact Name</span><input name="contact_name" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                    <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Contact Number</span><input name="contact_no" required maxlength="10" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                    <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Pincode</span><input name="pincode" required maxlength="6" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                    <label class="space-y-1"><span class="text-sm font-medium text-gray-700">City</span><input name="city" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                    <label class="space-y-1"><span class="text-sm font-medium text-gray-700">State</span><input name="state" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                    <label class="space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Address</span><textarea name="address" rows="2" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                    <label class="space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">Address 2</span><textarea name="address_2" rows="2" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea></label>
+                    <label class="space-y-1 md:col-span-2"><span class="text-sm font-medium text-gray-700">GST Number</span><input name="gst_number" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-gray-200 pt-4">
+                    <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-warehouse-modal">Cancel</button>
+                    <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">Save Warehouse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="courier-warehouse-link-modal" class="courier-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-4">
+    <div class="mx-auto flex min-h-full max-w-lg items-center justify-center">
+        <div class="w-full rounded-3xl bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Link Existing Shipdaak IDs</h2>
+                    <p id="courier-warehouse-link-name" class="text-sm text-gray-500">-</p>
+                </div>
+                <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-warehouse-link-modal">X</button>
+            </div>
+            <form id="courier-warehouse-link-form" class="space-y-4 p-6">
+                <input id="courier-warehouse-link-id" type="hidden">
+                <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Shipdaak Pickup ID</span><input id="courier-warehouse-link-pickup" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Shipdaak RTO ID</span><input id="courier-warehouse-link-rto" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                <div class="flex justify-end gap-3 border-t border-gray-200 pt-4">
+                    <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-warehouse-link-modal">Cancel</button>
+                    <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">Link IDs</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="courier-warehouse-import-modal" class="courier-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-4">
+    <div class="mx-auto flex min-h-full max-w-4xl items-center justify-center">
+        <div class="w-full max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <div class="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Bulk Import Warehouses</h2>
+                    <p class="text-sm text-gray-500">Review the JSON payload, then push new local warehouses to Shipdaak in bulk.</p>
+                </div>
+                <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-warehouse-import-modal">X</button>
+            </div>
+            <div class="space-y-4 p-6">
+                <textarea id="courier-warehouse-import-textarea" rows="14" class="w-full rounded-2xl border border-gray-300 px-4 py-3 font-mono text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea>
+                <div id="courier-warehouse-import-summary" class="hidden rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700"></div>
+                <div class="flex justify-end gap-3 border-t border-gray-200 pt-4">
+                    <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-warehouse-import-modal">Cancel</button>
+                    <button type="button" id="courier-warehouse-import-submit" class="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Import Warehouses</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="courier-order-details-modal" class="courier-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-4">
+    <div class="mx-auto flex min-h-full max-w-5xl items-center justify-center">
+        <div class="w-full max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <div class="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Order Details</h2>
+                    <p id="courier-order-details-subtitle" class="text-sm text-gray-500">-</p>
+                </div>
+                <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-order-details-modal">X</button>
+            </div>
+            <div id="courier-order-details-content" class="grid gap-4 p-6 md:grid-cols-2"></div>
+        </div>
+    </div>
+</div>
+
+<div id="courier-tracking-modal" class="courier-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-4">
+    <div class="mx-auto flex min-h-full max-w-2xl items-center justify-center">
+        <div class="w-full max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <div class="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Tracking Timeline</h2>
+                    <p id="courier-tracking-subtitle" class="text-sm text-gray-500">-</p>
+                </div>
+                <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-tracking-modal">X</button>
+            </div>
+            <div id="courier-tracking-content" class="space-y-4 p-6"></div>
+        </div>
+    </div>
+</div>
+
+
+

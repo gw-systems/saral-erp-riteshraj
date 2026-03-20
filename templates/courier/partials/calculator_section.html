@@ -1,0 +1,162 @@
+<section class="courier-calc-shell">
+    <div class="courier-calc-toolbar">
+        <div class="courier-calc-tabs" role="tablist" aria-label="Courier calculator modes">
+            <button type="button" class="courier-calc-tab is-active" data-calc-tab="b2c" aria-pressed="true">B2C (&lt; 20kg)</button>
+            <button type="button" class="courier-calc-tab" data-calc-tab="b2b" aria-pressed="false">B2B (&gt;= 20kg)</button>
+            <button type="button" class="courier-calc-tab" data-calc-tab="ftl" aria-pressed="false">FTL Rate</button>
+        </div>
+
+        <div class="courier-calc-ratecard-tools">
+            <div id="courier-ratecard-picker" class="courier-calc-ratecard-picker">
+                <button type="button" id="courier-ratecard-trigger" class="courier-calc-select-button">Select couriers</button>
+                <div id="courier-ratecard-dropdown" class="courier-calc-dropdown is-hidden">
+                    <div class="courier-calc-dropdown-head">
+                        <span class="courier-calc-dropdown-title">Rate Card Families</span>
+                        <div class="courier-calc-dropdown-actions">
+                            <button type="button" id="courier-ratecard-select-all" class="courier-calc-dropdown-link">Select all</button>
+                            <button type="button" id="courier-ratecard-clear-all" class="courier-calc-dropdown-link">Clear</button>
+                        </div>
+                    </div>
+                    <div id="courier-ratecard-option-list" class="courier-calc-option-list"></div>
+                </div>
+            <button type="button" id="courier-ratecard-download" class="courier-calc-download-button">B2C Rate Card</button>
+        </div>
+    </div>
+
+    <div id="courier-regular-panel" class="courier-calc-panel">
+        <div class="courier-calc-panel-head">
+            <div>
+                <h2 class="courier-calc-title">Rate Shipment Calculator</h2>
+            </div>
+
+        </div>
+        <form id="courier-regular-form" novalidate>
+            <div class="courier-calc-form-grid">
+                <div class="courier-calc-field">
+                    <label for="courier-source-pincode">Source Pincode</label>
+                    <input id="courier-source-pincode" name="source_pincode" type="text" inputmode="numeric" maxlength="6" class="courier-calc-input" placeholder="e.g. 400001" autocomplete="off">
+                </div>
+                <div class="courier-calc-field">
+                    <label for="courier-dest-pincode">Destination Pincode</label>
+                    <input id="courier-dest-pincode" name="dest_pincode" type="text" inputmode="numeric" maxlength="6" class="courier-calc-input" placeholder="e.g. 110001" autocomplete="off">
+                </div>
+
+            <div class="courier-calc-boxes">
+                <div class="courier-calc-boxes-head">
+                    <div>
+                        <p class="courier-calc-boxes-title">Shipment Details (Boxes)</p>
+                    </div>
+                    <div class="courier-calc-boxes-controls">
+                        <div class="courier-calc-inline-field">
+                            <span class="courier-calc-inline-label">Category:</span>
+                            <select id="courier-category-filter" class="courier-calc-select">
+                                <option value="all">All</option>
+                                <option value="Surface">Surface</option>
+                                <option value="Air">Air</option>
+                                <option value="Heavy Surface">Heavy Surface</option>
+                                <option value="Documents">Documents</option>
+                                <option value="NDD Surface">NDD Surface</option>
+                                <option value="NDD Heavy Surface">NDD Heavy Surface</option>
+                                <option value="RVP">RVP</option>
+                            </select>
+                        </div>
+                        <div class="courier-calc-inline-field">
+                            <span class="courier-calc-inline-label">Unit:</span>
+                            <select id="courier-dimension-unit" class="courier-calc-select">
+                                <option value="cm">cm</option>
+                                <option value="mm">mm</option>
+                                <option value="m">m</option>
+                                <option value="in">in</option>
+                                <option value="ft">ft</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="courier-box-list" class="courier-calc-box-list"></div>
+
+                <button type="button" id="courier-add-box" class="courier-calc-ghost-button">+ Add Another Box</button>
+
+                <div class="courier-calc-summary-row">
+                    <div>
+                        <div class="courier-calc-summary-label">Total Applicable Weight</div>
+                        <div id="courier-total-applicable-weight" class="courier-calc-summary-value">0.00 kg</div>
+                    </div>
+                    <div class="courier-calc-pill-row">
+                        <span class="courier-calc-pill">Volumetric divisor: 5000</span>
+                    </div>
+                </div>
+
+            <div class="courier-calc-form-grid" style="margin-top: 1.25rem;">
+                <div class="courier-calc-field">
+                    <label for="courier-payment-mode">Payment Mode</label>
+                    <select id="courier-payment-mode" class="courier-calc-select">
+                        <option value="Prepaid">Prepaid</option>
+                        <option value="COD">COD</option>
+                    </select>
+                </div>
+                <div class="courier-calc-field">
+                    <label for="courier-total-order-value">Total Order Value (Auto-calc)</label>
+                    <input id="courier-total-order-value" class="courier-calc-input" type="text" value="0.00" readonly>
+                </div>
+
+            <div style="margin-top: 1.4rem;">
+                <button type="submit" class="courier-calc-primary-button">Calculate Rates</button>
+        </form>
+    </div>
+
+    <div id="courier-ftl-panel" class="courier-calc-panel courier-calc-hidden">
+        <div class="courier-calc-panel-head">
+            <div>
+                <h2 class="courier-calc-title">FTL Rate Calculator</h2>
+                <p class="courier-calc-subtitle">Choose a source, destination, and truck type to calculate the ERP FTL price.</p>
+        </div>
+
+        <form id="courier-ftl-form" novalidate>
+            <div class="courier-calc-ftl-grid">
+                <div class="courier-calc-field">
+                    <label for="courier-ftl-source">Source City</label>
+                    <select id="courier-ftl-source" class="courier-calc-select">
+                        <option value="">Select source city</option>
+                    </select>
+                </div>
+                <div class="courier-calc-field">
+                    <label for="courier-ftl-destination">Destination City</label>
+                    <select id="courier-ftl-destination" class="courier-calc-select">
+                        <option value="">Select destination city</option>
+                    </select>
+                </div>
+                <div class="courier-calc-field">
+                    <label for="courier-ftl-truck-type">Truck Type</label>
+                    <select id="courier-ftl-truck-type" class="courier-calc-select">
+                        <option value="">Select truck type</option>
+                    </select>
+                </div>
+
+            <div style="margin-top: 1.4rem;">
+                <button type="submit" class="courier-calc-primary-button">Calculate FTL Rate</button>
+        </form>
+    </div>
+
+    <div id="courier-regular-results-panel" class="courier-calc-panel">
+        <div class="courier-calc-results-head">
+            <div>
+                <h3 class="courier-calc-title" style="font-size: 1.2rem;">Regular Results</h3>
+                <p class="courier-calc-subtitle">Cheapest serviceable carrier first, with expandable breakdown.</p>
+        </div>
+        <div id="courier-regular-results" class="courier-calc-results-list">
+            <div class="courier-calc-empty">Run a B2C or B2B rate comparison to see carrier pricing here.</div>
+        </div>
+    </div>
+
+    <div id="courier-ftl-results-panel" class="courier-calc-panel courier-calc-hidden">
+        <div class="courier-calc-results-head">
+            <div>
+                <h3 class="courier-calc-title" style="font-size: 1.2rem;">FTL Result</h3>
+                <p class="courier-calc-subtitle">Base price, escalation, GST, and final amount.</p>
+        </div>
+        <div id="courier-ftl-results" class="courier-calc-results-list">
+            <div class="courier-calc-empty">Choose an FTL route and calculate the price to see the result here.</div>
+        </div>
+    </div>
+</section>

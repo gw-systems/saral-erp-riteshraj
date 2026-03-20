@@ -53,6 +53,9 @@ pydantic>=2.0.0
 
 # Date/time utilities (used for relative dates in agreements, billing)
 python-dateutil>=2.8.2
+djangorestframework>=3.15.2
+pandas>=2.2.0
+reportlab>=4.2.0
 
 # DOCX generation (LR + local quotation generators)
 python-docx>=1.1.2

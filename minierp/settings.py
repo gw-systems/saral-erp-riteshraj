@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',  # Number formatting (intcomma, etc.)
+    'rest_framework',
 
 
     # Your apps
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'projects',
     'supply',
     'operations',
+    'operations.courier.apps.CourierConfig',
     'gmail',  # Gmail OAuth2 integration
     'integrations',
     'integrations.bigin',
@@ -263,6 +265,20 @@ APP_NAME = "Saral"
 APP_VERSION = "v1.0"
 APP_FULL_NAME = f"{APP_NAME} {APP_VERSION}"
 
+# Courier / logistics integration
+COURIER_BUSINESS_RULES = {
+    'VOLUMETRIC_DIVISOR': config('COURIER_VOLUMETRIC_DIVISOR', default=5000, cast=int),
+}
+MAX_RATE_UPLOAD_SIZE_BYTES = config('MAX_RATE_UPLOAD_SIZE_BYTES', default=10 * 1024 * 1024, cast=int)
+SHIPDAAK_API_BASE_URL = config('SHIPDAAK_API_BASE_URL', default='https://api.shipdaak.com')
+SHIPDAAK_TIMEOUT_SECONDS = config('SHIPDAAK_TIMEOUT_SECONDS', default=30, cast=int)
+SHIPDAAK_EMAIL = config('SHIPDAAK_EMAIL', default='')
+SHIPDAAK_PASSWORD = config('SHIPDAAK_PASSWORD', default='')
+SHIPDAAK_ENABLE_BOOKING = config('SHIPDAAK_ENABLE_BOOKING', default=False, cast=bool)
+SHIPDAAK_REGISTER_ON_CREATE = config('SHIPDAAK_REGISTER_ON_CREATE', default=False, cast=bool)
+SHIPDAAK_LIVE_PRICING_ENABLED = config('SHIPDAAK_LIVE_PRICING_ENABLED', default=False, cast=bool)
+SHIPDAAK_LIVE_BULK_MAX_ORDERS = config('SHIPDAAK_LIVE_BULK_MAX_ORDERS', default=50, cast=int)
+
 # -----------------------------
 # Google Cloud Tasks Configuration
 # -----------------------------
@@ -422,12 +438,12 @@ if RUNNING_IN_PRODUCTION:
             GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
                 credentials_dict
             )
-            print("✅ GCS credentials loaded from environment")
+            print("GCS credentials loaded from environment")
         else:
-            print("⚠️ Warning: GCS_CREDENTIALS environment variable not set")
+            print("Warning: GCS_CREDENTIALS environment variable not set")
             GS_CREDENTIALS = None
     except Exception as e:
-        print(f"⚠️ Warning: Could not load GCS credentials: {e}")
+        print(f"Warning: Could not load GCS credentials: {e}")
         GS_CREDENTIALS = None
     
     # File URL settings
@@ -435,10 +451,10 @@ if RUNNING_IN_PRODUCTION:
     GS_FILE_OVERWRITE = False  # Don't overwrite files with same name
     GS_MAX_MEMORY_SIZE = 5242880  # 5MB - files larger than this use disk
     
-    print(f"📦 Storage backend: GCS (Production)")
+    print("Storage backend: GCS (Production)")
 else:
     # Local development: Use local filesystem
-    print(f"📦 Storage backend: Local (Development)")
+    print("Storage backend: Local (Development)")
 
 # ============================================================================
 # STORAGE BACKENDS CONFIGURATION (Django 4.2+)

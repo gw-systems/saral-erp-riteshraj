@@ -1,0 +1,436 @@
+[
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-amazon-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-bluedart-500-gms-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-bluedart-500-gms-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-documents-surface-0p25",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-surface-surface-0p25",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-delhivery-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-dtdc-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-1",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-dtdc-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-ekart-documents-surface-0p25",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-ekart-rvp-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-ekart-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-heavy-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-heavy-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-professional-surface-surface-0p25",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-professional-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shadowfax-rvp-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shadowfax-special-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shadowfax-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shree-maruti-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-shree-maruti-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-documents-surface-0p25",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-1",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-surface-surface-0p25",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "rapidshyp-xpressbees-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-ats-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-delhivery-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-delhivery-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-delhivery-surface-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-delhivery-surface-surface-2",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-delhivery-surface-surface-20",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-delhivery-surface-surface-5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-dtdc-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-dtdc-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-ekart-air-air-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-ekart-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-shadowfax-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "shipdaak-test-carrier-surface-surface-0p5",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.0000"
+  },
+  {
+    "base_price": "90.00",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "is_dynamic": false,
+    "ratio": "0.6250",
+    "surcharge_percent": "0.1000"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "standalone-blue-dart-surface-surface-10",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.5560"
+  },
+  {
+    "base_price": "0.00",
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "is_dynamic": false,
+    "ratio": "0.0000",
+    "surcharge_percent": "0.1000"
+  }
+]

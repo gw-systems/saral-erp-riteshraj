@@ -1,0 +1,182 @@
+[
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Chattishgarh",
+    "zone_code": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Madhya Pradesh",
+    "zone_code": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "vidarbha",
+    "zone_code": "CTL"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Kolkata",
+    "zone_code": "E1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Bihar",
+    "zone_code": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Jharkhand",
+    "zone_code": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Odisha",
+    "zone_code": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "West Bengal",
+    "zone_code": "E2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Baroda",
+    "zone_code": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Vapi Ahmedabad",
+    "zone_code": "GJ1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Dadra Nagal Haveli",
+    "zone_code": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Gujrat",
+    "zone_code": "GJ2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Mumbai",
+    "zone_code": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Pune",
+    "zone_code": "MH1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Maharashtra",
+    "zone_code": "MH2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Delhi",
+    "zone_code": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Gaziabad",
+    "zone_code": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Noida",
+    "zone_code": "N1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Haryana",
+    "zone_code": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Himachal Pradesh",
+    "zone_code": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Punjab",
+    "zone_code": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Rajasthan",
+    "zone_code": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Uttar Pradesh",
+    "zone_code": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Uttarakhand",
+    "zone_code": "N2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Jammu",
+    "zone_code": "N3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Guwahati",
+    "zone_code": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Siliguri",
+    "zone_code": "NE1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Bangalore",
+    "zone_code": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Chennai",
+    "zone_code": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Hyderabad",
+    "zone_code": "S1"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Andhra Pradesh",
+    "zone_code": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Karnataka",
+    "zone_code": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Tamil Nadu",
+    "zone_code": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Telangana",
+    "zone_code": "S2"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Kerala",
+    "zone_code": "S3"
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "location_name": "Goa",
+    "zone_code": "W3"
+  }
+]

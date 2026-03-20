@@ -1179,6 +1179,31 @@ def admin_dashboard_operations(request):
     pending_adhoc_count = _adhoc_ops_agg['pending_adhoc_count']
     adhoc_overdue = _adhoc_ops_agg['adhoc_overdue']
 
+    # Courier operations
+    try:
+        from operations.courier.models import (
+            Courier,
+            Order as CourierOrder,
+            OrderStatus as CourierOrderStatus,
+            Warehouse as CourierWarehouse,
+        )
+
+        courier_stats = {
+            'total_carriers': Courier.objects.count(),
+            'active_carriers': Courier.objects.filter(is_active=True).count(),
+            'draft_orders': CourierOrder.objects.filter(status=CourierOrderStatus.DRAFT).count(),
+            'booked_orders': CourierOrder.objects.filter(status=CourierOrderStatus.BOOKED).count(),
+            'warehouses': CourierWarehouse.objects.filter(is_active=True).count(),
+        }
+    except Exception:
+        courier_stats = {
+            'total_carriers': 0,
+            'active_carriers': 0,
+            'draft_orders': 0,
+            'booked_orders': 0,
+            'warehouses': 0,
+        }
+
     # Escalations and holidays
     total_escalations = 0  # Placeholder
     upcoming_holidays = 0  # Placeholder
@@ -1197,6 +1222,8 @@ def admin_dashboard_operations(request):
         'bills_paid': bills_paid,
         'disputes_overdue': disputes_overdue,
         'adhoc_overdue': adhoc_overdue,
+        'courier_stats': courier_stats,
+        'courier_admin_available': bool(request.user.is_staff),
         'total_escalations': total_escalations,
         'upcoming_holidays': upcoming_holidays,
     }

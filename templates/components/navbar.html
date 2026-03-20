@@ -123,6 +123,12 @@
                                     <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Porter Invoice Editor
                                 </a>
+                                {% if user.role == 'operation_coordinator' or user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' or user.role == 'super_user' %}
+                                <a href="{% url 'operations:courier:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-8 4h5m5 4H6a2 2 0 01-2-2V7a2 2 0 012-2h3l2-2h2l2 2h3a2 2 0 012 2v10a2 2 0 01-2 2z"/></svg>
+                                    Courier Control
+                                </a>
+                                {% endif %}
                                 {% if user.role == 'operation_manager' or user.role == 'operation_controller' or user.role == 'admin' %}
                                 <div class="border-t border-gray-100 my-1"></div>
                                 <a href="{% url 'operations:dispute_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 inline-flex items-center gap-2">
@@ -1038,3 +1044,4 @@ document.getElementById('mobile-menu')?.querySelectorAll('a').forEach(link => {
   });
 })();
 </script>
+

@@ -1,0 +1,2100 @@
+[
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-amazon-surface-surface-0p5",
+    "display_name": "Amazon",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Amazon Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-bluedart-500-gms-air-air-0p5",
+    "display_name": "Blue Dart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Bluedart 500 gms Air 0.5",
+    "service_category": "Air",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-bluedart-500-gms-surface-surface-0p5",
+    "display_name": "Blue Dart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Bluedart 500 gms Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-air-air-0p5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Air 0.5",
+    "service_category": "Air",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-documents-surface-0p25",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Documents 0.25",
+    "service_category": "Documents",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-10",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Heavy Surface 10",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-2",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Heavy Surface 2",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Heavy Surface 5",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-0p5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery RVP 0.5",
+    "service_category": "RVP",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-10",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery RVP 10",
+    "service_category": "RVP",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-2",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery RVP 2",
+    "service_category": "RVP",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-rvp-surface-5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery RVP 5",
+    "service_category": "RVP",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-surface-surface-0p25",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Surface 0.25",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-delhivery-surface-surface-0p5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Delhivery Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-dtdc-air-air-0p5",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp DTDC Air 0.5",
+    "service_category": "Air",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-1",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp DTDC Heavy Surface 1",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-2",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp DTDC Heavy Surface 2",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-5",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp DTDC Heavy Surface 5",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-dtdc-surface-surface-0p5",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp DTDC Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-ekart-documents-surface-0p25",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Ekart Documents 0.25",
+    "service_category": "Documents",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-10",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Ekart Heavy Surface 10",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-2",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Ekart Heavy Surface 2",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-5",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Ekart Heavy Surface 5",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-ekart-rvp-surface-0p5",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Ekart RVP 0.5",
+    "service_category": "RVP",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-ekart-surface-surface-0p5",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Ekart Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-heavy-surface-surface-2",
+    "display_name": "Pikndel NDD",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Pikndel NDD NDD Heavy Surface 2",
+    "service_category": "NDD Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-heavy-surface-surface-5",
+    "display_name": "Pikndel NDD",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Pikndel NDD NDD Heavy Surface 5",
+    "service_category": "NDD Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-surface-surface-0p5",
+    "display_name": "Pikndel NDD",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Pikndel NDD NDD Surface 0.5",
+    "service_category": "NDD Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-professional-surface-surface-0p25",
+    "display_name": "Professional",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Professional Surface 0.25",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-professional-surface-surface-0p5",
+    "display_name": "Professional",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Professional Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-10",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp ShadowFax Heavy Surface 10",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-2",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp ShadowFax Heavy Surface 2",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-5",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp ShadowFax Heavy Surface 5",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shadowfax-rvp-surface-0p5",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Shadowfax RVP 0.5",
+    "service_category": "RVP",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shadowfax-special-surface-surface-0p5",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Shadowfax Special Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shadowfax-surface-surface-0p5",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Shadowfax Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shree-maruti-air-air-0p5",
+    "display_name": "Shree Maruti",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Shree Maruti Air 0.5",
+    "service_category": "Air",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-shree-maruti-surface-surface-0p5",
+    "display_name": "Shree Maruti",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Shree Maruti Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-air-air-0p5",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Air 0.5",
+    "service_category": "Air",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-documents-surface-0p25",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Documents 0.25",
+    "service_category": "Documents",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-1",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Heavy Surface 1",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-10",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Heavy Surface 10",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-2",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Heavy Surface 2",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-5",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Heavy Surface 5",
+    "service_category": "Heavy Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-surface-surface-0p25",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Surface 0.25",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "RapidShyp",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "rapidshyp-xpressbees-surface-surface-0p5",
+    "display_name": "Xpressbees",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "RapidShyp Xpressbees Surface 0.5",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-ats-surface-surface-0p5",
+    "display_name": "ATS",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "ATS Surface 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 26.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 24.0,
+            "z_b": 26.0,
+            "z_c": 31.0,
+            "z_d": 34.0,
+            "z_e": 34.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 28.0,
+            "z_b": 32.0,
+            "z_c": 37.0,
+            "z_d": 41.0,
+            "z_e": 58.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.15,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak ATS Surface 0.5kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 13
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-delhivery-air-air-0p5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Delhivery Air 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 32.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Air",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 30.0,
+            "z_b": 34.0,
+            "z_c": 49.0,
+            "z_d": 58.0,
+            "z_e": 75.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 30.0,
+            "z_b": 34.0,
+            "z_c": 49.0,
+            "z_d": 58.0,
+            "z_e": 75.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.75,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Delhivery Air 0.5kg",
+    "service_category": "Air",
+    "shipdaak_courier_id": 16
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-delhivery-surface-surface-0p5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Delhivery Surface 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 29.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 26.0,
+            "z_b": 32.0,
+            "z_c": 36.0,
+            "z_d": 42.0,
+            "z_e": 67.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 27.0,
+            "z_b": 30.0,
+            "z_c": 36.0,
+            "z_d": 41.0,
+            "z_e": 69.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.5,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Delhivery Surface 0.5kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 15
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-delhivery-surface-surface-10",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Delhivery Surface 10kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 35.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 50.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 10.0,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 20.0,
+            "z_b": 25.0,
+            "z_c": 28.0,
+            "z_d": 33.0,
+            "z_e": 41.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 212.0,
+            "z_b": 265.0,
+            "z_c": 306.0,
+            "z_d": 355.0,
+            "z_e": 448.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.75,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Delhivery Surface 10kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 7
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-delhivery-surface-surface-2",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Delhivery Surface 2kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 29.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 2.0,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 17.0,
+            "z_b": 19.0,
+            "z_c": 26.0,
+            "z_d": 28.0,
+            "z_e": 44.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 63.0,
+            "z_b": 82.0,
+            "z_c": 88.0,
+            "z_d": 106.0,
+            "z_e": 173.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.5,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Delhivery Surface 2kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 5
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-delhivery-surface-surface-20",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Delhivery Surface 20kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 35.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 20.0,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 17.0,
+            "z_b": 20.0,
+            "z_c": 21.0,
+            "z_d": 26.0,
+            "z_e": 35.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 340.0,
+            "z_b": 420.0,
+            "z_c": 472.0,
+            "z_d": 552.0,
+            "z_e": 749.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.75,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Delhivery Surface 20kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 8
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-delhivery-surface-surface-5",
+    "display_name": "Delhivery",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Delhivery Surface 5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 29.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 5.0,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 17.0,
+            "z_b": 19.0,
+            "z_c": 26.0,
+            "z_d": 28.0,
+            "z_e": 44.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 121.0,
+            "z_b": 129.0,
+            "z_c": 133.0,
+            "z_d": 152.0,
+            "z_e": 259.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.5,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Delhivery Surface 5kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 6
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-dtdc-air-air-0p5",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "DTDC Air 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 36.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Air",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 16.0,
+            "z_b": 19.0,
+            "z_c": 44.0,
+            "z_d": 46.0,
+            "z_e": 54.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 32.0,
+            "z_b": 36.0,
+            "z_c": 56.0,
+            "z_d": 60.0,
+            "z_e": 54.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.6,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak DTDC Air 0.5kg",
+    "service_category": "Air",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-dtdc-surface-surface-0p5",
+    "display_name": "DTDC",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "DTDC Surface 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 36.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 16.0,
+            "z_b": 19.0,
+            "z_c": 22.0,
+            "z_d": 24.0,
+            "z_e": 30.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 32.0,
+            "z_b": 36.0,
+            "z_c": 42.0,
+            "z_d": 48.0,
+            "z_e": 59.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.6,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak DTDC Surface 0.5kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Air",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-ekart-air-air-0p5",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Ekart Air 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 26.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Air",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 17.0,
+            "z_b": 19.0,
+            "z_c": 48.0,
+            "z_d": 50.0,
+            "z_e": 50.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 28.0,
+            "z_b": 32.0,
+            "z_c": 55.0,
+            "z_d": 57.0,
+            "z_e": 59.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.4,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Ekart Air 0.5kg",
+    "service_category": "Air",
+    "shipdaak_courier_id": 19
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-ekart-surface-surface-0p5",
+    "display_name": "Ekart",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Ekart Surface 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 26.0,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 17.0,
+            "z_b": 19.0,
+            "z_c": 23.0,
+            "z_d": 28.0,
+            "z_e": 50.0,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 28.0,
+            "z_b": 32.0,
+            "z_c": 35.0,
+            "z_d": 40.0,
+            "z_e": 59.0,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.4,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Ekart Surface 0.5kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 11
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "shipdaak-shadowfax-surface-surface-0p5",
+    "display_name": "Shadowfax",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Shadowfax Surface 0.5kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 27.69,
+        "docket_fee": 0.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "base_diesel_price": 0.0,
+        "diesel_ratio": 0.0,
+        "flat_percent": 0.0,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "max_weight": 99999.0,
+      "min_freight": 0.0,
+      "min_freight_value": 0.0,
+      "min_weight": 0.5,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": null,
+        "door_delivery_slabs": [],
+        "is_city_specific": false,
+        "zonal_rates": {
+          "additional": {
+            "z_a": 23.75,
+            "z_b": 26.25,
+            "z_c": 31.25,
+            "z_d": 33.75,
+            "z_e": 37.5,
+            "z_f": 0.0
+          },
+          "forward": {
+            "z_a": 27.5,
+            "z_b": 30.0,
+            "z_c": 36.25,
+            "z_d": 41.25,
+            "z_e": 52.5,
+            "z_f": 0.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 0.0188,
+        "damage_claim_percent": 0.0,
+        "fov_insured_percent": 0.0,
+        "hamali_per_kg": 0.0
+      },
+      "volumetric_divisor": 4500
+    },
+    "name": "Shipdaak Shadowfax Surface 0.5kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": 9
+  },
+  {
+    "aggregator": "Shipdaak",
+    "carrier_mode": "Surface",
+    "carrier_type": "Courier",
+    "courier_code": "shipdaak-test-carrier-surface-surface-0p5",
+    "display_name": "Test Carrier",
+    "is_active": true,
+    "legacy_rate_card_backup": {},
+    "name": "Test Carrier",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "Standalone",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2B",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "display_name": "ACPL",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "ACPL Surface 50kg",
+      "fixed_fees": {
+        "appointment_delivery": 1500.0,
+        "cod_fixed": 250.0,
+        "docket_fee": 100.0,
+        "eway_bill_fee": 10.0
+      },
+      "fuel_config": {
+        "flat_percent": 90.0,
+        "is_dynamic": false
+      },
+      "logic": "city_to_city",
+      "max_weight": 99999.0,
+      "min_freight": 0,
+      "min_freight_value": 0.0,
+      "min_weight": 50.0,
+      "mode": "Surface",
+      "routing_logic": {
+        "city_rates": {
+          "ahmedabad": 4.75,
+          "ahmednagar": 2.75,
+          "akola": 4.25,
+          "ambarnath": 2.4,
+          "ambattur": 7.2,
+          "amravati": 4.5,
+          "ankleshwar": 3.95,
+          "asangaon": 2.15,
+          "aslali": 4.55,
+          "aurangabad": 3.35,
+          "autonagar": 5.65,
+          "badlapur": 2.4,
+          "bahadurgarh": 6.65,
+          "baramati": 3.55,
+          "barshi": 3.9,
+          "beed": 3.9,
+          "belgaum": 3.85,
+          "bhandara": 5.4,
+          "bhavnagar": 5.55,
+          "bhiwadi": 6.65,
+          "bhiwandi": 2.05,
+          "bhopal": 5.05,
+          "bhosari": 2.45,
+          "bilimora": 3.35,
+          "bommasandra": 6.75,
+          "broadway": 7.4,
+          "chakan": 2.45,
+          "changodar": 4.5,
+          "cherlapally": 5.3,
+          "chhatral": 5.15,
+          "chitegaon": 3.35,
+          "cochin": 7.7,
+          "coimbatore": 6.9,
+          "dahej": 4.35,
+          "daman": 3.05,
+          "davangere": 5.1,
+          "delhi": 6.65,
+          "dewas": 5.1,
+          "dhule": 2.95,
+          "dindori": 2.9,
+          "dombivali": 2.4,
+          "erode": 7.05,
+          "faridabad": 6.65,
+          "fursungi": 2.45,
+          "gandhidham": 5.7,
+          "ghaziabad": 6.65,
+          "goa": 4.5,
+          "golden chowkadi": 3.75,
+          "gummidipundi": 7.6,
+          "gurugram": 6.35,
+          "halol": 4.45,
+          "haridwar": 7.55,
+          "hazira": 3.95,
+          "hubli": 4.3,
+          "ichalkaranji": 3.75,
+          "indore": 4.6,
+          "jaipur": 6.55,
+          "jalgaon": 3.35,
+          "jalna": 3.35,
+          "jamnagar": 5.7,
+          "jejuri": 2.8,
+          "jodhpur": 5.85,
+          "kagal": 3.55,
+          "kalaburagi": 4.2,
+          "kandlakoya": 4.95,
+          "karad": 3.15,
+          "karwar": 4.85,
+          "katedan": 5.6,
+          "khed": 2.7,
+          "khedshivapur": 2.9,
+          "khopoli": 2.4,
+          "kim": 3.95,
+          "kolhapur": 3.45,
+          "kukatpally": 5.1,
+          "kundli": 6.85,
+          "kurkumbh": 3.3,
+          "lautur": 4.1,
+          "lonavala": 2.4,
+          "m m nagar": 7.75,
+          "madurai": 7.65,
+          "masjid": 2.4,
+          "meerut": 6.95,
+          "mehsana": 5.65,
+          "mira bhayandar": 2.15,
+          "morbi": 5.25,
+          "mumbai central": 2.4,
+          "mysore": 6.4,
+          "nagpur": 5.2,
+          "nanded": 4.4,
+          "nashik": 2.2,
+          "navi mumbai": 2.4,
+          "navsari": 3.35,
+          "new delhi": 6.65,
+          "nipani": 3.85,
+          "noida": 6.85,
+          "odhav": 4.65,
+          "olpad": 4.05,
+          "palghar": 2.4,
+          "palsana": 3.05,
+          "palus": 3.8,
+          "panvel": 2.4,
+          "patancheru": 5.1,
+          "peenya": 6.25,
+          "pirangut": 2.7,
+          "pithampur": 4.1,
+          "pondicherry": 9.15,
+          "poonamalle": 7.4,
+          "pune": 2.7,
+          "rajkot": 5.25,
+          "ranipet": 6.9,
+          "ranjangaon": 2.45,
+          "roha": 2.75,
+          "salem": 6.9,
+          "sanand": 4.75,
+          "sangli": 3.35,
+          "satara": 2.95,
+          "secundarabad": 5.15,
+          "selaqui": 7.75,
+          "shendra": 3.55,
+          "shimoga": 6.15,
+          "shiroli": 3.55,
+          "shirwal": 2.7,
+          "shivane": 2.45,
+          "sidhpur": 6.1,
+          "silvasa": 2.8,
+          "sindhudurg": 4.85,
+          "sinnar": 2.8,
+          "solapur": 3.55,
+          "surat": 3.6,
+          "surendranagar": 5.55,
+          "talegaon": 2.55,
+          "tathawade": 2.2,
+          "thane": 2.15,
+          "tumkur": 6.5,
+          "udaipur": 4.95,
+          "umbergaon": 3.05,
+          "v v nagar": 4.55,
+          "vadodara": 3.95,
+          "valsad": 3.15,
+          "vapi": 2.8,
+          "vasai": 2.15,
+          "vatva": 4.55,
+          "vitthlapur": 5.65,
+          "wada": 2.15,
+          "wagholi": 2.45,
+          "wai": 3.1,
+          "waluj": 3.15,
+          "white field": 6.65,
+          "yeshwantpur": 6.05
+        },
+        "door_delivery_slabs": [
+          {
+            "max": 500,
+            "min": 0,
+            "rate": 250
+          },
+          {
+            "max": 1000,
+            "min": 501,
+            "rate": 450
+          },
+          {
+            "max": null,
+            "min": 1001,
+            "rate": 650
+          }
+        ],
+        "is_city_specific": true,
+        "zonal_rates": []
+      },
+      "type": "PTL",
+      "variable_fees": {
+        "cod_percent": 0.0,
+        "damage_claim_percent": 0.0,
+        "delivery_slab": {
+          "base": 70.0,
+          "city_exceptions": {
+            "mumbai": {
+              "base": 80.0,
+              "extra_rate": 0.25,
+              "slab": 100
+            }
+          },
+          "extra_rate": 0.25,
+          "slab": 100
+        },
+        "fov_insured_percent": 0.0004,
+        "fov_min": 20.0,
+        "fov_uninsured_percent": 0.005,
+        "hamali_per_kg": 0.5,
+        "min_hamali": 50.0,
+        "owners_risk": {
+          "min_amount": 50.0,
+          "percent": 0.005
+        },
+        "pickup_slab": {
+          "base": 20.0,
+          "extra_rate": 0.1,
+          "slab": 100
+        }
+      },
+      "volumetric_divisor": 2880
+    },
+    "name": "Standalone ACPL Surface 50kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "Standalone",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2C",
+    "courier_code": "standalone-blue-dart-surface-surface-10",
+    "display_name": "Blue Dart",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "Blue Dart",
+      "edl_config": {
+        "overflow_rates": {
+          "dist_limit": 500,
+          "dist_rate_per_km": 14,
+          "weight_limit": 1500,
+          "weight_rate_per_kg": 5
+        },
+        "special_regions": {
+          "min_amount": 3000,
+          "rate_per_kg": 15,
+          "regions": [
+            "NORTH EAST"
+          ],
+          "states": [
+            "JAMMU AND KASHMIR"
+          ]
+        }
+      },
+      "edl_matrix": [
+        {
+          "dist_max": 50,
+          "dist_min": 20,
+          "rates": {
+            "100": 550,
+            "1000": 1375,
+            "1500": 1650,
+            "250": 990,
+            "500": 1100
+          }
+        },
+        {
+          "dist_max": 100,
+          "dist_min": 51,
+          "rates": {
+            "100": 825,
+            "1000": 1650,
+            "1500": 1925,
+            "250": 1210,
+            "500": 1375
+          }
+        },
+        {
+          "dist_max": 150,
+          "dist_min": 101,
+          "rates": {
+            "100": 1100,
+            "1000": 2200,
+            "1500": 2750,
+            "250": 1650,
+            "500": 1925
+          }
+        },
+        {
+          "dist_max": 200,
+          "dist_min": 151,
+          "rates": {
+            "100": 1375,
+            "1000": 2475,
+            "1500": 3300,
+            "250": 1925,
+            "500": 2200
+          }
+        },
+        {
+          "dist_max": 250,
+          "dist_min": 201,
+          "rates": {
+            "100": 1650,
+            "1000": 3300,
+            "1500": 3960,
+            "250": 2200,
+            "500": 2750
+          }
+        },
+        {
+          "dist_max": 300,
+          "dist_min": 250,
+          "rates": {
+            "100": 1925,
+            "1000": 3800,
+            "1500": 4560,
+            "250": 2500,
+            "500": 3150
+          }
+        },
+        {
+          "dist_max": 350,
+          "dist_min": 300,
+          "rates": {
+            "100": 2200,
+            "1000": 4300,
+            "1500": 5160,
+            "250": 2800,
+            "500": 3550
+          }
+        },
+        {
+          "dist_max": 400,
+          "dist_min": 350,
+          "rates": {
+            "100": 2475,
+            "1000": 4800,
+            "1500": 5760,
+            "250": 3100,
+            "500": 3950
+          }
+        },
+        {
+          "dist_max": 450,
+          "dist_min": 400,
+          "rates": {
+            "100": 2750,
+            "1000": 5300,
+            "1500": 6360,
+            "250": 3400,
+            "500": 4350
+          }
+        },
+        {
+          "dist_max": 500,
+          "dist_min": 451,
+          "rates": {
+            "100": 3025,
+            "1000": 5800,
+            "1500": 6960,
+            "250": 3700,
+            "500": 4750
+          }
+        }
+      ],
+      "fixed_fees": {
+        "awb_fee": 300,
+        "cod_fixed": 0.0,
+        "docket_fee": 0
+      },
+      "forward_rates": {
+        "CENTRAL": 7,
+        "EAST": 12.5,
+        "NORTH": 9.5,
+        "NORTH EAST": 18,
+        "SOUTH": 9,
+        "SOUTH1": 9,
+        "SOUTH2": 9,
+        "WEST": 7,
+        "WEST1": 7,
+        "WEST2": 7
+      },
+      "fuel_config": {
+        "flat_percent": 0.556,
+        "is_dynamic": false
+      },
+      "logic": "pincode_region_csv",
+      "max_weight": 99999.0,
+      "min_weight": 0.5,
+      "mode": "Surface",
+      "required_source_city": "bhiwandi",
+      "routing_logic": {
+        "csv_file": "BlueDart_Servicable Pincodes.csv",
+        "type": "pincode_region_csv"
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 0.0,
+        "dod_charge": {
+          "min_amount": 200,
+          "percent": 0.005
+        },
+        "fod_charge": {
+          "gt_charge": 250,
+          "lte_charge": 100,
+          "slab_weight": 100
+        },
+        "owners_risk": {
+          "min_amount": 100,
+          "percent": 0.002
+        }
+      },
+      "volumetric_divisor": 5000
+    },
+    "name": "Standalone Blue Dart",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  },
+  {
+    "aggregator": "Standalone",
+    "carrier_mode": "Surface",
+    "carrier_type": "B2B",
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "display_name": "V-Trans",
+    "is_active": true,
+    "legacy_rate_card_backup": {
+      "active": true,
+      "carrier_name": "V-Trans 100kg",
+      "fixed_fees": {
+        "appointment_delivery": 0.0,
+        "cod_fixed": 35.0,
+        "eway_bill_fee": 0.0
+      },
+      "fuel_config": {
+        "flat_percent": 0.1,
+        "is_dynamic": false
+      },
+      "logic": "Zonal",
+      "min_freight": 0.0,
+      "min_freight_value": 1500,
+      "min_weight": 100.0,
+      "mode": "Surface",
+      "routing_logic": {
+        "is_city_specific": false,
+        "zonal_rates": {
+          "CTL": {
+            "CTL": 7.0,
+            "E1": 10.0,
+            "E2": 11.0,
+            "GJ1": 7.5,
+            "GJ2": 8.0,
+            "MH1": 8.0,
+            "MH2": 8.5,
+            "N1": 9.5,
+            "N2": 10.5,
+            "N3": 12.5,
+            "NE1": 15.0,
+            "S1": 10.0,
+            "S2": 11.0,
+            "S3": 12.5,
+            "W3": 10.0
+          },
+          "E1": {
+            "CTL": 9.0,
+            "E1": 5.0,
+            "E2": 6.5,
+            "GJ1": 10.0,
+            "GJ2": 10.5,
+            "MH1": 10.0,
+            "MH2": 11.0,
+            "N1": 8.5,
+            "N2": 9.5,
+            "N3": 11.5,
+            "NE1": 9.5,
+            "S1": 11.0,
+            "S2": 12.5,
+            "S3": 15.5,
+            "W3": 12.0
+          },
+          "E2": {
+            "CTL": 11.0,
+            "E1": 6.0,
+            "E2": 6.0,
+            "GJ1": 12.5,
+            "GJ2": 12.5,
+            "MH1": 12.5,
+            "MH2": 13.5,
+            "N1": 9.5,
+            "N2": 10.5,
+            "N3": 12.5,
+            "NE1": 14.5,
+            "S1": 13.5,
+            "S2": 13.5,
+            "S3": 15.5,
+            "W3": 14.5
+          },
+          "GJ1": {
+            "CTL": 8.0,
+            "E1": 14.0,
+            "E2": 16.0,
+            "GJ1": 6.0,
+            "GJ2": 6.0,
+            "MH1": 6.5,
+            "MH2": 8.0,
+            "N1": 9.0,
+            "N2": 10.0,
+            "N3": 12.0,
+            "NE1": 17.5,
+            "S1": 11.5,
+            "S2": 12.5,
+            "S3": 13.0,
+            "W3": 8.5
+          },
+          "GJ2": {
+            "CTL": 8.5,
+            "E1": 14.0,
+            "E2": 16.5,
+            "GJ1": 6.0,
+            "GJ2": 6.5,
+            "MH1": 6.5,
+            "MH2": 8.0,
+            "N1": 9.5,
+            "N2": 10.5,
+            "N3": 12.5,
+            "NE1": 17.5,
+            "S1": 11.5,
+            "S2": 12.5,
+            "S3": 13.0,
+            "W3": 8.5
+          },
+          "MH1": {
+            "CTL": 9.5,
+            "E1": 14.0,
+            "E2": 16.5,
+            "GJ1": 5.5,
+            "GJ2": 5.5,
+            "MH1": 5.0,
+            "MH2": 6.5,
+            "N1": 11.0,
+            "N2": 11.5,
+            "N3": 13.5,
+            "NE1": 18.0,
+            "S1": 10.0,
+            "S2": 10.5,
+            "S3": 12.5,
+            "W3": 7.0
+          },
+          "MH2": {
+            "CTL": 9.5,
+            "E1": 14.0,
+            "E2": 17.5,
+            "GJ1": 6.5,
+            "GJ2": 7.0,
+            "MH1": 6.0,
+            "MH2": 6.5,
+            "N1": 11.0,
+            "N2": 11.5,
+            "N3": 13.5,
+            "NE1": 20.0,
+            "S1": 10.0,
+            "S2": 10.5,
+            "S3": 13.5,
+            "W3": 8.0
+          },
+          "N1": {
+            "CTL": 9.0,
+            "E1": 12.0,
+            "E2": 13.0,
+            "GJ1": 7.0,
+            "GJ2": 8.0,
+            "MH1": 9.0,
+            "MH2": 10.0,
+            "N1": 5.0,
+            "N2": 5.5,
+            "N3": 7.5,
+            "NE1": 15.0,
+            "S1": 11.5,
+            "S2": 12.5,
+            "S3": 15.0,
+            "W3": 11.0
+          },
+          "N2": {
+            "CTL": 10.0,
+            "E1": 12.5,
+            "E2": 13.5,
+            "GJ1": 8.0,
+            "GJ2": 9.0,
+            "MH1": 10.0,
+            "MH2": 11.0,
+            "N1": 5.5,
+            "N2": 6.5,
+            "N3": 8.5,
+            "NE1": 16.5,
+            "S1": 12.0,
+            "S2": 13.5,
+            "S3": 15.0,
+            "W3": 12.0
+          },
+          "N3": {
+            "CTL": 10.5,
+            "E1": 12.5,
+            "E2": 13.5,
+            "GJ1": 8.0,
+            "GJ2": 9.0,
+            "MH1": 10.0,
+            "MH2": 11.5,
+            "N1": 5.5,
+            "N2": 6.0,
+            "N3": 5.5,
+            "NE1": 18.0,
+            "S1": 13.0,
+            "S2": 13.5,
+            "S3": 16.0,
+            "W3": 12.0
+          },
+          "NE1": {
+            "CTL": 18.4,
+            "E1": 6.9,
+            "E2": 14.3,
+            "GJ1": 18.0,
+            "GJ2": 18.0,
+            "MH1": 18.0,
+            "MH2": 18.0,
+            "N1": 18.0,
+            "N2": 18.0,
+            "N3": 18.0,
+            "NE1": 10.0,
+            "S1": 18.0,
+            "S2": 18.0,
+            "S3": 19.0,
+            "W3": 18.0
+          },
+          "S1": {
+            "CTL": 9.0,
+            "E1": 12.5,
+            "E2": 14.0,
+            "GJ1": 8.5,
+            "GJ2": 9.5,
+            "MH1": 7.5,
+            "MH2": 8.5,
+            "N1": 10.5,
+            "N2": 12.0,
+            "N3": 14.0,
+            "NE1": 18.0,
+            "S1": 5.5,
+            "S2": 6.0,
+            "S3": 7.0,
+            "W3": 10.0
+          },
+          "S2": {
+            "CTL": 10.5,
+            "E1": 12.5,
+            "E2": 14.0,
+            "GJ1": 8.5,
+            "GJ2": 9.5,
+            "MH1": 8.0,
+            "MH2": 9.0,
+            "N1": 12.5,
+            "N2": 13.5,
+            "N3": 15.5,
+            "NE1": 18.0,
+            "S1": 6.0,
+            "S2": 6.0,
+            "S3": 9.0,
+            "W3": 10.0
+          },
+          "S3": {
+            "CTL": 11.5,
+            "E1": 13.5,
+            "E2": 15.0,
+            "GJ1": 9.5,
+            "GJ2": 10.5,
+            "MH1": 9.0,
+            "MH2": 10.0,
+            "N1": 13.5,
+            "N2": 14.5,
+            "N3": 16.5,
+            "NE1": 19.0,
+            "S1": 6.5,
+            "S2": 7.5,
+            "S3": 6.0,
+            "W3": 11.5
+          },
+          "W3": {
+            "CTL": 10.5,
+            "E1": 15.0,
+            "E2": 17.5,
+            "GJ1": 6.5,
+            "GJ2": 7.5,
+            "MH1": 6.0,
+            "MH2": 7.5,
+            "N1": 12.0,
+            "N2": 12.5,
+            "N3": 14.5,
+            "NE1": 18.0,
+            "S1": 11.0,
+            "S2": 11.5,
+            "S3": 13.5,
+            "W3": 6.0
+          }
+        }
+      },
+      "type": "Courier",
+      "variable_fees": {
+        "cod_percent": 1.75,
+        "damage_claim_percent": 0.0,
+        "hamali_per_kg": 0.2,
+        "owners_risk": {
+          "min_amount": 0,
+          "percent": 0.002
+        }
+      },
+      "volumetric_divisor": 4500,
+      "zone_mapping": {
+        "Andhra Pradesh": "S2",
+        "Bangalore": "S1",
+        "Baroda": "GJ1",
+        "Bihar": "E2",
+        "Chattishgarh": "CTL",
+        "Chennai": "S1",
+        "Dadra Nagal Haveli": "GJ2",
+        "Delhi": "N1",
+        "Gaziabad": "N1",
+        "Goa": "W3",
+        "Gujrat": "GJ2",
+        "Guwahati": "NE1",
+        "Haryana": "N2",
+        "Himachal Pradesh": "N2",
+        "Hyderabad": "S1",
+        "Jammu": "N3",
+        "Jharkhand": "E2",
+        "Karnataka": "S2",
+        "Kerala": "S3",
+        "Kolkata": "E1",
+        "Madhya Pradesh": "CTL",
+        "Maharashtra": "MH2",
+        "Mumbai": "MH1",
+        "Noida": "N1",
+        "Odisha": "E2",
+        "Pune": "MH1",
+        "Punjab": "N2",
+        "Rajasthan": "N2",
+        "Siliguri": "NE1",
+        "Tamil Nadu": "S2",
+        "Telangana": "S2",
+        "Uttar Pradesh": "N2",
+        "Uttarakhand": "N2",
+        "Vapi Ahmedabad": "GJ1",
+        "West Bengal": "E2",
+        "vidarbha": "CTL"
+      }
+    },
+    "name": "Standalone V-Trans 100kg",
+    "service_category": "Surface",
+    "shipdaak_courier_id": null
+  }
+]

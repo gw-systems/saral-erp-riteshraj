@@ -127,6 +127,56 @@
             </div>
         </div>
 
+        <!-- Courier Operations -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <svg class="h-5 w-5 mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-8 4h5m5 4H6a2 2 0 01-2-2V7a2 2 0 012-2h3l2-2h2l2 2h3a2 2 0 012 2v10a2 2 0 01-2 2z"/>
+                    </svg>
+                    Courier Operations
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                        <p class="text-xs font-medium text-gray-700">Carriers</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ courier_stats.total_carriers }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 border border-emerald-200">
+                        <p class="text-xs font-medium text-emerald-700">Active</p>
+                        <p class="text-2xl font-bold text-emerald-900">{{ courier_stats.active_carriers }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
+                        <p class="text-xs font-medium text-amber-700">Draft Orders</p>
+                        <p class="text-2xl font-bold text-amber-900">{{ courier_stats.draft_orders }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <p class="text-xs font-medium text-blue-700">Booked Orders</p>
+                        <p class="text-2xl font-bold text-blue-900">{{ courier_stats.booked_orders }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg p-4 border border-violet-200">
+                        <p class="text-xs font-medium text-violet-700">Warehouses</p>
+                        <p class="text-2xl font-bold text-violet-900">{{ courier_stats.warehouses }}</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'operations:courier:dashboard' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        Open Courier Dashboard
+                    </a>
+                    <a href="{% url 'operations:courier:orders-dashboard' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        Courier Orders
+                    </a>
+                    <a href="{% url 'operations:courier:shipments-dashboard' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        Shipments
+                    </a>
+                    <a href="{% url 'operations:courier:warehouses-dashboard' %}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                        Warehouses
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Disputes & Adhoc Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
@@ -229,9 +279,16 @@
                 <p class="text-2xl font-bold mt-2">View</p>
                 <p class="text-xs text-emerald-50 mt-1">Analytics</p>
             </a>
+
+            <a href="{% url 'operations:courier:dashboard' %}" class="block smooth-card bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl shadow-md hover:shadow-xl transition p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 rounded-xl">
+                <p class="text-xs font-semibold text-indigo-50 uppercase">Courier Control</p>
+                <p class="text-2xl font-bold mt-2">{{ courier_stats.active_carriers }}</p>
+                <p class="text-xs text-indigo-50 mt-1">Open dashboard, calculator, orders, and shipments</p>
+            </a>
         </div>
 
     </div>
 
 </div>
 {% endblock %}
+

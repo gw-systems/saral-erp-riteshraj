@@ -85,6 +85,7 @@ python manage.py migrate
 accounts/         # User auth, role-based permissions
 projects/         # Warehouse project management (460 projects)
 operations/       # Daily entries, monthly billing, disputes, project cards
+operations/courier/  # Native courier operations, carriers, booking, rate cards
 dashboards/       # Role-specific dashboards
 integrations/     # Bigin CRM sync
 ```

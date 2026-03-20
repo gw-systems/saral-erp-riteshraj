@@ -1,0 +1,436 @@
+[
+  {
+    "courier_code": "rapidshyp-amazon-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-bluedart-500-gms-air-air-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-bluedart-500-gms-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-air-air-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-documents-surface-0p25",
+    "max_weight": 9999.0,
+    "min_weight": 0.25,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-10",
+    "max_weight": 9999.0,
+    "min_weight": 10.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-heavy-surface-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-rvp-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-rvp-surface-10",
+    "max_weight": 9999.0,
+    "min_weight": 10.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-rvp-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-rvp-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-surface-surface-0p25",
+    "max_weight": 9999.0,
+    "min_weight": 0.25,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-delhivery-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-dtdc-air-air-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-1",
+    "max_weight": 9999.0,
+    "min_weight": 1.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-dtdc-heavy-surface-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-dtdc-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-ekart-documents-surface-0p25",
+    "max_weight": 9999.0,
+    "min_weight": 0.25,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-10",
+    "max_weight": 9999.0,
+    "min_weight": 10.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-ekart-heavy-surface-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-ekart-rvp-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-ekart-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-heavy-surface-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-heavy-surface-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-pikndel-ndd-ndd-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-professional-surface-surface-0p25",
+    "max_weight": 9999.0,
+    "min_weight": 0.25,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-professional-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-10",
+    "max_weight": 9999.0,
+    "min_weight": 10.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shadowfax-heavy-surface-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shadowfax-rvp-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shadowfax-special-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shadowfax-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shree-maruti-air-air-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-shree-maruti-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-air-air-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-documents-surface-0p25",
+    "max_weight": 9999.0,
+    "min_weight": 0.25,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-1",
+    "max_weight": 9999.0,
+    "min_weight": 1.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-10",
+    "max_weight": 9999.0,
+    "min_weight": 10.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-2",
+    "max_weight": 9999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-heavy-surface-surface-5",
+    "max_weight": 9999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-surface-surface-0p25",
+    "max_weight": 9999.0,
+    "min_weight": 0.25,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "rapidshyp-xpressbees-surface-surface-0p5",
+    "max_weight": 9999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "shipdaak-ats-surface-surface-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-delhivery-air-air-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-delhivery-surface-surface-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-delhivery-surface-surface-10",
+    "max_weight": 50.0,
+    "min_weight": 10.0,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-delhivery-surface-surface-2",
+    "max_weight": 99999.0,
+    "min_weight": 2.0,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-delhivery-surface-surface-20",
+    "max_weight": 99999.0,
+    "min_weight": 20.0,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-delhivery-surface-surface-5",
+    "max_weight": 99999.0,
+    "min_weight": 5.0,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-dtdc-air-air-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-dtdc-surface-surface-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-ekart-air-air-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-ekart-surface-surface-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-shadowfax-surface-surface-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  },
+  {
+    "courier_code": "shipdaak-test-carrier-surface-surface-0p5",
+    "max_weight": 99999.0,
+    "min_weight": 0.5,
+    "required_source_city": null,
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "max_weight": 99999.0,
+    "min_weight": 50.0,
+    "required_source_city": null,
+    "volumetric_divisor": 2880
+  },
+  {
+    "courier_code": "standalone-blue-dart-surface-surface-10",
+    "max_weight": 99999.0,
+    "min_weight": 10.0,
+    "required_source_city": "bhiwandi",
+    "volumetric_divisor": 5000
+  },
+  {
+    "courier_code": "standalone-v-trans-surface-surface-100",
+    "max_weight": 99999.0,
+    "min_weight": 100.0,
+    "required_source_city": null,
+    "volumetric_divisor": 4500
+  }
+]

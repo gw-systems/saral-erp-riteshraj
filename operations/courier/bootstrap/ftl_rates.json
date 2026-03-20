@@ -1,0 +1,782 @@
+[
+  {
+    "destination_city": "Bhiwandi",
+    "rate": "27030.00",
+    "source_city": "Bangalore",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Bhiwandi",
+    "rate": "34250.00",
+    "source_city": "Bangalore",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Bhiwandi",
+    "rate": "121580.00",
+    "source_city": "Bangalore",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Noida",
+    "rate": "63600.00",
+    "source_city": "Bangalore",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Ahmedabad",
+    "rate": "19610.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Ahmedabad",
+    "rate": "25970.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Ahmedabad",
+    "rate": "30210.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Aurangabad",
+    "rate": "22670.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Aurangabad",
+    "rate": "36065.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Aurangabad",
+    "rate": "46640.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Bandra",
+    "rate": "84490.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Bangalore",
+    "rate": "37100.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Bangalore",
+    "rate": "56180.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Bangalore",
+    "rate": "61480.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Bhopal",
+    "rate": "35030.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Bhopal",
+    "rate": "46640.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Bhopal",
+    "rate": "54610.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Bhubaneshwar",
+    "rate": "74835.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Bhubaneshwar",
+    "rate": "96850.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Bhubaneshwar",
+    "rate": "120840.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Binola",
+    "rate": "50880.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Binola",
+    "rate": "64660.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Binola",
+    "rate": "69960.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Calicut",
+    "rate": "53576.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Calicut",
+    "rate": "76320.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Calicut",
+    "rate": "85860.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Chennai",
+    "rate": "45580.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Chennai",
+    "rate": "57335.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Chennai",
+    "rate": "64660.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Coimbatore",
+    "rate": "55120.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Coimbatore",
+    "rate": "75260.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Coimbatore",
+    "rate": "82680.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Delhi",
+    "rate": "50880.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Delhi",
+    "rate": "64660.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Delhi",
+    "rate": "69960.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Farukhnagar",
+    "rate": "49820.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Farukhnagar",
+    "rate": "61480.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Farukhnagar",
+    "rate": "69260.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Gurgaon",
+    "rate": "49820.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Gurgaon",
+    "rate": "61480.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Gurgaon",
+    "rate": "67840.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Guwahati",
+    "rate": "108185.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Guwahati",
+    "rate": "135680.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Guwahati",
+    "rate": "160272.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Hosur",
+    "rate": "38690.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Hosur",
+    "rate": "58300.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Hosur",
+    "rate": "60770.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Hubli",
+    "rate": "40280.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Hubli",
+    "rate": "57717.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Hubli",
+    "rate": "62540.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Hyderabad",
+    "rate": "33580.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Hyderabad",
+    "rate": "45890.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Hyderabad",
+    "rate": "50880.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Indore",
+    "rate": "29680.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Indore",
+    "rate": "38160.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Indore",
+    "rate": "43460.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Jaipur",
+    "rate": "45580.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Jaipur",
+    "rate": "62540.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Jaipur",
+    "rate": "66780.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Kochi",
+    "rate": "56670.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Kochi",
+    "rate": "78305.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Kochi",
+    "rate": "85860.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Kolhapur",
+    "rate": "23700.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Kolhapur",
+    "rate": "40185.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Kolhapur",
+    "rate": "49820.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Kolkata",
+    "rate": "77083.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Kolkata",
+    "rate": "101760.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Kolkata",
+    "rate": "111300.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Kozhikode",
+    "rate": "53576.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Kozhikode",
+    "rate": "74185.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Kozhikode",
+    "rate": "81855.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Lucknow",
+    "rate": "57240.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Lucknow",
+    "rate": "81620.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Lucknow",
+    "rate": "89040.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Ludhiana",
+    "rate": "57240.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Ludhiana",
+    "rate": "81620.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Ludhiana",
+    "rate": "89040.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Madurai",
+    "rate": "68900.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Madurai",
+    "rate": "78440.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Madurai",
+    "rate": "87980.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Malur",
+    "rate": "38690.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Malur",
+    "rate": "58300.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Malur",
+    "rate": "67840.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Mohali",
+    "rate": "52400.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Mohali",
+    "rate": "78705.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Mohali",
+    "rate": "85860.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Mumbai",
+    "rate": "8759.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Mumbai",
+    "rate": "10305.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Mumbai",
+    "rate": "14840.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Nadia (Kolkata)",
+    "rate": "82425.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Nadia (Kolkata)",
+    "rate": "109215.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Nadia (Kolkata)",
+    "rate": "133560.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Nadiad",
+    "rate": "18444.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Nadiad",
+    "rate": "25440.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Nadiad",
+    "rate": "27285.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Nagpur",
+    "rate": "34980.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Nagpur",
+    "rate": "47700.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Nagpur",
+    "rate": "52470.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Noida",
+    "rate": "47700.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Noida",
+    "rate": "66780.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Noida",
+    "rate": "73458.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Patna",
+    "rate": "77085.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Patna",
+    "rate": "97880.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Patna",
+    "rate": "104275.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Pune",
+    "rate": "10305.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Pune",
+    "rate": "14425.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Pune",
+    "rate": "26500.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Raipur",
+    "rate": "58300.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Raipur",
+    "rate": "72080.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Raipur",
+    "rate": "76320.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Rajkot",
+    "rate": "36900.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Rajkot",
+    "rate": "47700.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Rajkot",
+    "rate": "54060.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Siliguri",
+    "rate": "94446.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Siliguri",
+    "rate": "127200.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Siliguri",
+    "rate": "148400.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Surat",
+    "rate": "18020.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Surat",
+    "rate": "23320.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Surat",
+    "rate": "27560.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Thirullavur",
+    "rate": "47700.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Thirullavur",
+    "rate": "59360.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Thirullavur",
+    "rate": "67160.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Vijayawada",
+    "rate": "44305.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Vijayawada",
+    "rate": "59730.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Vijayawada",
+    "rate": "74200.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Visakhapatnam",
+    "rate": "69960.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "20FT"
+  },
+  {
+    "destination_city": "Visakhapatnam",
+    "rate": "90100.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Visakhapatnam",
+    "rate": "92220.00",
+    "source_city": "Bhiwandi",
+    "truck_type": "32 FT SXL 9MT"
+  },
+  {
+    "destination_city": "Mumbai",
+    "rate": "65000.00",
+    "source_city": "Delhi",
+    "truck_type": "32 FT SXL 7MT"
+  },
+  {
+    "destination_city": "Indore",
+    "rate": "49455.00",
+    "source_city": "Farukhnagar",
+    "truck_type": "32 FT SXL 9MT"
+  }
+]

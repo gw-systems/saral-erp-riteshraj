@@ -1,0 +1,97 @@
+[
+  {
+    "is_active": true,
+    "name": "ahmedabad",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "bangalore",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "bengaluru",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "chennai",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "delhi",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "hyderabad",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "kolkata",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "mumbai",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "pune",
+    "rule_type": "metro_city"
+  },
+  {
+    "is_active": true,
+    "name": "arunachal pradesh",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "assam",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "jammu and kashmir",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "ladakh",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "manipur",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "meghalaya",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "mizoram",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "nagaland",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "sikkim",
+    "rule_type": "special_state"
+  },
+  {
+    "is_active": true,
+    "name": "tripura",
+    "rule_type": "special_state"
+  }
+]

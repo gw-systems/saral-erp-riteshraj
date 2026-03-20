@@ -1,0 +1,747 @@
+[
+  {
+    "city_name": "ahmedabad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.75"
+  },
+  {
+    "city_name": "ahmednagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.75"
+  },
+  {
+    "city_name": "akola",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.25"
+  },
+  {
+    "city_name": "ambarnath",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "ambattur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.20"
+  },
+  {
+    "city_name": "amravati",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.50"
+  },
+  {
+    "city_name": "ankleshwar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.95"
+  },
+  {
+    "city_name": "asangaon",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.15"
+  },
+  {
+    "city_name": "aslali",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.55"
+  },
+  {
+    "city_name": "aurangabad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "autonagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.65"
+  },
+  {
+    "city_name": "badlapur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "bahadurgarh",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "baramati",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.55"
+  },
+  {
+    "city_name": "barshi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.90"
+  },
+  {
+    "city_name": "beed",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.90"
+  },
+  {
+    "city_name": "belgaum",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.85"
+  },
+  {
+    "city_name": "bhandara",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.40"
+  },
+  {
+    "city_name": "bhavnagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.55"
+  },
+  {
+    "city_name": "bhiwadi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "bhiwandi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.05"
+  },
+  {
+    "city_name": "bhopal",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.05"
+  },
+  {
+    "city_name": "bhosari",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.45"
+  },
+  {
+    "city_name": "bilimora",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "bommasandra",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.75"
+  },
+  {
+    "city_name": "broadway",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.40"
+  },
+  {
+    "city_name": "chakan",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.45"
+  },
+  {
+    "city_name": "changodar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.50"
+  },
+  {
+    "city_name": "cherlapally",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.30"
+  },
+  {
+    "city_name": "chhatral",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.15"
+  },
+  {
+    "city_name": "chitegaon",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "cochin",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.70"
+  },
+  {
+    "city_name": "coimbatore",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.90"
+  },
+  {
+    "city_name": "dahej",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.35"
+  },
+  {
+    "city_name": "daman",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.05"
+  },
+  {
+    "city_name": "davangere",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.10"
+  },
+  {
+    "city_name": "delhi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "dewas",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.10"
+  },
+  {
+    "city_name": "dhule",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.95"
+  },
+  {
+    "city_name": "dindori",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.90"
+  },
+  {
+    "city_name": "dombivali",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "erode",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.05"
+  },
+  {
+    "city_name": "faridabad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "fursungi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.45"
+  },
+  {
+    "city_name": "gandhidham",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.70"
+  },
+  {
+    "city_name": "ghaziabad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "goa",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.50"
+  },
+  {
+    "city_name": "golden chowkadi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.75"
+  },
+  {
+    "city_name": "gummidipundi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.60"
+  },
+  {
+    "city_name": "gurugram",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.35"
+  },
+  {
+    "city_name": "halol",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.45"
+  },
+  {
+    "city_name": "haridwar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.55"
+  },
+  {
+    "city_name": "hazira",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.95"
+  },
+  {
+    "city_name": "hubli",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.30"
+  },
+  {
+    "city_name": "ichalkaranji",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.75"
+  },
+  {
+    "city_name": "indore",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.60"
+  },
+  {
+    "city_name": "jaipur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.55"
+  },
+  {
+    "city_name": "jalgaon",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "jalna",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "jamnagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.70"
+  },
+  {
+    "city_name": "jejuri",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.80"
+  },
+  {
+    "city_name": "jodhpur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.85"
+  },
+  {
+    "city_name": "kagal",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.55"
+  },
+  {
+    "city_name": "kalaburagi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.20"
+  },
+  {
+    "city_name": "kandlakoya",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.95"
+  },
+  {
+    "city_name": "karad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.15"
+  },
+  {
+    "city_name": "karwar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.85"
+  },
+  {
+    "city_name": "katedan",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.60"
+  },
+  {
+    "city_name": "khed",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.70"
+  },
+  {
+    "city_name": "khedshivapur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.90"
+  },
+  {
+    "city_name": "khopoli",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "kim",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.95"
+  },
+  {
+    "city_name": "kolhapur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.45"
+  },
+  {
+    "city_name": "kukatpally",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.10"
+  },
+  {
+    "city_name": "kundli",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.85"
+  },
+  {
+    "city_name": "kurkumbh",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.30"
+  },
+  {
+    "city_name": "lautur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.10"
+  },
+  {
+    "city_name": "lonavala",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "m m nagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.75"
+  },
+  {
+    "city_name": "madurai",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.65"
+  },
+  {
+    "city_name": "masjid",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "meerut",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.95"
+  },
+  {
+    "city_name": "mehsana",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.65"
+  },
+  {
+    "city_name": "mira bhayandar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.15"
+  },
+  {
+    "city_name": "morbi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.25"
+  },
+  {
+    "city_name": "mumbai central",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "mysore",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.40"
+  },
+  {
+    "city_name": "nagpur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.20"
+  },
+  {
+    "city_name": "nanded",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.40"
+  },
+  {
+    "city_name": "nashik",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.20"
+  },
+  {
+    "city_name": "navi mumbai",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "navsari",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "new delhi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "nipani",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.85"
+  },
+  {
+    "city_name": "noida",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.85"
+  },
+  {
+    "city_name": "odhav",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.65"
+  },
+  {
+    "city_name": "olpad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.05"
+  },
+  {
+    "city_name": "palghar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "palsana",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.05"
+  },
+  {
+    "city_name": "palus",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.80"
+  },
+  {
+    "city_name": "panvel",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.40"
+  },
+  {
+    "city_name": "patancheru",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.10"
+  },
+  {
+    "city_name": "peenya",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.25"
+  },
+  {
+    "city_name": "pirangut",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.70"
+  },
+  {
+    "city_name": "pithampur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.10"
+  },
+  {
+    "city_name": "pondicherry",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "9.15"
+  },
+  {
+    "city_name": "poonamalle",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.40"
+  },
+  {
+    "city_name": "pune",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.70"
+  },
+  {
+    "city_name": "rajkot",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.25"
+  },
+  {
+    "city_name": "ranipet",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.90"
+  },
+  {
+    "city_name": "ranjangaon",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.45"
+  },
+  {
+    "city_name": "roha",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.75"
+  },
+  {
+    "city_name": "salem",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.90"
+  },
+  {
+    "city_name": "sanand",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.75"
+  },
+  {
+    "city_name": "sangli",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.35"
+  },
+  {
+    "city_name": "satara",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.95"
+  },
+  {
+    "city_name": "secundarabad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.15"
+  },
+  {
+    "city_name": "selaqui",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "7.75"
+  },
+  {
+    "city_name": "shendra",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.55"
+  },
+  {
+    "city_name": "shimoga",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.15"
+  },
+  {
+    "city_name": "shiroli",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.55"
+  },
+  {
+    "city_name": "shirwal",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.70"
+  },
+  {
+    "city_name": "shivane",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.45"
+  },
+  {
+    "city_name": "sidhpur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.10"
+  },
+  {
+    "city_name": "silvasa",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.80"
+  },
+  {
+    "city_name": "sindhudurg",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.85"
+  },
+  {
+    "city_name": "sinnar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.80"
+  },
+  {
+    "city_name": "solapur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.55"
+  },
+  {
+    "city_name": "surat",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.60"
+  },
+  {
+    "city_name": "surendranagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.55"
+  },
+  {
+    "city_name": "talegaon",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.55"
+  },
+  {
+    "city_name": "tathawade",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.20"
+  },
+  {
+    "city_name": "thane",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.15"
+  },
+  {
+    "city_name": "tumkur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.50"
+  },
+  {
+    "city_name": "udaipur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.95"
+  },
+  {
+    "city_name": "umbergaon",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.05"
+  },
+  {
+    "city_name": "v v nagar",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.55"
+  },
+  {
+    "city_name": "vadodara",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.95"
+  },
+  {
+    "city_name": "valsad",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.15"
+  },
+  {
+    "city_name": "vapi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.80"
+  },
+  {
+    "city_name": "vasai",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.15"
+  },
+  {
+    "city_name": "vatva",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "4.55"
+  },
+  {
+    "city_name": "vitthlapur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "5.65"
+  },
+  {
+    "city_name": "wada",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.15"
+  },
+  {
+    "city_name": "wagholi",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "2.45"
+  },
+  {
+    "city_name": "wai",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.10"
+  },
+  {
+    "city_name": "waluj",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "3.15"
+  },
+  {
+    "city_name": "white field",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.65"
+  },
+  {
+    "city_name": "yeshwantpur",
+    "courier_code": "standalone-acpl-surface-surface-50",
+    "rate_per_kg": "6.05"
+  }
+]

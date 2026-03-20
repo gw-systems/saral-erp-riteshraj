@@ -1,0 +1,311 @@
+[
+    {
+        "carrier_name": "ACPL Surface 50kg",
+        "type": "Courier",
+        "mode": "Surface",
+        "active": true,
+        "min_weight": 50.0,
+        "max_weight": 99999.0,
+        "volumetric_divisor": 4500,
+        "logic": "city_to_city",
+        "required_source_city": null,
+        "hub_pincode_prefixes": null,
+        "fuel_config": {
+            "is_dynamic": false,
+            "base_diesel_price": 0.0,
+            "diesel_ratio": 0.0,
+            "flat_percent": 0.1
+        },
+        "fixed_fees": {
+            "docket_fee": 50.0,
+            "eway_bill_fee": 0.0,
+            "cod_fixed": 0.0,
+            "appointment_delivery": 0.0
+        },
+        "variable_fees": {
+            "cod_percent": 0.0,
+            "hamali_per_kg": 0.5,
+            "min_hamali": 50.0,
+            "fov_insured_percent": 0.0,
+            "fov_uninsured_percent": 0.0,
+            "fov_min": 0.0,
+            "damage_claim_percent": 0.0
+        },
+        "routing_logic": {
+            "is_city_specific": true,
+            "zonal_rates": {
+                "forward": {
+                    "z_a": 200.0,
+                    "z_b": 250.0,
+                    "z_c": 300.0,
+                    "z_d": 350.0,
+                    "z_f": 450.0
+                },
+                "additional": {
+                    "z_a": 18.0,
+                    "z_b": 22.0,
+                    "z_c": 26.0,
+                    "z_d": 30.0,
+                    "z_f": 40.0
+                }
+            },
+            "city_rates": {
+                "gandhidham": 5.0
+            },
+            "zone_mapping": null,
+            "door_delivery_slabs": [],
+            "pincode_csv": "ACPL_Test_Pincodes.csv",
+            "hub_city": "bhiwandi"
+        }
+    },
+    {
+        "carrier_name": "Blue Dart",
+        "type": "Courier",
+        "mode": "Air",
+        "active": true,
+        "min_weight": 0.5,
+        "max_weight": 99999.0,
+        "volumetric_divisor": 4500,
+        "logic": "pincode_region_csv",
+        "required_source_city": null,
+        "hub_pincode_prefixes": null,
+        "fuel_config": {
+            "is_dynamic": false,
+            "base_diesel_price": 0.0,
+            "diesel_ratio": 0.0,
+            "flat_percent": 0.556
+        },
+        "fixed_fees": {
+            "docket_fee": 100.0,
+            "eway_bill_fee": 0.0,
+            "cod_fixed": 50.0,
+            "appointment_delivery": 0.0
+        },
+        "variable_fees": {
+            "cod_percent": 2.0,
+            "hamali_per_kg": 0.0,
+            "min_hamali": 0.0,
+            "fov_insured_percent": 0.0,
+            "fov_uninsured_percent": 0.0,
+            "fov_min": 0.0,
+            "damage_claim_percent": 0.0
+        },
+        "routing_logic": {
+            "is_city_specific": false,
+            "zonal_rates": {
+                "forward": {
+                    "EAST": 70.0,
+                    "NORTH": 60.0,
+                    "SOUTH": 80.0,
+                    "WEST": 50.0
+                },
+                "additional": {
+                    "EAST": 60.0,
+                    "NORTH": 50.0,
+                    "SOUTH": 70.0,
+                    "WEST": 40.0
+                }
+            },
+            "city_rates": null,
+            "zone_mapping": null,
+            "door_delivery_slabs": [],
+            "type": "pincode_region_csv",
+            "csv_file": "BlueDart_Test_Pincodes.csv"
+        },
+        "forward_rates": {
+            "EAST": 70.0,
+            "NORTH": 60.0,
+            "SOUTH": 80.0,
+            "WEST": 50.0
+        }
+    },
+    {
+        "carrier_name": "Delhivery Surface 0.5kg",
+        "type": "Courier",
+        "mode": "Surface",
+        "active": true,
+        "min_weight": 0.5,
+        "max_weight": 99999.0,
+        "volumetric_divisor": 4500,
+        "logic": "Zonal",
+        "required_source_city": null,
+        "hub_pincode_prefixes": null,
+        "fuel_config": {
+            "is_dynamic": false,
+            "base_diesel_price": 0.0,
+            "diesel_ratio": 0.0,
+            "flat_percent": 0.0
+        },
+        "fixed_fees": {
+            "docket_fee": 0.0,
+            "eway_bill_fee": 0.0,
+            "cod_fixed": 29.0,
+            "appointment_delivery": 0.0
+        },
+        "variable_fees": {
+            "cod_percent": 1.5,
+            "hamali_per_kg": 0.0,
+            "min_hamali": 0.0,
+            "fov_insured_percent": 0.0,
+            "fov_uninsured_percent": 0.0,
+            "fov_min": 0.0,
+            "damage_claim_percent": 0.0
+        },
+        "routing_logic": {
+            "is_city_specific": false,
+            "zonal_rates": {
+                "forward": {
+                    "z_a": 27.0,
+                    "z_b": 30.0,
+                    "z_c": 36.0,
+                    "z_d": 41.0,
+                    "z_e": 69.0,
+                    "z_f": 69.0
+                },
+                "additional": {
+                    "z_a": 26.0,
+                    "z_b": 32.0,
+                    "z_c": 36.0,
+                    "z_d": 42.0,
+                    "z_e": 67.0,
+                    "z_f": 67.0
+                }
+            },
+            "city_rates": null,
+            "zone_mapping": null,
+            "door_delivery_slabs": []
+        }
+    },
+    {
+        "carrier_name": "Shadowfax Surface 0.5kg",
+        "type": "Courier",
+        "mode": "Surface",
+        "active": true,
+        "min_weight": 0.5,
+        "max_weight": 99999.0,
+        "volumetric_divisor": 4500,
+        "logic": "Zonal",
+        "required_source_city": null,
+        "hub_pincode_prefixes": null,
+        "fuel_config": {
+            "is_dynamic": false,
+            "base_diesel_price": 0.0,
+            "diesel_ratio": 0.0,
+            "flat_percent": 0.0
+        },
+        "fixed_fees": {
+            "docket_fee": 0.0,
+            "eway_bill_fee": 0.0,
+            "cod_fixed": 0.0,
+            "appointment_delivery": 0.0
+        },
+        "variable_fees": {
+            "cod_percent": 0.0,
+            "hamali_per_kg": 0.0,
+            "min_hamali": 0.0,
+            "fov_insured_percent": 0.0,
+            "fov_uninsured_percent": 0.0,
+            "fov_min": 0.0,
+            "damage_claim_percent": 0.0
+        },
+        "routing_logic": {
+            "is_city_specific": false,
+            "zonal_rates": {
+                "forward": {
+                    "z_a": 30.0,
+                    "z_b": 35.0,
+                    "z_c": 40.0,
+                    "z_d": 45.0,
+                    "z_f": 60.0
+                },
+                "additional": {
+                    "z_a": 25.0,
+                    "z_b": 28.0,
+                    "z_c": 32.0,
+                    "z_d": 36.0,
+                    "z_f": 45.0
+                }
+            },
+            "city_rates": null,
+            "zone_mapping": null,
+            "door_delivery_slabs": []
+        }
+    },
+    {
+        "carrier_name": "V-Trans 100kg",
+        "type": "Courier",
+        "mode": "Surface",
+        "active": true,
+        "min_weight": 100.0,
+        "max_weight": 99999.0,
+        "volumetric_divisor": 4500,
+        "logic": "Zonal",
+        "required_source_city": null,
+        "hub_pincode_prefixes": null,
+        "fuel_config": {
+            "is_dynamic": false,
+            "base_diesel_price": 0.0,
+            "diesel_ratio": 0.0,
+            "flat_percent": 0.0
+        },
+        "fixed_fees": {
+            "docket_fee": 0.0,
+            "eway_bill_fee": 0.0,
+            "cod_fixed": 0.0,
+            "appointment_delivery": 0.0
+        },
+        "variable_fees": {
+            "cod_percent": 0.0,
+            "hamali_per_kg": 0.0,
+            "min_hamali": 0.0,
+            "fov_insured_percent": 0.0,
+            "fov_uninsured_percent": 0.0,
+            "fov_min": 0.0,
+            "damage_claim_percent": 0.0
+        },
+        "routing_logic": {
+            "is_city_specific": false,
+            "zonal_rates": {
+                "forward": {
+                    "z_a": 300.0,
+                    "z_b": 350.0,
+                    "z_c": 400.0,
+                    "z_d": 450.0,
+                    "z_f": 550.0
+                },
+                "additional": {
+                    "z_a": 20.0,
+                    "z_b": 25.0,
+                    "z_c": 30.0,
+                    "z_d": 35.0,
+                    "z_f": 45.0
+                }
+            },
+            "city_rates": null,
+            "zone_mapping": null,
+            "door_delivery_slabs": []
+        }
+    },
+    {
+        "carrier_name": "Backup Test Carrier",
+        "mode": "Surface",
+        "min_weight": 0.5,
+        "forward_rates": {
+            "z_a": 35.0,
+            "z_b": 40.0,
+            "z_c": 45.0,
+            "z_d": 50.0,
+            "z_f": 55.0
+        },
+        "additional_rates": {
+            "z_a": 5.0,
+            "z_b": 6.0,
+            "z_c": 7.0,
+            "z_d": 8.0,
+            "z_f": 9.0
+        },
+        "cod_fixed": 25.0,
+        "cod_percent": 0.015,
+        "active": true
+    }
+]
