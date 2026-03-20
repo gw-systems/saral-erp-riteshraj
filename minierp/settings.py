@@ -18,6 +18,26 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _config_bool(name: str, default: bool = False) -> bool:
+    """
+    Parse boolean-like settings while tolerating a few legacy environment values.
+
+    This keeps local shells that export values like ``DEBUG=release`` from
+    crashing Django startup before settings finish loading.
+    """
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return config(name, default=default, cast=bool)
+
+    normalized = str(raw_value).strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on", "dev", "debug", "development", "local"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off", "release", "prod", "production"}:
+        return False
+
+    return config(name, default=default, cast=bool)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -25,7 +45,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')  # Required - no default for security
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = _config_bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
 

@@ -879,7 +879,6 @@ window.courierCalculatorConfig = {
 <script src="{% static 'js/dashboard/courier-rate-calculator.js' %}"></script>
 {% endif %}
 {% if active_section == 'orders' or active_section == 'shipments' or active_section == 'warehouses' %}
-{{ warehouse_seed_payload|json_script:'courier-warehouse-seed' }}
 <script>
 window.courierWorkspaceConfig = {
     activeSection: "{{ active_section }}",
@@ -898,9 +897,8 @@ window.courierWorkspaceConfig = {
     shipmentCancelBaseUrl: "{% url 'operations:courier:shipdaak-order-cancel' 1 %}",
     bulkLabelUrl: "{% url 'operations:courier:shipdaak-bulk-label' %}",
     manifestUrl: "{% url 'operations:courier:shipdaak-manifest' %}",
-    warehouseImportBaseUrl: "{% url 'operations:courier:shipdaak-warehouse-import-existing' 1 %}",
+    warehouseSyncBaseUrl: "{% url 'operations:courier:shipdaak-warehouse-sync' 1 %}",
     warehouseLinkBaseUrl: "{% url 'operations:courier:shipdaak-warehouse-link-existing' 1 %}",
-    warehouseBulkImportUrl: "{% url 'operations:courier:shipdaak-warehouses-bulk-import' %}",
     singleInvoiceBaseUrl: "{% url 'operations:courier:generate-invoice' '1' %}",
     multiInvoiceUrl: "{% url 'operations:courier:download-invoices' %}",
 };

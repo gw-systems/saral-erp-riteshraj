@@ -1,7 +1,5 @@
 """ERP-native courier workspace views."""
 
-import json
-from pathlib import Path
 from urllib.parse import quote
 
 from django.contrib.auth.decorators import login_required
@@ -12,9 +10,6 @@ from django.urls import reverse
 
 from ..models import Courier, Order, OrderStatus, Warehouse
 from ..permissions import user_can_manage_courier, user_can_operate_courier
-
-
-BOOTSTRAP_DIR = Path(__file__).resolve().parent.parent / "bootstrap"
 
 
 SECTION_META = {
@@ -83,31 +78,6 @@ def _workspace_context(request, active_section: str) -> dict:
         .exclude(status=OrderStatus.DRAFT)
         .order_by("-updated_at")[:8]
     )
-    warehouse_seed_rows = []
-    warehouse_seed_path = BOOTSTRAP_DIR / "courier_warehouses.json"
-    if active_section == "warehouses" and warehouse_seed_path.exists():
-        try:
-            raw_rows = json.loads(warehouse_seed_path.read_text(encoding="utf-8"))
-            if isinstance(raw_rows, list):
-                for row in raw_rows:
-                    fields = row.get("fields") if isinstance(row, dict) else None
-                    if isinstance(fields, dict):
-                        warehouse_seed_rows.append(
-                            {
-                                "name": fields.get("name", ""),
-                                "contact_name": fields.get("contact_name", ""),
-                                "contact_no": fields.get("contact_no", ""),
-                                "address": fields.get("address", ""),
-                                "address_2": fields.get("address_2", ""),
-                                "pincode": fields.get("pincode", ""),
-                                "city": fields.get("city", ""),
-                                "state": fields.get("state", ""),
-                                "gst_number": fields.get("gst_number", ""),
-                            }
-                        )
-        except (OSError, ValueError, TypeError):
-            warehouse_seed_rows = []
-
     return {
         "active_section": active_section,
         "section_title": meta["title"],
@@ -134,7 +104,6 @@ def _workspace_context(request, active_section: str) -> dict:
             "orders": f"{reverse('admin:courier_order_changelist')}?admin=1",
             "warehouses": f"{reverse('admin:courier_warehouse_changelist')}?admin=1",
         },
-        "warehouse_seed_payload": warehouse_seed_rows,
     }
 
 

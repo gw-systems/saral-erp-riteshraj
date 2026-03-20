@@ -6,7 +6,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.conf import settings
-from django.utils import timezone
 
 from ..integrations.errors import ShipdaakIntegrationError
 from ..models import Order, OrderStatus, PaymentMode, Courier
@@ -21,17 +20,8 @@ from ..services import (
     BookingService,
     BatchRouteValidationError,
     ShipdaakLifecycleService,
+    ShipdaakWarehouseService,
 )
-
-
-def _extract_warehouse_ids(payload: dict) -> tuple[int | None, int | None]:
-    pickup_id = payload.get("pickupId")
-    rto_id = payload.get("rtoId")
-    if pickup_id and rto_id:
-        return pickup_id, rto_id
-
-    nested = payload.get("data") if isinstance(payload.get("data"), dict) else {}
-    return nested.get("pickup_warehouse_id"), nested.get("rto_warehouse_id")
 
 
 def _build_shipdaak_order_items(order: Order) -> list[dict]:
@@ -162,36 +152,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
                 if order.warehouse_id:
                     warehouse = order.warehouse
-                    pickup_warehouse_id = warehouse.shipdaak_pickup_id
-                    rto_warehouse_id = warehouse.shipdaak_rto_id
-
-                    if not (pickup_warehouse_id and rto_warehouse_id):
-                        warehouse_payload = client.create_warehouse(
-                            warehouse_name=warehouse.name,
-                            contact_name=warehouse.contact_name,
-                            contact_no=warehouse.contact_no,
-                            address=warehouse.address,
-                            address_2=warehouse.address_2,
-                            pin_code=str(warehouse.pincode),
-                            city=warehouse.city,
-                            state=warehouse.state,
-                            gst_number=warehouse.gst_number,
-                        )
-                        pickup_warehouse_id, rto_warehouse_id = _extract_warehouse_ids(
-                            warehouse_payload if isinstance(warehouse_payload, dict) else {}
-                        )
-                        if pickup_warehouse_id and rto_warehouse_id:
-                            warehouse.shipdaak_pickup_id = pickup_warehouse_id
-                            warehouse.shipdaak_rto_id = rto_warehouse_id
-                            warehouse.shipdaak_synced_at = timezone.now()
-                            warehouse.save(
-                                update_fields=[
-                                    "shipdaak_pickup_id",
-                                    "shipdaak_rto_id",
-                                    "shipdaak_synced_at",
-                                    "updated_at",
-                                ]
-                            )
+                    warehouse_payload = ShipdaakWarehouseService.ensure_shipdaak_link(
+                        warehouse=warehouse,
+                    )
+                    pickup_warehouse_id = warehouse_payload.get("pickupId")
+                    rto_warehouse_id = warehouse_payload.get("rtoId")
 
                 result = client.register_order(
                     order_no=order.order_number,

@@ -197,42 +197,21 @@
         <div class="w-full rounded-3xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-900">Link Existing Shipdaak IDs</h2>
+                    <h2 class="text-xl font-semibold text-gray-900">Link Existing ShipDaak IDs</h2>
                     <p id="courier-warehouse-link-name" class="text-sm text-gray-500">-</p>
                 </div>
                 <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-warehouse-link-modal">X</button>
             </div>
             <form id="courier-warehouse-link-form" class="space-y-4 p-6">
                 <input id="courier-warehouse-link-id" type="hidden">
-                <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Shipdaak Pickup ID</span><input id="courier-warehouse-link-pickup" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
-                <label class="space-y-1"><span class="text-sm font-medium text-gray-700">Shipdaak RTO ID</span><input id="courier-warehouse-link-rto" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                <p class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">This does not create anything in ShipDaak. It only saves the existing ShipDaak pickup and RTO IDs on this local warehouse.</p>
+                <label class="space-y-1"><span class="text-sm font-medium text-gray-700">ShipDaak Pickup ID</span><input id="courier-warehouse-link-pickup" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
+                <label class="space-y-1"><span class="text-sm font-medium text-gray-700">ShipDaak RTO ID</span><input id="courier-warehouse-link-rto" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></label>
                 <div class="flex justify-end gap-3 border-t border-gray-200 pt-4">
                     <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-warehouse-link-modal">Cancel</button>
-                    <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">Link IDs</button>
+                    <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">Save Linked IDs</button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
-
-<div id="courier-warehouse-import-modal" class="courier-modal hidden fixed inset-0 z-[90] bg-slate-950/50 p-4">
-    <div class="mx-auto flex min-h-full max-w-4xl items-center justify-center">
-        <div class="w-full max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
-            <div class="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-900">Bulk Import Warehouses</h2>
-                    <p class="text-sm text-gray-500">Review the JSON payload, then push new local warehouses to Shipdaak in bulk.</p>
-                </div>
-                <button type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-close-modal="courier-warehouse-import-modal">X</button>
-            </div>
-            <div class="space-y-4 p-6">
-                <textarea id="courier-warehouse-import-textarea" rows="14" class="w-full rounded-2xl border border-gray-300 px-4 py-3 font-mono text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea>
-                <div id="courier-warehouse-import-summary" class="hidden rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700"></div>
-                <div class="flex justify-end gap-3 border-t border-gray-200 pt-4">
-                    <button type="button" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" data-close-modal="courier-warehouse-import-modal">Cancel</button>
-                    <button type="button" id="courier-warehouse-import-submit" class="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Import Warehouses</button>
-                </div>
-            </div>
         </div>
     </div>
 </div>

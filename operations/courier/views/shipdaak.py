@@ -10,17 +10,7 @@ from ..integrations import ShipdaakV2Client
 from ..integrations.errors import ShipdaakIntegrationError
 from ..models import Order, Warehouse
 from ..permissions import IsAdminToken
-from ..services import ShipdaakLifecycleService
-
-
-def _extract_warehouse_ids(payload: dict) -> tuple[int | None, int | None]:
-    pickup_id = payload.get("pickupId")
-    rto_id = payload.get("rtoId")
-    if pickup_id and rto_id:
-        return pickup_id, rto_id
-
-    nested = payload.get("data") if isinstance(payload.get("data"), dict) else {}
-    return nested.get("pickup_warehouse_id"), nested.get("rto_warehouse_id")
+from ..services import ShipdaakLifecycleService, ShipdaakWarehouseService
 
 
 def _normalize_warehouse_name(name: str) -> str:
@@ -92,38 +82,23 @@ def _extract_url(payload: object, keys: tuple[str, ...]) -> str:
 @api_view(["POST"])
 @permission_classes([IsAdminToken])
 def shipdaak_import_existing_warehouse(request, pk: int):
-    """Register a courier warehouse in ShipDaak using its raw address details."""
+    """
+    Legacy helper that creates a courier warehouse in ShipDaak using raw details.
+
+    If the warehouse is already linked locally, return the stored IDs unless the
+    caller explicitly passes ``force=true``.
+    """
     try:
         warehouse = Warehouse.objects.get(pk=pk)
     except Warehouse.DoesNotExist:
         return Response({"detail": "Courier warehouse not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    client = ShipdaakV2Client()
+    force = ShipdaakWarehouseService.parse_force_flag(request.data.get("force"))
     try:
-        payload = client.create_warehouse(
-            warehouse_name=warehouse.name,
-            contact_name=warehouse.contact_name,
-            contact_no=warehouse.contact_no,
-            address=warehouse.address,
-            address_2=warehouse.address_2,
-            pin_code=str(warehouse.pincode),
-            city=warehouse.city,
-            state=warehouse.state,
-            gst_number=warehouse.gst_number,
+        payload = ShipdaakWarehouseService.ensure_shipdaak_link(
+            warehouse=warehouse,
+            force=force,
         )
-        pickup_id, rto_id = _extract_warehouse_ids(payload if isinstance(payload, dict) else {})
-        if pickup_id and rto_id:
-            warehouse.shipdaak_pickup_id = pickup_id
-            warehouse.shipdaak_rto_id = rto_id
-            warehouse.shipdaak_synced_at = timezone.now()
-            warehouse.save(
-                update_fields=[
-                    "shipdaak_pickup_id",
-                    "shipdaak_rto_id",
-                    "shipdaak_synced_at",
-                    "updated_at",
-                ]
-            )
         if isinstance(payload, dict):
             return Response(_with_courier_warehouse_aliases(payload, warehouse))
         return Response(payload)
@@ -151,55 +126,13 @@ def shipdaak_sync_warehouse(request, pk: int):
     except Warehouse.DoesNotExist:
         return Response({"detail": "Courier warehouse not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    force = bool(request.data.get("force", False))
-
-    # Short-circuit: if already synced and force is off, return cached IDs.
-    if not force and warehouse.shipdaak_pickup_id and warehouse.shipdaak_rto_id:
-        return Response(_with_courier_warehouse_aliases({
-            "pickupId": warehouse.shipdaak_pickup_id,
-            "rtoId": warehouse.shipdaak_rto_id,
-            "synced": True,
-            "alreadyExisted": True,
-            "syncedAt": (
-                warehouse.shipdaak_synced_at.isoformat()
-                if warehouse.shipdaak_synced_at else None
-            ),
-            "warehouseName": warehouse.name,
-        }, warehouse))
-
-    client = ShipdaakV2Client()
+    force = ShipdaakWarehouseService.parse_force_flag(request.data.get("force"))
     try:
-        raw = client.create_warehouse(
-            warehouse_name=warehouse.name,
-            contact_name=warehouse.contact_name,
-            contact_no=warehouse.contact_no,
-            address=warehouse.address,
-            address_2=warehouse.address_2,
-            pin_code=str(warehouse.pincode),
-            city=warehouse.city,
-            state=warehouse.state,
-            gst_number=warehouse.gst_number,
+        payload = ShipdaakWarehouseService.ensure_shipdaak_link(
+            warehouse=warehouse,
+            force=force,
         )
-        pickup_id, rto_id = _extract_warehouse_ids(raw if isinstance(raw, dict) else {})
-        if pickup_id and rto_id:
-            warehouse.shipdaak_pickup_id = pickup_id
-            warehouse.shipdaak_rto_id = rto_id
-            warehouse.shipdaak_synced_at = timezone.now()
-            warehouse.save(
-                update_fields=[
-                    "shipdaak_pickup_id",
-                    "shipdaak_rto_id",
-                    "shipdaak_synced_at",
-                    "updated_at",
-                ]
-            )
-        return Response(_with_courier_warehouse_aliases({
-            "pickupId": pickup_id,
-            "rtoId": rto_id,
-            "synced": bool(pickup_id and rto_id),
-            "alreadyExisted": False,
-            "warehouseName": warehouse.name,
-        }, warehouse))
+        return Response(_with_courier_warehouse_aliases(payload, warehouse))
     except ShipdaakIntegrationError as exc:
         return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -277,16 +210,10 @@ def shipdaak_link_existing_warehouse_id(request, pk: int):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    warehouse.shipdaak_pickup_id = pickup_id
-    warehouse.shipdaak_rto_id = rto_id
-    warehouse.shipdaak_synced_at = timezone.now()
-    warehouse.save(
-        update_fields=[
-            "shipdaak_pickup_id",
-            "shipdaak_rto_id",
-            "shipdaak_synced_at",
-            "updated_at",
-        ]
+    payload = ShipdaakWarehouseService.link_existing_ids(
+        warehouse=warehouse,
+        pickup_id=pickup_id,
+        rto_id=rto_id,
     )
 
     return Response(
@@ -295,7 +222,7 @@ def shipdaak_link_existing_warehouse_id(request, pk: int):
             "warehouseName": warehouse.name,
             "pickupId": pickup_id,
             "rtoId": rto_id,
-            "syncedAt": warehouse.shipdaak_synced_at.isoformat(),
+            "syncedAt": payload["syncedAt"],
         }, warehouse)
     )
 
@@ -303,6 +230,18 @@ def shipdaak_link_existing_warehouse_id(request, pk: int):
 @api_view(["POST"])
 @permission_classes([IsAdminToken])
 def shipdaak_bulk_import_warehouses(request):
+    """
+    Internal bootstrap helper for fresh-project warehouse seeding.
+
+    This endpoint is intentionally kept out of the normal ERP workspace UI.
+    It creates brand-new ShipDaak warehouses for seed rows that do not already
+    exist locally by normalized warehouse name, then stores the returned local
+    link IDs. Existing local warehouses are skipped.
+
+    The legacy ``shipdaak/warehouses/bulk-import`` route is still supported for
+    backward compatibility, but this should be treated as an internal/admin
+    bootstrap flow rather than an everyday warehouse operation.
+    """
     if not isinstance(request.data, list):
         return Response(
             {"detail": "Request body must be a JSON array of courier warehouses."},
@@ -347,7 +286,9 @@ def shipdaak_bulk_import_warehouses(request):
                 state=normalized["state"] or "",
                 gst_number=normalized["gst_number"],
             )
-            pickup_id, rto_id = _extract_warehouse_ids(payload if isinstance(payload, dict) else {})
+            pickup_id, rto_id = ShipdaakWarehouseService.extract_warehouse_ids(
+                payload if isinstance(payload, dict) else {}
+            )
             if not pickup_id or not rto_id:
                 raise ValueError("ShipDaak response missing pickup/rto warehouse IDs.")
 

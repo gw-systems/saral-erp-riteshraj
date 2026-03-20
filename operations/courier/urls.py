@@ -62,6 +62,8 @@ urlpatterns = [
 
     # Shipdaak v2 operations
     path('shipdaak/warehouses/<int:pk>/import-existing', views.shipdaak_import_existing_warehouse, name='shipdaak-warehouse-import-existing'),
+    path('internal/shipdaak/warehouses/bootstrap-import', views.shipdaak_bulk_import_warehouses, name='shipdaak-bootstrap-warehouses'),
+    # Legacy bootstrap route kept for backward compatibility with old admin/bootstrap usage.
     path('shipdaak/warehouses/bulk-import', views.shipdaak_bulk_import_warehouses, name='shipdaak-warehouses-bulk-import'),
     path('shipdaak/warehouses/<int:pk>/sync', views.shipdaak_sync_warehouse, name='shipdaak-warehouse-sync'),
     path('shipdaak/warehouses/<int:pk>/status', views.shipdaak_warehouse_status, name='shipdaak-warehouse-status'),

@@ -3,7 +3,7 @@
   if (!cfg) return;
 
   const s = {
-    wh: [], seed: [], orderType: 'b2c', orderStatus: 'all', orderSearch: '', orders: [], selOrders: new Set(),
+    wh: [], orderType: 'b2c', orderStatus: 'all', orderSearch: '', orders: [], selOrders: new Set(),
     ftlStatus: 'all', ftlOrders: [], selFtl: new Set(), shipType: 'b2c', shipOrders: [], selShip: new Set(),
     shipCarrier: null, shipCompare: [], shipWh: null, shipFtl: [], selShipFtl: new Set(), routes: {}
   };
@@ -62,18 +62,39 @@
   function arr(data) { return Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []); }
   function setActive(btns, fn) { btns.forEach((b) => { const on = fn(b); b.classList.toggle('bg-white', on); b.classList.toggle('text-blue-700', on); b.classList.toggle('shadow-sm', on); b.classList.toggle('text-gray-600', !on); }); }
   function empty(el, msg) { if (el) el.innerHTML = `<div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center text-sm text-gray-500">${esc(msg)}</div>`; }
-  function seedRows() { try { return JSON.parse(q('courier-warehouse-seed')?.textContent || '[]'); } catch { return []; } }
   function whOptions() { return s.wh.filter((w) => w.is_active !== false).map((w) => `<option value="${w.id}">${esc(w.name)} (${esc(w.pincode)})</option>`).join(''); }
 
   function fillWhSelects() {
     const orderWh = q('courier-order-warehouse'); if (orderWh) orderWh.innerHTML = `<option value="">Select warehouse</option>${whOptions()}`;
     const shipWh = q('courier-shipment-warehouse'); if (shipWh) shipWh.innerHTML = `<option value="">Use sender pincode from order</option>${whOptions()}`;
   }
+  function isWhLinked(w) { return !!(w?.shipdaak_pickup_id && w?.shipdaak_rto_id); }
 
   async function loadWh() { s.wh = arr(await api(cfg.warehouseListUrl)); fillWhSelects(); if (cfg.activeSection === 'warehouses') renderWh(); }
   function renderWh() {
     const el = q('courier-warehouse-list'); if (!el) return; if (!s.wh.length) return empty(el, 'No courier warehouses yet.');
     el.innerHTML = s.wh.map((w) => `<article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div class="flex items-center gap-3"><h3 class="text-lg font-semibold text-gray-900">${esc(w.name)}</h3><span class="rounded-full px-3 py-1 text-xs font-semibold ${w.shipdaak_pickup_id && w.shipdaak_rto_id ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${w.shipdaak_pickup_id && w.shipdaak_rto_id ? 'Synced' : 'Not Synced'}</span></div><p class="mt-2 text-sm text-gray-600">${esc(w.address)}${w.address_2 ? `, ${esc(w.address_2)}` : ''}</p><p class="mt-1 text-sm text-gray-600">${esc(w.city)}, ${esc(w.state)} â€¢ ${esc(w.pincode)}</p><p class="mt-1 text-sm text-gray-600">Contact: ${esc(w.contact_name)} (${esc(w.contact_no)})</p><p class="mt-3 text-xs text-gray-500">Pickup ID: ${esc(w.shipdaak_pickup_id || '-')} â€¢ RTO ID: ${esc(w.shipdaak_rto_id || '-')}</p></div><div class="flex flex-wrap gap-2"><button type="button" data-wh-sync="${w.id}" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Sync to Shipdaak</button><button type="button" data-wh-link="${w.id}" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Link Existing IDs</button></div></div></article>`).join('');
+  }
+
+  function renderWh() {
+    const el = q('courier-warehouse-list'); if (!el) return; if (!s.wh.length) return empty(el, 'No courier warehouses yet.');
+    el.innerHTML = s.wh.map((w) => {
+      const linked = isWhLinked(w);
+      const createClasses = linked
+        ? 'cursor-not-allowed rounded-xl bg-slate-300 px-4 py-2 text-sm font-semibold text-white'
+        : 'rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700';
+      const createLabel = linked ? 'Already Linked' : 'Create NEW in ShipDaak';
+      const createTitle = linked
+        ? 'This warehouse is already linked to ShipDaak.'
+        : 'Creates a brand-new warehouse in ShipDaak. Use only if it does not already exist there.';
+      const helperTone = linked
+        ? 'rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900'
+        : 'rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900';
+      const helperText = linked
+        ? 'This local warehouse is already linked to ShipDaak.'
+        : 'Important: if this warehouse already exists in ShipDaak, do not create a new one. Use Link Existing ShipDaak IDs instead.';
+      return `<article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div class="min-w-0 flex-1"><div class="flex items-center gap-3"><h3 class="text-lg font-semibold text-gray-900">${esc(w.name)}</h3><span class="rounded-full px-3 py-1 text-xs font-semibold ${linked ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${linked ? 'Linked to ShipDaak' : 'Not Linked to ShipDaak'}</span></div><p class="mt-2 text-sm text-gray-600">${esc(w.address)}${w.address_2 ? `, ${esc(w.address_2)}` : ''}</p><p class="mt-1 text-sm text-gray-600">${esc(w.city)}, ${esc(w.state)} &middot; ${esc(w.pincode)}</p><p class="mt-1 text-sm text-gray-600">Contact: ${esc(w.contact_name)} (${esc(w.contact_no)})</p><p class="mt-3 text-xs text-gray-500">Pickup ID: ${esc(w.shipdaak_pickup_id || '-')} &middot; RTO ID: ${esc(w.shipdaak_rto_id || '-')}</p><div class="mt-4 ${helperTone}">${esc(helperText)}</div><p class="mt-2 text-xs text-gray-500">Link Existing ShipDaak IDs only saves the known ShipDaak pickup and RTO IDs on this local warehouse. It does not create anything in ShipDaak.</p></div><div class="flex flex-wrap gap-2 lg:max-w-xs lg:justify-end"><button type="button" data-wh-sync="${w.id}" class="${createClasses}" title="${esc(createTitle)}" ${linked ? 'disabled' : ''}>${createLabel}</button><button type="button" data-wh-link="${w.id}" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" title="Saves the existing ShipDaak pickup and RTO IDs locally without creating anything in ShipDaak.">Link Existing ShipDaak IDs</button></div></div></article>`;
+    }).join('');
   }
 
   async function loadOrders() { const url = s.orderStatus === 'all' ? cfg.orderListUrl : `${cfg.orderListUrl}?status=${encodeURIComponent(s.orderStatus)}`; s.orders = arr(await api(url)); renderOrders(); }
@@ -219,9 +240,25 @@
   function consumeShipSelection() { try { const raw = JSON.parse(sessionStorage.getItem('courier_shipment_selection') || 'null'); if (!raw || raw.business_type !== s.shipType) return; const ids = new Set(arr(raw.order_ids).map((id) => intOrNull(id)).filter(Boolean)); s.selShip = new Set(s.shipOrders.filter((o) => ids.has(o.id)).map((o) => o.id)); sessionStorage.removeItem('courier_shipment_selection'); renderShipOrders(); compareCarriers(); } catch { sessionStorage.removeItem('courier_shipment_selection'); } }
   async function bookCarrier() { if (s.shipCarrier == null) return toast('Select a carrier first.', 'warning'); const c = s.shipCompare[s.shipCarrier]; const body = { order_ids: Array.from(s.selShip), business_type: s.shipType, use_global_account: !!q('courier-use-global-account')?.checked }; if (c.carrier_id || c.id) body.carrier_id = c.carrier_id || c.id; else { body.carrier_name = c.carrier || c.carrier_name; body.mode = c.mode; } if (s.shipWh) body.warehouse_id = s.shipWh; await api(cfg.bookCarrierUrl, { method: 'POST', body }); s.selShip.clear(); s.shipCompare = []; s.shipCarrier = null; toast('Carrier booked successfully.', 'success'); await loadOrders(); await loadShipOrders(); }
   async function bookFtlShipments() { const ids = Array.from(s.selShipFtl); if (!ids.length) return; await api(cfg.ftlBookUrl, { method: 'POST', body: { order_ids: ids } }); s.selShipFtl.clear(); toast('FTL orders booked.', 'success'); await loadShipFtl(); await loadFtlOrders(); }
-  async function doSyncWh(id) { await api(pk(cfg.warehouseImportBaseUrl, id), { method: 'POST', body: {} }); toast('Warehouse synced to Shipdaak.', 'success'); await loadWh(); }
-  async function doLinkWh(e) { e.preventDefault(); const id = intOrNull(q('courier-warehouse-link-id').value); if (!id) return; await api(pk(cfg.warehouseLinkBaseUrl, id), { method: 'POST', body: { shipdaak_warehouse_id: intOrNull(q('courier-warehouse-link-pickup').value), rto_id: intOrNull(q('courier-warehouse-link-rto').value) } }); closeModals(); toast('Warehouse IDs linked.', 'success'); await loadWh(); }
-  async function doImportWh() { let body = []; try { body = JSON.parse(q('courier-warehouse-import-textarea').value || '[]'); if (!Array.isArray(body)) throw new Error('Warehouse payload must be a JSON array.'); } catch (e) { return toast(e.message, 'error'); } const r = await api(cfg.warehouseBulkImportUrl, { method: 'POST', body }); q('courier-warehouse-import-summary').classList.remove('hidden'); q('courier-warehouse-import-summary').innerHTML = `<p class="font-semibold text-gray-900">Created: ${esc(r.created || 0)} â€¢ Updated: ${esc(r.updated || 0)} â€¢ Skipped: ${esc(r.skipped || 0)} â€¢ Failed: ${esc((r.failed || []).length)}</p>`; toast('Warehouse bulk import finished.', 'success'); await loadWh(); }
+  async function doSyncWh(id) {
+    const warehouse = s.wh.find((w) => Number(w.id) === Number(id));
+    if (!warehouse) return;
+    if (isWhLinked(warehouse)) return toast('This warehouse is already linked to ShipDaak.', 'info');
+    if (!confirm('This will create a brand-new warehouse in ShipDaak. If the warehouse already exists in ShipDaak, cancel and use Link Existing ShipDaak IDs instead.')) return;
+    const result = await api(pk(cfg.warehouseSyncBaseUrl, id), { method: 'POST', body: {} });
+    toast(result?.alreadyExisted ? 'Existing ShipDaak IDs reused for this warehouse.' : 'New ShipDaak warehouse created and linked.', 'success');
+    await loadWh();
+  }
+  async function doLinkWh(e) {
+    e.preventDefault();
+    const id = intOrNull(q('courier-warehouse-link-id').value);
+    if (!id) return;
+    await api(pk(cfg.warehouseLinkBaseUrl, id), { method: 'POST', body: { shipdaak_warehouse_id: intOrNull(q('courier-warehouse-link-pickup').value), rto_id: intOrNull(q('courier-warehouse-link-rto').value) } });
+    closeModals();
+    toast('Existing ShipDaak IDs saved locally.', 'success');
+    await loadWh();
+  }
+
   function updateCreateOrderButton() {
     const btn = q('courier-open-create-order');
     if (!btn) return;
@@ -256,12 +293,10 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
     q('courier-open-create-order')?.addEventListener('click', () => { if (s.orderType === 'ftl') openFtl(null); else openOrder(null, s.orderType); });
     q('courier-open-create-warehouse')?.addEventListener('click', () => modal('courier-warehouse-modal', true));
-    q('courier-open-warehouse-import')?.addEventListener('click', () => { q('courier-warehouse-import-summary')?.classList.add('hidden'); q('courier-warehouse-import-textarea').value = JSON.stringify(s.seed, null, 2); modal('courier-warehouse-import-modal', true); });
     q('courier-order-form')?.addEventListener('submit', (e) => saveOrder(e).catch((x) => toast(x.message, 'error')));
     q('courier-ftl-form')?.addEventListener('submit', (e) => saveFtl(e).catch((x) => toast(x.message, 'error')));
     q('courier-warehouse-form')?.addEventListener('submit', (e) => saveWh(e).catch((x) => toast(x.message, 'error')));
     q('courier-warehouse-link-form')?.addEventListener('submit', (e) => doLinkWh(e).catch((x) => toast(x.message, 'error')));
-    q('courier-warehouse-import-submit')?.addEventListener('click', () => doImportWh().catch((x) => toast(x.message, 'error')));
     q('courier-order-recipient-pincode')?.addEventListener('input', (e) => {
       const pin = String(e.target.value || '').trim();
       if (/^\d{6}$/.test(pin)) lookupPin().catch((x) => toast(x.message, 'warning'));
@@ -303,7 +338,7 @@
   }
 
   async function init() {
-    s.seed = seedRows(); bind(); await Promise.all([loadWh(), loadRoutes()]);
+    bind(); await Promise.all([loadWh(), loadRoutes()]);
     if (cfg.activeSection === 'orders') { updateCreateOrderButton(); setActive([...document.querySelectorAll('[data-orders-type]')], (x) => x.dataset.ordersType === 'b2c'); setActive([...document.querySelectorAll('[data-orders-status]')], (x) => x.dataset.ordersStatus === 'all'); await loadOrders(); }
     if (cfg.activeSection === 'shipments') { setActive([...document.querySelectorAll('[data-shipment-type]')], (x) => x.dataset.shipmentType === 'b2c'); await loadShipOrders(); }
     if (cfg.activeSection === 'warehouses') renderWh();

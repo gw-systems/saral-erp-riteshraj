@@ -630,6 +630,124 @@ class CarrierService:
         }
 
 
+class ShipdaakWarehouseService:
+    """Shared helpers for linking or creating ShipDaak warehouse mappings safely."""
+
+    @staticmethod
+    def extract_warehouse_ids(payload: dict[str, Any]) -> tuple[int | None, int | None]:
+        pickup_id = payload.get("pickupId")
+        rto_id = payload.get("rtoId")
+        if pickup_id and rto_id:
+            return pickup_id, rto_id
+
+        nested = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        return nested.get("pickup_warehouse_id"), nested.get("rto_warehouse_id")
+
+    @staticmethod
+    def parse_force_flag(raw_value: Any) -> bool:
+        if isinstance(raw_value, bool):
+            return raw_value
+        if raw_value is None:
+            return False
+        normalized = str(raw_value).strip().lower()
+        return normalized in {"1", "true", "yes", "y", "on"}
+
+    @staticmethod
+    def _save_linked_ids(
+        warehouse: Warehouse,
+        pickup_id: int,
+        rto_id: int,
+    ) -> dict[str, Any]:
+        warehouse.shipdaak_pickup_id = pickup_id
+        warehouse.shipdaak_rto_id = rto_id
+        warehouse.shipdaak_synced_at = timezone.now()
+        warehouse.save(
+            update_fields=[
+                "shipdaak_pickup_id",
+                "shipdaak_rto_id",
+                "shipdaak_synced_at",
+                "updated_at",
+            ]
+        )
+        return {
+            "pickupId": pickup_id,
+            "rtoId": rto_id,
+            "synced": True,
+            "alreadyExisted": False,
+            "warehouseName": warehouse.name,
+            "syncedAt": (
+                warehouse.shipdaak_synced_at.isoformat()
+                if warehouse.shipdaak_synced_at else None
+            ),
+        }
+
+    @classmethod
+    def link_existing_ids(
+        cls,
+        warehouse: Warehouse,
+        pickup_id: int,
+        rto_id: int | None = None,
+    ) -> dict[str, Any]:
+        resolved_rto_id = rto_id if rto_id is not None else pickup_id
+        return cls._save_linked_ids(
+            warehouse=warehouse,
+            pickup_id=int(pickup_id),
+            rto_id=int(resolved_rto_id),
+        )
+
+    @classmethod
+    def ensure_shipdaak_link(
+        cls,
+        warehouse: Warehouse,
+        *,
+        force: bool = False,
+        client: ShipdaakV2Client | None = None,
+    ) -> dict[str, Any]:
+        if not force and warehouse.shipdaak_pickup_id and warehouse.shipdaak_rto_id:
+            return {
+                "pickupId": warehouse.shipdaak_pickup_id,
+                "rtoId": warehouse.shipdaak_rto_id,
+                "synced": True,
+                "alreadyExisted": True,
+                "warehouseName": warehouse.name,
+                "syncedAt": (
+                    warehouse.shipdaak_synced_at.isoformat()
+                    if warehouse.shipdaak_synced_at else None
+                ),
+            }
+
+        active_client = client or ShipdaakV2Client()
+        payload = active_client.create_warehouse(
+            warehouse_name=warehouse.name,
+            contact_name=warehouse.contact_name,
+            contact_no=warehouse.contact_no,
+            address=warehouse.address,
+            address_2=warehouse.address_2,
+            pin_code=str(warehouse.pincode),
+            city=warehouse.city,
+            state=warehouse.state,
+            gst_number=warehouse.gst_number,
+        )
+        pickup_id, rto_id = cls.extract_warehouse_ids(payload if isinstance(payload, dict) else {})
+        if not pickup_id or not rto_id:
+            return {
+                "pickupId": pickup_id,
+                "rtoId": rto_id,
+                "synced": False,
+                "alreadyExisted": False,
+                "warehouseName": warehouse.name,
+                "syncedAt": (
+                    warehouse.shipdaak_synced_at.isoformat()
+                    if warehouse.shipdaak_synced_at else None
+                ),
+            }
+        return cls._save_linked_ids(
+            warehouse=warehouse,
+            pickup_id=int(pickup_id),
+            rto_id=int(rto_id),
+        )
+
+
 class ShipdaakLifecycleService:
     """Shared lifecycle operations for Shipdaak-backed shipments."""
 

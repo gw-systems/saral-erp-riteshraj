@@ -717,3 +717,42 @@ def porter_invoice_edit_api(request):
             'status': 'error',
             'error': result.get('error', 'Unknown error'),
         }, status=500)
+
+
+@login_required
+@require_POST
+def porter_invoice_edit_upload_api(request):
+    """
+    Backward-compatible alias for the single-edit upload/extract step.
+
+    Older URL wiring still points at this endpoint name, but the actual upload
+    behavior already lives in ``porter_invoice_extract_api``.
+    """
+    return porter_invoice_extract_api(request)
+
+
+def _porter_invoice_not_configured_response(request, feature_name: str):
+    denied = _check_access(request)
+    if denied:
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    return JsonResponse(
+        {
+            'error': f'{feature_name} is not configured in this ERP build.',
+            'configured': False,
+            'results': [],
+        },
+        status=501,
+    )
+
+
+@login_required
+def porter_invoice_drive_subfolders_api(request):
+    """Placeholder until Google Drive-backed Porter workflows are restored."""
+    return _porter_invoice_not_configured_response(request, 'Google Drive subfolder lookup')
+
+
+@login_required
+@require_POST
+def porter_invoice_drive_upload_batch_api(request):
+    """Placeholder until Google Drive-backed Porter batch uploads are restored."""
+    return _porter_invoice_not_configured_response(request, 'Google Drive batch upload')
