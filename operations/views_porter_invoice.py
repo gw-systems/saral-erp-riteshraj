@@ -6,6 +6,7 @@ Batch processing + single invoice editing for Porter transport invoices.
 import io
 import json
 import logging
+import math
 import re
 import tempfile
 import zipfile
@@ -32,6 +33,27 @@ PORTER_ALLOWED_ROLES = [
 ]
 
 _CRN_PREFIX_RE = re.compile(r"^CRN", re.IGNORECASE)
+CRN_HEADER_CANDIDATES = (
+    'crn',
+    'crn no',
+    'crn number',
+    'order id',
+    'order no',
+    'order number',
+    'invoice id',
+    'invoice no',
+    'invoice number',
+)
+TOTAL_HEADER_CANDIDATES = (
+    'new total',
+    'total amount',
+    'total',
+    'amount',
+    'price',
+    'fare',
+)
+EXCEL_VALIDATION_SAMPLE_SIZE = 20
+EXCEL_VALIDATION_THRESHOLD = 0.90
 
 
 def _check_access(request):
@@ -50,7 +72,40 @@ def _normalise_crn(raw: str) -> str:
     return _CRN_PREFIX_RE.sub("", s)
 
 
-def _parse_excel_mapping(excel_file) -> dict:
+def _normalise_excel_header(value) -> str:
+    """Normalise Excel header text for safer column matching."""
+    return re.sub(r"[^a-z0-9]+", " ", str(value or "").strip().lower()).strip()
+
+
+def _find_excel_column_index(header, candidates):
+    """Return the first header index matching any candidate phrase, else None."""
+    for i, h in enumerate(header):
+        if any(candidate in h for candidate in candidates):
+            return i
+    return None
+
+
+def _looks_like_crn(value) -> bool:
+    """Return True when the cell value matches the expected CRN format."""
+    text = str(value or '').strip().upper()
+    if text.endswith('.0'):
+        text = text[:-2]
+    return text.startswith('CRN') and len(text) > 3
+
+
+def _looks_like_amount(value) -> bool:
+    """Return True when the cell value can be parsed as a decimal amount."""
+    text = str(value or '').strip().replace(',', '')
+    if not text:
+        return False
+    try:
+        Decimal(text)
+        return True
+    except Exception:
+        return False
+
+
+def _parse_excel_mapping(excel_file, crn_col_index=None, total_col_index=None) -> dict:
     """Parse Excel file to get CRN → target_total mapping using openpyxl."""
     import openpyxl
 
@@ -61,23 +116,20 @@ def _parse_excel_mapping(excel_file) -> dict:
     if not rows:
         return {}
 
-    header = [str(h).strip().lower() if h else '' for h in rows[0]]
+    header = [_normalise_excel_header(h) for h in rows[0]]
 
-    # Find CRN column
-    crn_col = None
-    for i, h in enumerate(header):
-        if any(k in h for k in ('crn', 'order', 'number')):
-            crn_col = i
-            break
+    crn_col = crn_col_index if crn_col_index is not None else _find_excel_column_index(
+        header, CRN_HEADER_CANDIDATES,
+    )
+    total_col = total_col_index if total_col_index is not None else _find_excel_column_index(
+        header, TOTAL_HEADER_CANDIDATES,
+    )
 
-    # Find total column
-    total_col = None
-    for i, h in enumerate(header):
-        if any(k in h for k in ('total', 'amount', 'new', 'price')):
-            total_col = i
-            break
-
-    if crn_col is None or total_col is None:
+    if (
+        crn_col is None or total_col is None
+        or crn_col < 0 or total_col < 0
+        or crn_col >= len(header) or total_col >= len(header)
+    ):
         return {}
 
     mapping = {}
@@ -95,6 +147,90 @@ def _parse_excel_mapping(excel_file) -> dict:
 
     wb.close()
     return mapping
+
+
+def _validate_excel_crn_column(excel_file, requested_col_index=None):
+    """Validate that the chosen CRN column mostly contains CRN-like values."""
+    import openpyxl
+
+    wb = openpyxl.load_workbook(excel_file, read_only=True, data_only=True)
+    ws = wb.active
+
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        wb.close()
+        return False, None, [], 0, 0
+
+    header = [_normalise_excel_header(h) for h in rows[0]]
+    crn_col = requested_col_index if requested_col_index is not None else _find_excel_column_index(
+        header, CRN_HEADER_CANDIDATES,
+    )
+
+    if crn_col is None or crn_col < 0 or crn_col >= len(header):
+        wb.close()
+        return False, crn_col, [], 0, 0
+
+    samples = []
+    for row in rows[1:]:
+        if len(row) <= crn_col:
+            continue
+        value = row[crn_col]
+        if value in (None, ''):
+            continue
+        samples.append(str(value).strip())
+        if len(samples) >= EXCEL_VALIDATION_SAMPLE_SIZE:
+            break
+
+    wb.close()
+
+    if not samples:
+        return False, crn_col, [], 0, 0
+
+    valid_count = sum(1 for value in samples if _looks_like_crn(value))
+    required_count = max(1, math.ceil(len(samples) * EXCEL_VALIDATION_THRESHOLD))
+    return valid_count >= required_count, crn_col, samples, valid_count, len(samples)
+
+
+def _validate_excel_total_column(excel_file, requested_col_index=None):
+    """Validate that the chosen total column mostly contains numeric values."""
+    import openpyxl
+
+    wb = openpyxl.load_workbook(excel_file, read_only=True, data_only=True)
+    ws = wb.active
+
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        wb.close()
+        return False, None, [], 0, 0
+
+    header = [_normalise_excel_header(h) for h in rows[0]]
+    total_col = requested_col_index if requested_col_index is not None else _find_excel_column_index(
+        header, TOTAL_HEADER_CANDIDATES,
+    )
+
+    if total_col is None or total_col < 0 or total_col >= len(header):
+        wb.close()
+        return False, total_col, [], 0, 0
+
+    samples = []
+    for row in rows[1:]:
+        if len(row) <= total_col:
+            continue
+        value = row[total_col]
+        if value in (None, ''):
+            continue
+        samples.append(str(value).strip())
+        if len(samples) >= EXCEL_VALIDATION_SAMPLE_SIZE:
+            break
+
+    wb.close()
+
+    if not samples:
+        return False, total_col, [], 0, 0
+
+    valid_count = sum(1 for value in samples if _looks_like_amount(value))
+    required_count = max(1, math.ceil(len(samples) * EXCEL_VALIDATION_THRESHOLD))
+    return valid_count >= required_count, total_col, samples, valid_count, len(samples)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -148,6 +284,18 @@ def porter_invoice_batch(request):
     if request.method == 'GET':
         return render(request, 'operations/porter_invoice_batch.html')
 
+    def _parse_column_index(value):
+        value = (value or '').strip()
+        if value == '':
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    excel_crn_column = _parse_column_index(request.POST.get('excel_crn_column'))
+    excel_total_column = _parse_column_index(request.POST.get('excel_total_column'))
+
     # POST — process batch
     files = request.FILES.getlist('pdf_files')
     if not files:
@@ -165,7 +313,49 @@ def porter_invoice_batch(request):
     excel_file = request.FILES.get('excel_file')
     if excel_file:
         try:
-            excel_mapping = _parse_excel_mapping(excel_file)
+            excel_file.seek(0)
+            crn_is_valid, effective_crn_column, crn_samples, crn_valid_count, crn_sample_count = _validate_excel_crn_column(
+                excel_file,
+                requested_col_index=excel_crn_column,
+            )
+            if not crn_is_valid:
+                sample_preview = ", ".join(crn_samples[:5]) if crn_samples else "No non-empty sample values found"
+                messages.error(
+                    request,
+                    "Selected CRN column failed validation. "
+                    f"{crn_valid_count}/{crn_sample_count} sampled values start with CRN "
+                    f"(minimum {math.ceil(max(crn_sample_count, 1) * EXCEL_VALIDATION_THRESHOLD)} required). "
+                    f"Preview: {sample_preview}"
+                )
+                return render(request, 'operations/porter_invoice_batch.html')
+
+            excel_file.seek(0)
+            total_is_valid, effective_total_column, total_samples, total_valid_count, total_sample_count = _validate_excel_total_column(
+                excel_file,
+                requested_col_index=excel_total_column,
+            )
+            if not total_is_valid:
+                sample_preview = ", ".join(total_samples[:5]) if total_samples else "No non-empty sample values found"
+                messages.error(
+                    request,
+                    "Selected New Total column failed validation. "
+                    f"{total_valid_count}/{total_sample_count} sampled values look numeric "
+                    f"(minimum {math.ceil(max(total_sample_count, 1) * EXCEL_VALIDATION_THRESHOLD)} required). "
+                    f"Preview: {sample_preview}"
+                )
+                return render(request, 'operations/porter_invoice_batch.html')
+
+            excel_file.seek(0)
+            excel_mapping = _parse_excel_mapping(
+                excel_file,
+                crn_col_index=effective_crn_column,
+                total_col_index=effective_total_column,
+            )
+            if not excel_mapping:
+                messages.warning(
+                    request,
+                    "Excel mapping was uploaded but no CRN/Total mapping rows could be parsed."
+                )
         except Exception as e:
             messages.warning(request, f"Failed to parse Excel file: {e}. Processing without mapping.")
 

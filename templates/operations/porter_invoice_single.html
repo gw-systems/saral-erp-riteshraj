@@ -1,16 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Single Edit — Porter Invoice Editor{% endblock %}
+{% block title %}Details Editor - Porter Invoice Editor{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-6" x-data="singleEditor()">
     <div class="mb-6">
         <a href="{% url 'operations:porter_invoice_dashboard' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Dashboard</a>
-        <h1 class="text-2xl font-bold text-gray-900 mt-2">Single Invoice Edit</h1>
-        <p class="text-sm text-gray-500 mt-1">Upload a Porter invoice PDF, then edit individual fields</p>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">Details Editor</h1>
+        <p class="text-sm text-gray-500 mt-1">Upload a Porter invoice PDF, then edit invoice details</p>
     </div>
 
-    <!-- Phase 1: Upload -->
     <div x-show="phase === 'upload'" x-transition class="bg-white rounded-lg shadow-sm border p-6">
         <label class="block text-sm font-medium text-gray-700 mb-3">Invoice PDF *</label>
         <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition">
@@ -20,7 +19,6 @@
             <p class="text-xs text-gray-400 mt-2">Select a single Porter invoice PDF</p>
         </div>
 
-        <!-- Upload progress -->
         <div x-show="uploading" class="mt-4">
             <div class="flex items-center gap-3 text-sm text-gray-600">
                 <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
@@ -28,11 +26,9 @@
             </div>
         </div>
 
-        <!-- Upload error -->
         <div x-show="uploadError" class="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700" x-text="uploadError"></div>
     </div>
 
-    <!-- Phase 2: Edit Form -->
     <div x-show="phase === 'edit'" x-transition>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div class="flex items-center justify-between">
@@ -45,7 +41,6 @@
         </div>
 
         <form @submit.prevent="applyEdits()" class="space-y-6">
-            <!-- CRN & Date -->
             <div class="bg-white rounded-lg shadow-sm border p-6">
                 <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Header Fields</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -56,22 +51,25 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Invoice Date</label>
-                        <div class="relative">
+                        <div class="relative flex items-center gap-2">
                             <input type="text" readonly
                                    :value="fields.date || ''"
-                                   placeholder="Pick a date →"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-pointer focus:ring-blue-500 focus:border-blue-500"
-                                   @click="$refs.invoiceDatePicker.showPicker()">
+                                   placeholder="Pick a date"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
+                            <button type="button"
+                                    @click="openInvoiceDatePicker()"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm text-blue-700 bg-white hover:bg-blue-50 whitespace-nowrap">
+                                Select Date
+                            </button>
                             <input type="date" x-ref="invoiceDatePicker"
                                    @change="onInvoiceDateChange($event.target.value)"
-                                   class="absolute inset-0 opacity-0 w-full cursor-pointer"
+                                   class="absolute inset-0 opacity-0 pointer-events-none"
                                    tabindex="-1">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Vehicle -->
             <div class="bg-white rounded-lg shadow-sm border p-6">
                 <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Vehicle</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -93,30 +91,31 @@
                 </div>
             </div>
 
-            <!-- Pickup -->
             <div class="bg-white rounded-lg shadow-sm border p-6">
                 <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Pickup Details</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="sm:col-span-3">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Pickup Location</label>
-                        <input type="text" x-model="fields.pickup_loc" placeholder="Full pickup address"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Pickup Time</label>
-                        <input type="text" x-model="fields.pickup_time" placeholder="e.g. 10:30 AM"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <div class="relative">
+                            <input type="text" readonly
+                                   :value="fields.pickup_time || ''"
+                                   placeholder="e.g. 10:30 AM"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-pointer focus:ring-blue-500 focus:border-blue-500"
+                                   @click="openTimePicker('pickupTimePicker', 'pickup_time')">
+                            <input type="time" x-ref="pickupTimePicker"
+                                   @change="onTimeChange('pickup_time', $event.target.value)"
+                                   class="absolute inset-0 opacity-0 pointer-events-none"
+                                   tabindex="-1">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Pickup Date</label>
-                        <input type="text" x-model="fields.pickup_date" placeholder="e.g. 15/01/2026"
-                               @input="if (!fields.drop_date) fields.drop_date = fields.pickup_date"
+                        <input type="text" x-model="fields.pickup_date" placeholder="e.g. 18/10/2026"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
             </div>
 
-            <!-- Drop -->
             <div class="bg-white rounded-lg shadow-sm border p-6">
                 <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Drop Details</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -127,18 +126,26 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Drop Time</label>
-                        <input type="text" x-model="fields.drop_time" placeholder="e.g. 2:45 PM"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <div class="relative">
+                            <input type="text" readonly
+                                   :value="fields.drop_time || ''"
+                                   placeholder="e.g. 2:45 PM"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-pointer focus:ring-blue-500 focus:border-blue-500"
+                                   @click="openTimePicker('dropTimePicker', 'drop_time')">
+                            <input type="time" x-ref="dropTimePicker"
+                                   @change="onTimeChange('drop_time', $event.target.value)"
+                                   class="absolute inset-0 opacity-0 pointer-events-none"
+                                   tabindex="-1">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Drop Date</label>
-                        <input type="text" x-model="fields.drop_date" placeholder="e.g. 15/01/2026"
+                        <input type="text" x-model="fields.drop_date" placeholder="e.g. 18/10/2026"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
             </div>
 
-            <!-- Submit -->
             <div class="flex items-center justify-between">
                 <p class="text-xs text-gray-400">Leave fields blank to keep originals</p>
                 <button type="submit" :disabled="submitting"
@@ -158,12 +165,10 @@
                 </button>
             </div>
 
-            <!-- Edit error -->
             <div x-show="editError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700" x-text="editError"></div>
         </form>
     </div>
 
-    <!-- Phase 3: Download -->
     <div x-show="phase === 'download'" x-transition>
         <div class="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
             <svg class="mx-auto h-12 w-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -202,10 +207,14 @@ function singleEditor() {
         fileId: null,
         sessionId: null,
         downloadUrl: '',
+        pickerValues: {
+            pickup_time: '',
+            drop_time: '',
+        },
         fields: {
             crn: '', date: '',
             vehicle_type: '', vehicle: '', num_stops: '',
-            pickup_loc: '', pickup_time: '', pickup_date: '',
+            pickup_time: '', pickup_date: '',
             drop_loc: '', drop_time: '', drop_date: '',
         },
 
@@ -220,15 +229,25 @@ function singleEditor() {
             this.fileId = null;
             this.sessionId = null;
             this.downloadUrl = '';
+            this.pickerValues = {
+                pickup_time: '',
+                drop_time: '',
+            };
             this.fields = {
                 crn: '', date: '',
                 vehicle_type: '', vehicle: '', num_stops: '',
-                pickup_loc: '', pickup_time: '', pickup_date: '',
+                pickup_time: '', pickup_date: '',
                 drop_loc: '', drop_time: '', drop_date: '',
             };
             this.$nextTick(() => {
                 if (this.$refs.invoiceDatePicker) {
                     this.$refs.invoiceDatePicker.value = '';
+                }
+                if (this.$refs.pickupTimePicker) {
+                    this.$refs.pickupTimePicker.value = '';
+                }
+                if (this.$refs.dropTimePicker) {
+                    this.$refs.dropTimePicker.value = '';
                 }
             });
         },
@@ -273,6 +292,18 @@ function singleEditor() {
             this.submitting = true;
             this.editError = '';
 
+            if (this.fields.pickup_time && !this.isValidTime(this.fields.pickup_time)) {
+                this.editError = 'Pickup Time must be in the format 12:00 PM or 12:00 AM.';
+                this.submitting = false;
+                return;
+            }
+
+            if (this.fields.drop_time && !this.isValidTime(this.fields.drop_time)) {
+                this.editError = 'Drop Time must be in the format 12:00 PM or 12:00 AM.';
+                this.submitting = false;
+                return;
+            }
+
             const formData = new FormData();
             formData.append('file_id', this.fileId);
 
@@ -301,20 +332,89 @@ function singleEditor() {
             this.submitting = false;
         },
 
+        openInvoiceDatePicker() {
+            if (!this.$refs.invoiceDatePicker) return;
+
+            const picker = this.$refs.invoiceDatePicker;
+            if (typeof picker.showPicker === 'function') {
+                picker.showPicker();
+                return;
+            }
+
+            picker.focus();
+            picker.click();
+        },
+
+        openTimePicker(refName, fieldName) {
+            const picker = this.$refs[refName];
+            if (!picker) return;
+
+            if (this.pickerValues[fieldName]) {
+                picker.value = this.pickerValues[fieldName];
+            } else if (this.fields[fieldName]) {
+                const converted = this.convertTimeTo24Hour(this.fields[fieldName]);
+                if (converted) {
+                    picker.value = converted;
+                    this.pickerValues[fieldName] = converted;
+                }
+            }
+
+            if (typeof picker.showPicker === 'function') {
+                picker.showPicker();
+                return;
+            }
+
+            picker.focus();
+            picker.click();
+        },
+
+        onTimeChange(fieldName, rawTime) {
+            if (!rawTime) return;
+
+            this.pickerValues[fieldName] = rawTime;
+            this.fields[fieldName] = this.formatTime12Hour(rawTime);
+        },
+
+        formatTime12Hour(rawTime) {
+            const [hourString, minute] = rawTime.split(':');
+            const hour = parseInt(hourString, 10);
+            const suffix = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minute} ${suffix}`;
+        },
+
+        convertTimeTo24Hour(displayTime) {
+            const match = String(displayTime).trim().match(/^(0?[1-9]|1[0-2]):([0-5][0-9]) (AM|PM)$/);
+            if (!match) return '';
+
+            let hour = parseInt(match[1], 10);
+            const minute = match[2];
+            const suffix = match[3];
+
+            if (suffix === 'AM' && hour === 12) {
+                hour = 0;
+            } else if (suffix === 'PM' && hour !== 12) {
+                hour += 12;
+            }
+
+            return `${String(hour).padStart(2, '0')}:${minute}`;
+        },
+
+        isValidTime(value) {
+            return /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/.test(String(value).trim());
+        },
+
         onInvoiceDateChange(rawDate) {
-            // rawDate is 'YYYY-MM-DD' from the date picker
             if (!rawDate) return;
             const [year, month, day] = rawDate.split('-');
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthName = months[parseInt(month, 10) - 1];
 
-            // Invoice date on PDF: "27 Oct 2026"
             this.fields.date = `${parseInt(day, 10)} ${monthName} ${year}`;
 
-            // Autofill pickup/drop dates: "27/10/2026"
             const ddmmyyyy = `${day}/${month}/${year}`;
-            if (!this.fields.pickup_date) this.fields.pickup_date = ddmmyyyy;
-            if (!this.fields.drop_date) this.fields.drop_date = ddmmyyyy;
+            this.fields.pickup_date = ddmmyyyy;
+            this.fields.drop_date = ddmmyyyy;
         },
     };
 }
