@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.courier-form-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.courier-form-hero {
+    border: 1px solid #dbe4f0;
+    border-radius: 1.5rem;
+    background: linear-gradient(145deg, #f8fbff 0%, #ffffff 55%);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    padding: 1.5rem;
+}
+.courier-form-hero-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.courier-form-breadcrumb {
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.courier-form-breadcrumb a {
+    color: #1d4ed8;
+}
+.courier-form-title {
+    color: #0f172a;
+    font-size: clamp(1.9rem, 3vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 0.6rem;
+}
+.courier-form-copy {
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-top: 0.65rem;
+    max-width: 50rem;
+}
+.courier-form-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+.courier-form-pill {
+    border-radius: 999px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.45rem 0.8rem;
+    text-transform: uppercase;
+}
+.courier-form-alert {
+    display: none;
+    border-radius: 1rem;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+}
+.courier-form-alert.is-visible {
+    display: block;
+}
+.courier-form-layout {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.courier-form-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 1.35rem;
+    background: #ffffff;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+    padding: 1.2rem;
+}
+.courier-form-card--span-2 {
+    grid-column: span 2;
+}
+.courier-form-card-head {
+    margin-bottom: 1rem;
+}
+.courier-form-card-title {
+    color: #0f172a;
+    font-size: 1.02rem;
+    font-weight: 800;
+}
+.courier-form-card-copy {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-top: 0.3rem;
+}
+.courier-field-grid {
+    display: grid;
+    gap: 0.95rem 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.courier-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.38rem;
+}
+.courier-field--span-2 {
+    grid-column: span 2;
+}
+.courier-field label,
+.courier-field span {
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+.courier-input,
+.courier-select,
+.courier-textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.95rem;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.95rem;
+    padding: 0.9rem 1rem;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.courier-input:focus,
+.courier-select:focus,
+.courier-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    outline: none;
+}
+.courier-input[readonly] {
+    background: #f8fafc;
+    color: #475569;
+}
+.courier-field-note {
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+.courier-page-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid #dbe4f0;
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(8px);
+    padding: 1rem 1.15rem;
+}
+.courier-page-footer-copy {
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+.courier-page-footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+.courier-btn {
+    border-radius: 0.95rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.85rem 1.25rem;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+.courier-btn:hover {
+    transform: translateY(-1px);
+}
+.courier-btn-secondary {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+}
+.courier-btn-primary {
+    border: 1px solid #1d4ed8;
+    background: #1d4ed8;
+    box-shadow: 0 16px 28px rgba(29, 78, 216, 0.18);
+    color: #ffffff;
+}
+@media (max-width: 960px) {
+    .courier-form-layout,
+    .courier-field-grid {
+        grid-template-columns: 1fr;
+    }
+    .courier-form-card--span-2,
+    .courier-field--span-2 {
+        grid-column: span 1;
+    }
+}
+@media (max-width: 640px) {
+    .courier-form-hero,
+    .courier-form-card {
+        padding: 1rem;
+    }
+    .courier-page-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .courier-page-footer-actions {
+        width: 100%;
+    }
+    .courier-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="courier-form-shell">
+    <section class="courier-form-hero">
+        <div class="courier-form-hero-top">
+            <div>
+                <div class="courier-form-breadcrumb">
+                    <a href="{{ back_url }}">Courier Orders</a> / {{ form_title }}
+                </div>
+                <h1 class="courier-form-title">{{ form_title }}</h1>
+                <p class="courier-form-copy">{{ form_subtitle }}</p>
+                <div class="courier-form-pill-row">
+                    <span class="courier-form-pill">{{ order_type|upper }}</span>
+                    <span class="courier-form-pill">Draft Workflow</span>
+                    <span class="courier-form-pill">Laptop Friendly</span>
+                </div>
+            </div>
+            <a href="{{ back_url }}" class="courier-btn courier-btn-secondary">Back To Orders</a>
+        </div>
+    </section>
+
+    <form id="courier-order-page-form" novalidate>
+        <div id="courier-form-alert" class="courier-form-alert" role="alert"></div>
+
+        <div class="courier-form-layout">
+            <section class="courier-form-card">
+                <div class="courier-form-card-head">
+                    <h2 class="courier-form-card-title">Recipient Details</h2>
+                    <p class="courier-form-card-copy">Capture the consignee exactly as the carrier should see the delivery destination.</p>
+                </div>
+                <div class="courier-field-grid">
+                    <div class="courier-field">
+                        <label for="recipient_name">Recipient Name</label>
+                        <input id="recipient_name" name="recipient_name" required class="courier-input" value="{{ order.recipient_name|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="recipient_contact">Recipient Contact</label>
+                        <input id="recipient_contact" name="recipient_contact" required maxlength="10" class="courier-input" value="{{ order.recipient_contact|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field courier-field--span-2">
+                        <label for="recipient_address">Recipient Address</label>
+                        <textarea id="recipient_address" name="recipient_address" rows="3" required class="courier-textarea">{{ order.recipient_address|default_if_none:'' }}</textarea>
+                    </div>
+                    <div class="courier-field">
+                        <label for="recipient_pincode">Recipient Pincode</label>
+                        <input id="recipient_pincode" name="recipient_pincode" required maxlength="6" class="courier-input" value="{{ order.recipient_pincode|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="recipient_email">Recipient Email</label>
+                        <input id="recipient_email" name="recipient_email" type="email" class="courier-input" value="{{ order.recipient_email|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="recipient_city">Recipient City</label>
+                        <input id="recipient_city" name="recipient_city" readonly tabindex="-1" aria-readonly="true" class="courier-input" value="{{ order.recipient_city|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="recipient_state">Recipient State</label>
+                        <input id="recipient_state" name="recipient_state" readonly tabindex="-1" aria-readonly="true" class="courier-input" value="{{ order.recipient_state|default_if_none:'' }}">
+                    </div>
+                </div>
+            </section>
+
+            <section class="courier-form-card">
+                <div class="courier-form-card-head">
+                    <h2 class="courier-form-card-title">Origin Details</h2>
+                    <p class="courier-form-card-copy">Connect the shipment to the right courier warehouse and sender identity before booking.</p>
+                </div>
+                <div class="courier-field-grid">
+                    <div class="courier-field">
+                        <label for="sender_pincode">Sender Pincode</label>
+                        <input id="sender_pincode" name="sender_pincode" required maxlength="6" class="courier-input" value="{{ order.sender_pincode|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="sender_name">Sender Name</label>
+                        <input id="sender_name" name="sender_name" class="courier-input" value="{{ order.sender_name|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field courier-field--span-2">
+                        <label for="warehouse">Courier Warehouse</label>
+                        <select id="warehouse" name="warehouse" class="courier-select">
+                            <option value="">Select warehouse</option>
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}" {% if order.warehouse_id == warehouse.id %}selected{% endif %}>{{ warehouse.name }} ({{ warehouse.pincode }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="courier-field-note">Use a linked courier warehouse when ShipDaak pickup and RTO IDs already exist.</div>
+                    </div>
+                    <div class="courier-field courier-field--span-2">
+                        <label for="sender_address">Sender Address</label>
+                        <textarea id="sender_address" name="sender_address" rows="3" class="courier-textarea">{{ order.sender_address|default_if_none:'' }}</textarea>
+                    </div>
+                    <div class="courier-field courier-field--span-2">
+                        <label for="sender_phone">Sender Phone</label>
+                        <input id="sender_phone" name="sender_phone" maxlength="10" class="courier-input" value="{{ order.sender_phone|default_if_none:'' }}">
+                    </div>
+                </div>
+            </section>
+
+            <section class="courier-form-card">
+                <div class="courier-form-card-head">
+                    <h2 class="courier-form-card-title">Parcel Details</h2>
+                    <p class="courier-form-card-copy">Weight and dimensions drive serviceability, pricing, and B2B/B2C operational treatment.</p>
+                </div>
+                <div class="courier-field-grid">
+                    <div class="courier-field">
+                        <label for="weight">Weight (kg)</label>
+                        <input id="weight" name="weight" type="number" min="0.01" step="0.01" required class="courier-input" value="{{ order.weight|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="length">Length (cm)</label>
+                        <input id="length" name="length" type="number" min="0.1" step="0.1" required class="courier-input" value="{{ order.length|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="width">Width (cm)</label>
+                        <input id="width" name="width" type="number" min="0.1" step="0.1" required class="courier-input" value="{{ order.width|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="height">Height (cm)</label>
+                        <input id="height" name="height" type="number" min="0.1" step="0.1" required class="courier-input" value="{{ order.height|default_if_none:'' }}">
+                    </div>
+                </div>
+            </section>
+
+            <section class="courier-form-card">
+                <div class="courier-form-card-head">
+                    <h2 class="courier-form-card-title">Commercial Details</h2>
+                    <p class="courier-form-card-copy">Keep payment, item metadata, and notes together so operations can review the draft quickly.</p>
+                </div>
+                <div class="courier-field-grid">
+                    <div class="courier-field">
+                        <label for="payment_mode">Payment Mode</label>
+                        <select id="payment_mode" name="payment_mode" class="courier-select">
+                            <option value="prepaid" {% if order.payment_mode == 'prepaid' or not order %}selected{% endif %}>Prepaid</option>
+                            <option value="cod" {% if order.payment_mode == 'cod' %}selected{% endif %}>COD</option>
+                        </select>
+                    </div>
+                    <div class="courier-field">
+                        <label for="order_value">Order Value</label>
+                        <input id="order_value" name="order_value" type="number" min="0" step="0.01" class="courier-input" value="{{ order.order_value|default_if_none:'0' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="item_type">Item Type</label>
+                        <input id="item_type" name="item_type" class="courier-input" value="{{ order.item_type|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="sku">SKU</label>
+                        <input id="sku" name="sku" class="courier-input" value="{{ order.sku|default_if_none:'' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="quantity">Quantity</label>
+                        <input id="quantity" name="quantity" type="number" min="1" step="1" class="courier-input" value="{{ order.quantity|default_if_none:'1' }}">
+                    </div>
+                    <div class="courier-field">
+                        <label for="item_amount">Item Amount</label>
+                        <input id="item_amount" name="item_amount" type="number" min="0" step="0.01" class="courier-input" value="{{ order.item_amount|default_if_none:'0' }}">
+                    </div>
+                    <div class="courier-field courier-field--span-2">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" class="courier-textarea">{{ order.notes|default_if_none:'' }}</textarea>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="courier-page-footer">
+            <p class="courier-page-footer-copy">This page keeps every required field available on-screen without nested drawer scrolling or hidden footer actions.</p>
+            <div class="courier-page-footer-actions">
+                <a href="{{ back_url }}" class="courier-btn courier-btn-secondary">Cancel</a>
+                <button type="submit" class="courier-btn courier-btn-primary">{% if is_edit %}Save Changes{% else %}Save Draft Order{% endif %}</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.courierOrderFormConfig = {
+    apiUrl: "{% if is_edit %}{% url 'operations:courier:order-detail' order.pk %}{% else %}{% url 'operations:courier:order-list' %}{% endif %}",
+    formMode: "{{ form_mode }}",
+    orderType: "{{ order_type }}",
+    lookupPincodeUrlTemplate: "{% url 'operations:courier:lookup-pincode' 111111 %}",
+    redirectUrl: "{{ back_url|escapejs }}"
+};
+</script>
+<script src="{% static 'js/dashboard/courier-order-form.js' %}"></script>
+{% endblock %}

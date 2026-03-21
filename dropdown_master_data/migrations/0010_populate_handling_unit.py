@@ -7,7 +7,7 @@ def populate_handling_unit(apps, schema_editor):
     Used by MonthlyBilling for inbound/outbound handling quantity tracking.
     """
     HandlingUnit = apps.get_model('dropdown_master_data', 'HandlingUnit')
-    
+
     units = [
         ('boxes', 'Boxes', 10),
         ('cartons', 'Cartons', 15),
@@ -22,18 +22,18 @@ def populate_handling_unit(apps, schema_editor):
         ('shipments', 'Shipments', 75),
         ('other', 'Other', 100),
     ]
-    
+
     for code, label, display_order in units:
         HandlingUnit.objects.get_or_create(
             code=code,
             defaults={
                 'label': label,
                 'is_active': True,
-                'display_order': display_order
-            }
+                'display_order': display_order,
+            },
         )
-    
-    print(f"✅ Populated {len(units)} HandlingUnit values")
+
+    print(f"Populated {len(units)} HandlingUnit values")
 
 
 class Migration(migrations.Migration):
@@ -45,6 +45,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             populate_handling_unit,
-            reverse_code=migrations.RunPython.noop
+            reverse_code=migrations.RunPython.noop,
         ),
     ]

@@ -27,12 +27,12 @@
     "courier_zone_rates.jsonl": {
       "dataset": "courier_zone_rates",
       "record_count": 1072,
-      "sha256": "124264a521aab11bc83d020da21d1062e99e8564e9700f80f94688cdfa06f091"
+      "sha256": "5906b0c6d715f6947e9e5e5e343f4a303d84bc77f9058769a7b76934c7782a72"
     },
     "couriers.json": {
       "dataset": "couriers",
       "record_count": 62,
-      "sha256": "a2f2103d1852c9ee5967470ea2865d33578e046e547cc15d3db9ff5b3477374f"
+      "sha256": "3224da0b6b9035661139b8e53fe34633e200e1cc3993e2d06b17ce4073c285eb"
     },
     "custom_zone_rates.json": {
       "dataset": "custom_zone_rates",

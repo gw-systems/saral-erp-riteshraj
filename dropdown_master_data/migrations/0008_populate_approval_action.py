@@ -8,24 +8,24 @@ def populate_approval_action(apps, schema_editor):
     Both default to 'pending'.
     """
     ApprovalAction = apps.get_model('dropdown_master_data', 'ApprovalAction')
-    
+
     actions = [
         ('pending', 'Pending Review', 10),
         ('approved', 'Approved', 20),
         ('rejected', 'Rejected', 30),
     ]
-    
+
     for code, label, display_order in actions:
         ApprovalAction.objects.get_or_create(
             code=code,
             defaults={
                 'label': label,
                 'is_active': True,
-                'display_order': display_order
-            }
+                'display_order': display_order,
+            },
         )
-    
-    print(f"✅ Populated {len(actions)} ApprovalAction values")
+
+    print(f"Populated {len(actions)} ApprovalAction values")
 
 
 class Migration(migrations.Migration):
@@ -37,6 +37,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             populate_approval_action,
-            reverse_code=migrations.RunPython.noop
+            reverse_code=migrations.RunPython.noop,
         ),
     ]

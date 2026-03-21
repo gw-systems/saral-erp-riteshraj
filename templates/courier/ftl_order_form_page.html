@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - {{ APP_FULL_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.courier-ftl-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.courier-ftl-hero {
+    border: 1px solid #dbe4f0;
+    border-radius: 1.5rem;
+    background: linear-gradient(145deg, #f0f9ff 0%, #ffffff 55%);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    padding: 1.5rem;
+}
+.courier-ftl-hero-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.courier-ftl-breadcrumb {
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.courier-ftl-breadcrumb a {
+    color: #1d4ed8;
+}
+.courier-ftl-title {
+    color: #0f172a;
+    font-size: clamp(1.9rem, 3vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 0.6rem;
+}
+.courier-ftl-copy {
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-top: 0.65rem;
+    max-width: 50rem;
+}
+.courier-ftl-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+.courier-ftl-pill {
+    border-radius: 999px;
+    border: 1px solid #bae6fd;
+    background: #ecfeff;
+    color: #0e7490;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.45rem 0.8rem;
+    text-transform: uppercase;
+}
+.courier-ftl-alert {
+    display: none;
+    border-radius: 1rem;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+}
+.courier-ftl-alert.is-visible {
+    display: block;
+}
+.courier-ftl-layout {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.8fr);
+}
+.courier-ftl-main {
+    display: grid;
+    gap: 1.25rem;
+}
+.courier-ftl-card,
+.courier-ftl-sidecard {
+    border: 1px solid #e2e8f0;
+    border-radius: 1.35rem;
+    background: #ffffff;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+    padding: 1.2rem;
+}
+.courier-ftl-sidecard {
+    position: sticky;
+    top: 5.5rem;
+    height: fit-content;
+}
+.courier-ftl-card-title {
+    color: #0f172a;
+    font-size: 1.02rem;
+    font-weight: 800;
+}
+.courier-ftl-card-copy {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-top: 0.3rem;
+}
+.courier-ftl-field-grid {
+    display: grid;
+    gap: 0.95rem 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+.courier-ftl-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.38rem;
+}
+.courier-ftl-field--span-2 {
+    grid-column: span 2;
+}
+.courier-ftl-field label {
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+.courier-ftl-input,
+.courier-ftl-select,
+.courier-ftl-textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.95rem;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.95rem;
+    padding: 0.9rem 1rem;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.courier-ftl-input:focus,
+.courier-ftl-select:focus,
+.courier-ftl-textarea:focus {
+    border-color: #0891b2;
+    box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.12);
+    outline: none;
+}
+.courier-ftl-sidegrid {
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 1rem;
+}
+.courier-ftl-stat {
+    border-radius: 1rem;
+    border: 1px solid #dbeafe;
+    background: #f8fbff;
+    padding: 0.95rem 1rem;
+}
+.courier-ftl-stat-label {
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.courier-ftl-stat-value {
+    color: #0f172a;
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+}
+.courier-ftl-placeholder {
+    border-radius: 1rem;
+    border: 1px dashed #cbd5e1;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    padding: 1rem;
+}
+.courier-ftl-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid #dbe4f0;
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(8px);
+    padding: 1rem 1.15rem;
+}
+.courier-ftl-footer-copy {
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+.courier-ftl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+.courier-ftl-btn {
+    border-radius: 0.95rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.85rem 1.25rem;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+.courier-ftl-btn:hover {
+    transform: translateY(-1px);
+}
+.courier-ftl-btn-secondary {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+}
+.courier-ftl-btn-primary {
+    border: 1px solid #0891b2;
+    background: #0891b2;
+    box-shadow: 0 16px 28px rgba(8, 145, 178, 0.2);
+    color: #ffffff;
+}
+@media (max-width: 1080px) {
+    .courier-ftl-layout {
+        grid-template-columns: 1fr;
+    }
+    .courier-ftl-sidecard {
+        position: static;
+    }
+}
+@media (max-width: 720px) {
+    .courier-ftl-field-grid {
+        grid-template-columns: 1fr;
+    }
+    .courier-ftl-field--span-2 {
+        grid-column: span 1;
+    }
+}
+@media (max-width: 640px) {
+    .courier-ftl-hero,
+    .courier-ftl-card,
+    .courier-ftl-sidecard {
+        padding: 1rem;
+    }
+    .courier-ftl-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .courier-ftl-actions {
+        width: 100%;
+    }
+    .courier-ftl-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="courier-ftl-shell">
+    <section class="courier-ftl-hero">
+        <div class="courier-ftl-hero-head">
+            <div>
+                <div class="courier-ftl-breadcrumb">
+                    <a href="{{ back_url }}">Courier Orders</a> / {{ form_title }}
+                </div>
+                <h1 class="courier-ftl-title">{{ form_title }}</h1>
+                <p class="courier-ftl-copy">{{ form_subtitle }}</p>
+                <div class="courier-ftl-pill-row">
+                    <span class="courier-ftl-pill">FTL</span>
+                    <span class="courier-ftl-pill">Route Pricing</span>
+                    <span class="courier-ftl-pill">Full Page Workflow</span>
+                </div>
+            </div>
+            <a href="{{ back_url }}" class="courier-ftl-btn courier-ftl-btn-secondary">Back To Orders</a>
+        </div>
+    </section>
+
+    <form id="courier-ftl-page-form" novalidate>
+        <div id="courier-ftl-alert" class="courier-ftl-alert" role="alert"></div>
+
+        <div class="courier-ftl-layout">
+            <div class="courier-ftl-main">
+                <section class="courier-ftl-card">
+                    <h2 class="courier-ftl-card-title">Contact Details</h2>
+                    <p class="courier-ftl-card-copy">Primary customer details for the truckload request.</p>
+                    <div class="courier-ftl-field-grid">
+                        <div class="courier-ftl-field">
+                            <label for="ftl_name">Name</label>
+                            <input id="ftl_name" name="name" required class="courier-ftl-input" value="{{ order.name|default_if_none:'' }}">
+                        </div>
+                        <div class="courier-ftl-field">
+                            <label for="ftl_phone">Phone</label>
+                            <input id="ftl_phone" name="phone" required maxlength="10" class="courier-ftl-input" value="{{ order.phone|default_if_none:'' }}">
+                        </div>
+                        <div class="courier-ftl-field courier-ftl-field--span-2">
+                            <label for="ftl_email">Email</label>
+                            <input id="ftl_email" name="email" type="email" class="courier-ftl-input" value="{{ order.email|default_if_none:'' }}">
+                        </div>
+                        <div class="courier-ftl-field courier-ftl-field--span-2">
+                            <label for="ftl_notes">Notes</label>
+                            <textarea id="ftl_notes" name="notes" rows="3" class="courier-ftl-textarea">{{ order.notes|default_if_none:'' }}</textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="courier-ftl-card">
+                    <h2 class="courier-ftl-card-title">Route & Shipment</h2>
+                    <p class="courier-ftl-card-copy">Choose the lane and container first so pricing can stay visible while you complete the booking.</p>
+                    <div class="courier-ftl-field-grid">
+                        <div class="courier-ftl-field">
+                            <label for="source_city">Source City</label>
+                            <select id="source_city" name="source_city" class="courier-ftl-select" required></select>
+                        </div>
+                        <div class="courier-ftl-field">
+                            <label for="destination_city">Destination City</label>
+                            <select id="destination_city" name="destination_city" class="courier-ftl-select" required></select>
+                        </div>
+                        <div class="courier-ftl-field courier-ftl-field--span-2">
+                            <label for="container_type">Container Type</label>
+                            <select id="container_type" name="container_type" class="courier-ftl-select" required></select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="courier-ftl-card">
+                    <h2 class="courier-ftl-card-title">Origin Details</h2>
+                    <p class="courier-ftl-card-copy">Pickup address and pincode used for scheduling and vehicle placement.</p>
+                    <div class="courier-ftl-field-grid">
+                        <div class="courier-ftl-field">
+                            <label for="source_pincode">Source Pincode</label>
+                            <input id="source_pincode" name="source_pincode" required maxlength="6" class="courier-ftl-input" value="{{ order.source_pincode|default_if_none:'' }}">
+                        </div>
+                        <div class="courier-ftl-field courier-ftl-field--span-2">
+                            <label for="source_address">Source Address</label>
+                            <textarea id="source_address" name="source_address" rows="3" class="courier-ftl-textarea">{{ order.source_address|default_if_none:'' }}</textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="courier-ftl-card">
+                    <h2 class="courier-ftl-card-title">Destination Details</h2>
+                    <p class="courier-ftl-card-copy">Drop address and pincode for the destination branch or unloading point.</p>
+                    <div class="courier-ftl-field-grid">
+                        <div class="courier-ftl-field">
+                            <label for="destination_pincode">Destination Pincode</label>
+                            <input id="destination_pincode" name="destination_pincode" required maxlength="6" class="courier-ftl-input" value="{{ order.destination_pincode|default_if_none:'' }}">
+                        </div>
+                        <div class="courier-ftl-field courier-ftl-field--span-2">
+                            <label for="destination_address">Destination Address</label>
+                            <textarea id="destination_address" name="destination_address" rows="3" class="courier-ftl-textarea">{{ order.destination_address|default_if_none:'' }}</textarea>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="courier-ftl-sidecard">
+                <h2 class="courier-ftl-card-title">Pricing Preview</h2>
+                <p class="courier-ftl-card-copy">Live FTL pricing stays in view while you complete the request.</p>
+                <div id="courier-ftl-preview-empty" class="courier-ftl-placeholder">
+                    Choose a source city, destination city, and container type to preview base price, GST, and final total.
+                </div>
+                <div id="courier-ftl-preview" class="courier-ftl-sidegrid" hidden>
+                    <div class="courier-ftl-stat">
+                        <div class="courier-ftl-stat-label">Base Price</div>
+                        <div id="courier-ftl-preview-base" class="courier-ftl-stat-value">-</div>
+                    </div>
+                    <div class="courier-ftl-stat">
+                        <div class="courier-ftl-stat-label">Escalation</div>
+                        <div id="courier-ftl-preview-escalation" class="courier-ftl-stat-value">-</div>
+                    </div>
+                    <div class="courier-ftl-stat">
+                        <div class="courier-ftl-stat-label">GST</div>
+                        <div id="courier-ftl-preview-gst" class="courier-ftl-stat-value">-</div>
+                    </div>
+                    <div class="courier-ftl-stat">
+                        <div class="courier-ftl-stat-label">Total Price</div>
+                        <div id="courier-ftl-preview-total" class="courier-ftl-stat-value">-</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <div class="courier-ftl-footer">
+            <p class="courier-ftl-footer-copy">This page keeps route selection, price preview, and operational inputs visible without drawer clipping.</p>
+            <div class="courier-ftl-actions">
+                <a href="{{ back_url }}" class="courier-ftl-btn courier-ftl-btn-secondary">Cancel</a>
+                <button type="submit" class="courier-ftl-btn courier-ftl-btn-primary">{% if is_edit %}Save Changes{% else %}Save FTL Draft{% endif %}</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.courierFtlFormConfig = {
+    apiUrl: "{% if is_edit %}{% url 'operations:courier:ftl-order-detail' order.pk %}{% else %}{% url 'operations:courier:ftl-order-list' %}{% endif %}",
+    formMode: "{{ form_mode }}",
+    redirectUrl: "{{ back_url|escapejs }}",
+    ftlRoutesUrl: "{% url 'operations:courier:get-ftl-routes' %}",
+    ftlRateUrl: "{% url 'operations:courier:calculate-ftl-rate' %}",
+    initialSourceCity: "{{ order.source_city|default_if_none:''|escapejs }}",
+    initialDestinationCity: "{{ order.destination_city|default_if_none:''|escapejs }}",
+    initialContainerType: "{{ order.container_type|default_if_none:''|escapejs }}"
+};
+</script>
+<script src="{% static 'js/dashboard/courier-ftl-form.js' %}"></script>
+{% endblock %}

@@ -19,17 +19,20 @@
                     </div>
                     <div id="courier-ratecard-option-list" class="courier-calc-option-list"></div>
                 </div>
+            </div>
             <button type="button" id="courier-ratecard-download" class="courier-calc-download-button">B2C Rate Card</button>
         </div>
     </div>
+
+    <div id="courier-alert" class="hidden rounded-xl border px-4 py-3 text-sm"></div>
 
     <div id="courier-regular-panel" class="courier-calc-panel">
         <div class="courier-calc-panel-head">
             <div>
                 <h2 class="courier-calc-title">Rate Shipment Calculator</h2>
             </div>
-
         </div>
+
         <form id="courier-regular-form" novalidate>
             <div class="courier-calc-form-grid">
                 <div class="courier-calc-field">
@@ -40,6 +43,7 @@
                     <label for="courier-dest-pincode">Destination Pincode</label>
                     <input id="courier-dest-pincode" name="dest_pincode" type="text" inputmode="numeric" maxlength="6" class="courier-calc-input" placeholder="e.g. 110001" autocomplete="off">
                 </div>
+            </div>
 
             <div class="courier-calc-boxes">
                 <div class="courier-calc-boxes-head">
@@ -86,6 +90,7 @@
                         <span class="courier-calc-pill">Volumetric divisor: 5000</span>
                     </div>
                 </div>
+            </div>
 
             <div class="courier-calc-form-grid" style="margin-top: 1.25rem;">
                 <div class="courier-calc-field">
@@ -99,9 +104,11 @@
                     <label for="courier-total-order-value">Total Order Value (Auto-calc)</label>
                     <input id="courier-total-order-value" class="courier-calc-input" type="text" value="0.00" readonly>
                 </div>
+            </div>
 
             <div style="margin-top: 1.4rem;">
                 <button type="submit" class="courier-calc-primary-button">Calculate Rates</button>
+            </div>
         </form>
     </div>
 
@@ -110,6 +117,7 @@
             <div>
                 <h2 class="courier-calc-title">FTL Rate Calculator</h2>
                 <p class="courier-calc-subtitle">Choose a source, destination, and truck type to calculate the ERP FTL price.</p>
+            </div>
         </div>
 
         <form id="courier-ftl-form" novalidate>
@@ -132,9 +140,11 @@
                         <option value="">Select truck type</option>
                     </select>
                 </div>
+            </div>
 
             <div style="margin-top: 1.4rem;">
                 <button type="submit" class="courier-calc-primary-button">Calculate FTL Rate</button>
+            </div>
         </form>
     </div>
 
@@ -143,6 +153,7 @@
             <div>
                 <h3 class="courier-calc-title" style="font-size: 1.2rem;">Regular Results</h3>
                 <p class="courier-calc-subtitle">Cheapest serviceable carrier first, with expandable breakdown.</p>
+            </div>
         </div>
         <div id="courier-regular-results" class="courier-calc-results-list">
             <div class="courier-calc-empty">Run a B2C or B2B rate comparison to see carrier pricing here.</div>
@@ -154,6 +165,7 @@
             <div>
                 <h3 class="courier-calc-title" style="font-size: 1.2rem;">FTL Result</h3>
                 <p class="courier-calc-subtitle">Base price, escalation, GST, and final amount.</p>
+            </div>
         </div>
         <div id="courier-ftl-results" class="courier-calc-results-list">
             <div class="courier-calc-empty">Choose an FTL route and calculate the price to see the result here.</div>

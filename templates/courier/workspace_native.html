@@ -39,7 +39,6 @@
 .courier-workspace .bg-sky-700 { background-color: #0369a1 !important; }
 .courier-workspace .bg-red-600 { background-color: #dc2626 !important; }
 .courier-workspace .bg-red-700 { background-color: #b91c1c !important; }
-.courier-workspace .text-white { color: #ffffff !important; }
 .courier-workspace .text-blue-100 { color: #dbeafe !important; }
 .courier-workspace .text-blue-200 { color: #bfdbfe !important; }
 .courier-workspace .text-blue-700 { color: #1d4ed8 !important; }
@@ -64,14 +63,6 @@
 .courier-workspace .border-amber-200 { border-color: #fde68a !important; }
 .courier-workspace .border-emerald-200 { border-color: #a7f3d0 !important; }
 .courier-workspace .border-indigo-200 { border-color: #c7d2fe !important; }
-.courier-workspace nav a.text-white {
-    background-color: #2563eb !important;
-    color: #ffffff !important;
-}
-.courier-workspace nav a.text-gray-700 {
-    background-color: #ffffff !important;
-    color: #374151 !important;
-}
 .courier-calc-shell {
     display: flex;
     flex-direction: column;
@@ -726,116 +717,713 @@
         grid-template-columns: 1fr;
     }
 }
+.courier-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.courier-hero {
+    border: 1px solid #dbe4f0;
+    border-radius: 1.6rem;
+    background: linear-gradient(155deg, #f8fbff 0%, #eef5ff 48%, #ffffff 100%);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    padding: 1.4rem 1.5rem;
+}
+.courier-hero-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+}
+.courier-eyebrow {
+    color: #2563eb;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.courier-hero-title {
+    color: #0f172a;
+    font-size: clamp(1.85rem, 3vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-top: 0.55rem;
+}
+.courier-hero-copy {
+    color: #475569;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    margin-top: 0.65rem;
+    max-width: 46rem;
+}
+.courier-stat-strip {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-width: min(100%, 28rem);
+}
+.courier-stat-card {
+    border: 1px solid #dbe4f0;
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.95rem 1rem;
+}
+.courier-stat-label {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.courier-stat-value {
+    color: #0f172a;
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+}
+.courier-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    border: 1px solid #dbe4f0;
+    border-radius: 1.2rem;
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+    padding: 0.55rem;
+}
+.courier-nav-link {
+    border-radius: 0.95rem;
+    color: #475569;
+    font-size: 0.94rem;
+    font-weight: 700;
+    padding: 0.78rem 1rem;
+    transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.courier-nav-link:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+.courier-nav-link.is-active {
+    background: #1d4ed8;
+    box-shadow: 0 14px 26px rgba(29, 78, 216, 0.16);
+    color: #ffffff;
+}
+.courier-page-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.courier-surface {
+    border: 1px solid #e2e8f0;
+    border-radius: 1.35rem;
+    background: #ffffff;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
+}
+.courier-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.25rem 1.15rem;
+}
+.courier-section-kicker {
+    color: #2563eb;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.courier-section-title {
+    color: #0f172a;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-top: 0.4rem;
+}
+.courier-section-copy {
+    color: #64748b;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin-top: 0.35rem;
+    max-width: 40rem;
+}
+.courier-head-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.courier-primary-link,
+.courier-secondary-link,
+.courier-secondary-button {
+    border-radius: 0.95rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 0.82rem 1rem;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+.courier-primary-link:hover,
+.courier-secondary-link:hover,
+.courier-secondary-button:hover {
+    transform: translateY(-1px);
+}
+.courier-primary-link {
+    background: #1d4ed8;
+    box-shadow: 0 14px 24px rgba(29, 78, 216, 0.16);
+    color: #ffffff;
+}
+.courier-secondary-link,
+.courier-secondary-button {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+}
+.courier-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1.1rem;
+}
+.courier-toolbar--sticky {
+    position: sticky;
+    top: 4.6rem;
+    z-index: 20;
+}
+.courier-toolbar-main,
+.courier-toolbar-side {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+.courier-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    border: 1px solid #dbe4f0;
+    border-radius: 1rem;
+    background: #f8fafc;
+    padding: 0.28rem;
+}
+.courier-segment-btn,
+.courier-filter-btn,
+.courier-ftl-filter-btn,
+.courier-shipment-tab-btn {
+    border: 0;
+    border-radius: 0.8rem;
+    background: transparent;
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 0.72rem 0.95rem;
+    transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.courier-segment-btn.is-active,
+.courier-filter-btn.is-active,
+.courier-ftl-filter-btn.is-active,
+.courier-shipment-tab-btn.is-active {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.18);
+    color: #ffffff;
+}
+.courier-search-wrap {
+    min-width: min(100%, 18rem);
+}
+.courier-search-input {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.95rem;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.92rem;
+    padding: 0.82rem 0.95rem;
+}
+.courier-search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    outline: none;
+}
+.courier-selection-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 1.15rem;
+    background: #eff6ff;
+    padding: 0.95rem 1rem;
+}
+.courier-selection-count {
+    color: #1e3a8a;
+    display: block;
+    font-size: 0.94rem;
+    font-weight: 800;
+}
+.courier-selection-copy {
+    color: #475569;
+    font-size: 0.82rem;
+    margin-top: 0.2rem;
+}
+.courier-selection-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+.courier-selection-button {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.85rem;
+    background: #ffffff;
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 0.7rem 0.9rem;
+}
+.courier-selection-button--primary {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+    color: #ffffff;
+}
+.courier-selection-button--danger {
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+.courier-table-shell {
+    overflow: hidden;
+}
+.courier-table-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 1.1rem;
+}
+.courier-table-head--stack {
+    align-items: flex-start;
+}
+.courier-table-title {
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+}
+.courier-table-copy {
+    color: #64748b;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    margin-top: 0.28rem;
+}
+.courier-table-head-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.courier-table-scroll {
+    overflow: auto;
+}
+.courier-table-scroll--tall {
+    max-height: calc(100vh - 18rem);
+}
+.courier-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.courier-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 0.85rem 0.9rem;
+    text-align: left;
+    text-transform: uppercase;
+}
+.courier-table tbody td {
+    border-bottom: 1px solid #eef2f7;
+    color: #334155;
+    font-size: 0.9rem;
+    padding: 0.85rem 0.9rem;
+    vertical-align: top;
+}
+.courier-table tbody tr:hover {
+    background: #fbfdff;
+}
+.courier-table-check {
+    width: 2.75rem;
+}
+.courier-table-title-cell {
+    color: #0f172a;
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+.courier-table-subtext {
+    color: #64748b;
+    display: block;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+}
+.courier-status-pill {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.74rem;
+    font-weight: 800;
+    padding: 0.35rem 0.65rem;
+}
+.courier-chip {
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 0.42rem 0.78rem;
+}
+.courier-table-empty {
+    color: #64748b;
+    font-size: 0.92rem;
+    padding: 2.25rem 1rem !important;
+    text-align: center;
+}
+.courier-ship-layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1.2fr) minmax(19rem, 0.9fr);
+}
+.courier-ship-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+.courier-warehouse-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 17rem;
+}
+.courier-warehouse-inline label {
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.courier-compare-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    height: fit-content;
+    max-height: calc(100vh - 10rem);
+    position: sticky;
+    top: 5.1rem;
+}
+.courier-compare-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+.courier-compare-toggle {
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+.courier-compare-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    min-height: 12rem;
+    overflow: auto;
+}
+.courier-ftl-placeholder {
+    border: 1px dashed #cbd5e1;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    padding: 1rem;
+}
+.courier-compare-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    background: #ffffff;
+    padding: 0.95rem;
+}
+.courier-compare-card.is-selected {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.22);
+}
+.courier-compare-card-head {
+    display: flex;
+    gap: 0.75rem;
+}
+.courier-compare-card-copy {
+    color: #64748b;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-top: 0.25rem;
+}
+.courier-compare-cost {
+    color: #1d4ed8;
+    font-size: 1rem;
+    font-weight: 800;
+}
+.courier-compare-footer {
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.9rem;
+}
+.courier-compare-footer-copy {
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+.courier-dashboard-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.85fr);
+}
+.courier-shortcuts {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.courier-shortcut-card {
+    border: 1px solid #dbe4f0;
+    border-radius: 1.15rem;
+    background: linear-gradient(160deg, #f8fbff 0%, #ffffff 100%);
+    padding: 1rem;
+}
+.courier-shortcut-kicker {
+    color: #2563eb;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.courier-shortcut-title {
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+}
+.courier-shortcut-copy {
+    color: #64748b;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    margin-top: 0.3rem;
+}
+.courier-shortcut-link {
+    color: #1d4ed8;
+    display: inline-flex;
+    font-size: 0.86rem;
+    font-weight: 700;
+    margin-top: 0.65rem;
+}
+.courier-kpi-list {
+    display: grid;
+    gap: 0.75rem;
+}
+.courier-kpi-row {
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+}
+.courier-kpi-label {
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+.courier-kpi-value {
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+}
+@media (max-width: 1180px) {
+    .courier-ship-layout,
+    .courier-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .courier-compare-panel {
+        max-height: none;
+        position: static;
+    }
+}
+@media (max-width: 960px) {
+    .courier-stat-strip,
+    .courier-shortcuts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 720px) {
+    .courier-toolbar--sticky {
+        position: static;
+    }
+    .courier-stat-strip,
+    .courier-shortcuts {
+        grid-template-columns: 1fr;
+    }
+    .courier-table-scroll--tall {
+        max-height: none;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="space-y-6 courier-workspace">
-    <section class="overflow-hidden rounded-xl bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 shadow-xl">
-        <div class="px-6 py-8 md:px-8 md:py-10">
-            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-3xl">
-                    <p class="text-sm font-semibold uppercase tracking-widest text-blue-200">Operations Courier</p>
-                    <h1 class="mt-3 text-3xl font-bold text-white md:text-4xl">{{ section_title }}</h1>
-                    <p class="mt-3 text-sm text-blue-100 md:text-base">{{ section_subtitle }}</p>
+<div class="courier-shell courier-workspace">
+    <section class="courier-hero">
+        <div class="courier-hero-inner">
+            <div>
+                <p class="courier-eyebrow">Operations Courier</p>
+                <h1 class="courier-hero-title">{{ section_title }}</h1>
+                <p class="courier-hero-copy">{{ section_subtitle }}</p>
+            </div>
+            <div class="courier-stat-strip">
+                <div class="courier-stat-card">
+                    <p class="courier-stat-label">Active Carriers</p>
+                    <p class="courier-stat-value metric-number">{{ workspace_stats.active_carriers }}</p>
                 </div>
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div class="rounded-xl border border-white bg-white bg-opacity-10 px-4 py-3">
-                        <p class="text-xs uppercase tracking-wide text-blue-100">Carriers</p>
-                        <p class="mt-2 text-2xl font-bold text-white metric-number">{{ workspace_stats.active_carriers }}</p>
-                    </div>
-                    <div class="rounded-xl border border-white bg-white bg-opacity-10 px-4 py-3">
-                        <p class="text-xs uppercase tracking-wide text-blue-100">Drafts</p>
-                        <p class="mt-2 text-2xl font-bold text-white metric-number">{{ workspace_stats.draft_orders }}</p>
-                    </div>
-                    <div class="rounded-xl border border-white bg-white bg-opacity-10 px-4 py-3">
-                        <p class="text-xs uppercase tracking-wide text-blue-100">Live Shipments</p>
-                        <p class="mt-2 text-2xl font-bold text-white metric-number">{{ workspace_stats.live_shipments }}</p>
-                    </div>
-                    <div class="rounded-xl border border-white bg-white bg-opacity-10 px-4 py-3">
-                        <p class="text-xs uppercase tracking-wide text-blue-100">Warehouses</p>
-                        <p class="mt-2 text-2xl font-bold text-white metric-number">{{ workspace_stats.synced_warehouses }}/{{ workspace_stats.warehouses }}</p>
-                    </div>
+                <div class="courier-stat-card">
+                    <p class="courier-stat-label">Draft Orders</p>
+                    <p class="courier-stat-value metric-number">{{ workspace_stats.draft_orders }}</p>
+                </div>
+                <div class="courier-stat-card">
+                    <p class="courier-stat-label">Live Shipments</p>
+                    <p class="courier-stat-value metric-number">{{ workspace_stats.live_shipments }}</p>
+                </div>
+                <div class="courier-stat-card">
+                    <p class="courier-stat-label">Linked Warehouses</p>
+                    <p class="courier-stat-value metric-number">{{ workspace_stats.synced_warehouses }}/{{ workspace_stats.warehouses }}</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <nav class="rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
-    <div class="flex flex-wrap gap-2">
-        <a href="{% url 'operations:courier:dashboard' %}" class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'dashboard' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">Dashboard</a>
-        <a href="{% url 'operations:courier:rate-calculator' %}" class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'calculator' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">Rate Calculator</a>
-        <a href="{% url 'operations:courier:orders-dashboard' %}" class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'orders' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">Orders</a>
-        <a href="{% url 'operations:courier:shipments-dashboard' %}" class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'shipments' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">Shipments</a>
-        <a href="{% url 'operations:courier:warehouses-dashboard' %}" class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'warehouses' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">Warehouses</a>
-    </div>
-</nav>
+    <nav class="courier-nav" aria-label="Courier navigation">
+        <a href="{% url 'operations:courier:dashboard' %}" class="courier-nav-link {% if active_section == 'dashboard' %}is-active{% endif %}">Home</a>
+        <a href="{% url 'operations:courier:rate-calculator' %}" class="courier-nav-link {% if active_section == 'calculator' %}is-active{% endif %}">Rate Calculator</a>
+        <a href="{% url 'operations:courier:orders-dashboard' %}" class="courier-nav-link {% if active_section == 'orders' %}is-active{% endif %}">Orders</a>
+        <a href="{% url 'operations:courier:shipments-dashboard' %}" class="courier-nav-link {% if active_section == 'shipments' %}is-active{% endif %}">Shipments</a>
+        <a href="{% url 'operations:courier:warehouses-dashboard' %}" class="courier-nav-link {% if active_section == 'warehouses' %}is-active{% endif %}">Warehouses</a>
+    </nav>
 
 {% if active_section == 'dashboard' %}
-    <section class="grid gap-6 lg:grid-cols-3">
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-3">
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <a href="{% url 'operations:courier:rate-calculator' %}" class="smooth-card rounded-xl border border-blue-200 bg-blue-50 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Rates</p>
-                    <p class="mt-2 text-sm text-blue-900">Compare live B2C, B2B, and FTL pricing.</p>
-                </a>
-                <a href="{% url 'operations:courier:orders-dashboard' %}" class="smooth-card rounded-xl border border-amber-200 bg-amber-50 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Orders</p>
-                    <p class="mt-2 text-sm text-amber-900">Draft orders, booking, and invoice readiness.</p>
-                </a>
-                <a href="{% url 'operations:courier:shipments-dashboard' %}" class="smooth-card rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Shipments</p>
-                    <p class="mt-2 text-sm text-emerald-900">Track AWBs, manifests, and delivery status.</p>
-                </a>
-                <a href="{% url 'operations:courier:warehouses-dashboard' %}" class="smooth-card rounded-xl border border-indigo-200 bg-indigo-50 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">Warehouses</p>
-                    <p class="mt-2 text-sm text-indigo-900">See warehouse readiness and sync state.</p>
-                </a>
+    <section class="courier-dashboard-grid">
+        <div class="courier-page-stack">
+            <div class="courier-surface courier-page-head">
+                <div>
+                    <p class="courier-section-kicker">Task Launcher</p>
+                    <h2 class="courier-section-title">Pick The Workflow You Need</h2>
+                    <p class="courier-section-copy">The home screen stays intentionally light so operators can jump into the right task without scrolling through dense operational widgets.</p>
+                </div>
+            </div>
+            <div class="courier-shortcuts">
+                <article class="courier-shortcut-card">
+                    <p class="courier-shortcut-kicker">Orders</p>
+                    <h3 class="courier-shortcut-title">Create And Review Drafts</h3>
+                    <p class="courier-shortcut-copy">Open the denser order workspace for B2C, B2B, and FTL draft handling.</p>
+                    <a href="{% url 'operations:courier:orders-dashboard' %}" class="courier-shortcut-link">Open Orders</a>
+                </article>
+                <article class="courier-shortcut-card">
+                    <p class="courier-shortcut-kicker">Shipments</p>
+                    <h3 class="courier-shortcut-title">Compare And Book Carriers</h3>
+                    <p class="courier-shortcut-copy">Select draft orders, compare live carrier options, and book AWBs from one queue.</p>
+                    <a href="{% url 'operations:courier:shipments-dashboard' %}" class="courier-shortcut-link">Open Shipments</a>
+                </article>
+                <article class="courier-shortcut-card">
+                    <p class="courier-shortcut-kicker">Rates</p>
+                    <h3 class="courier-shortcut-title">Check B2C, B2B, And FTL Costs</h3>
+                    <p class="courier-shortcut-copy">Use the calculator when you need quick pricing before creating or booking anything.</p>
+                    <a href="{% url 'operations:courier:rate-calculator' %}" class="courier-shortcut-link">Open Calculator</a>
+                </article>
+                <article class="courier-shortcut-card">
+                    <p class="courier-shortcut-kicker">Warehouses</p>
+                    <h3 class="courier-shortcut-title">Confirm ShipDaak Readiness</h3>
+                    <p class="courier-shortcut-copy">Manage local courier warehouses and keep pickup and RTO IDs in sync.</p>
+                    <a href="{% url 'operations:courier:warehouses-dashboard' %}" class="courier-shortcut-link">Open Warehouses</a>
+                </article>
+            </div>
+
+            <div class="courier-surface courier-table-shell">
+                <div class="courier-table-head">
+                    <div>
+                        <h3 class="courier-table-title">Recent Orders</h3>
+                        <p class="courier-table-copy">A quick glance at the newest courier activity, without turning the home screen into a giant operations dashboard.</p>
+                    </div>
+                    <a href="{% url 'operations:courier:orders-dashboard' %}" class="courier-secondary-link">Open Orders</a>
+                </div>
+                <div class="courier-table-scroll">
+                    <table class="courier-table">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Recipient</th>
+                                <th>Status</th>
+                                <th>Carrier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <span class="courier-table-title-cell">{{ order.order_number }}</span>
+                                    <span class="courier-table-subtext">{{ order.created_at|date:"d M Y, h:i A" }}</span>
+                                </td>
+                                <td>
+                                    <span class="courier-table-title-cell">{{ order.recipient_name }}</span>
+                                    <span class="courier-table-subtext">{{ order.recipient_pincode }}</span>
+                                </td>
+                                <td>{{ order.get_status_display }}</td>
+                                <td>{% if order.carrier %}{{ order.carrier }}{% else %}<span class="courier-table-subtext">Not booked</span>{% endif %}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="courier-table-empty">No courier orders yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-semibold text-gray-900">Status Breakdown</h2>
-            <div class="mt-4 space-y-3">
+        <div class="courier-page-stack">
+            <div class="courier-surface courier-page-head">
+                <div>
+                    <p class="courier-section-kicker">Operational Snapshot</p>
+                    <h2 class="courier-section-title">Status Breakdown</h2>
+                    <p class="courier-section-copy">Use this list to spot which states need attention before jumping into the detailed task pages.</p>
+                </div>
+            </div>
+            <div class="courier-kpi-list">
                 {% for row in status_breakdown %}
-                <div class="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
-                    <span class="text-sm font-medium text-gray-700">{{ row.label }}</span>
-                    <span class="text-sm font-semibold text-gray-900 metric-number">{{ row.total }}</span>
+                <div class="courier-kpi-row">
+                    <span class="courier-kpi-label">{{ row.label }}</span>
+                    <span class="courier-kpi-value metric-number">{{ row.total }}</span>
                 </div>
                 {% empty %}
-                <p class="text-sm text-gray-500">Status metrics will appear after orders are created.</p>
+                <div class="courier-kpi-row">
+                    <span class="courier-kpi-label">Status metrics will appear after orders are created.</span>
+                    <span class="courier-kpi-value">-</span>
+                </div>
                 {% endfor %}
-            </div>
-        </div>
-
-        <div class="rounded-xl border border-gray-200 bg-white shadow-sm lg:col-span-2">
-            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                <h2 class="text-lg font-semibold text-gray-900">Recent Orders</h2>
-                <a href="{% url 'operations:courier:orders-dashboard' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Open Orders</a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Order</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Recipient</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Carrier</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 bg-white">
-                        {% for order in recent_orders %}
-                        <tr>
-                            <td class="px-5 py-4 text-sm font-medium text-gray-900">{{ order.order_number }}</td>
-                            <td class="px-5 py-4 text-sm text-gray-700">{{ order.recipient_name }}<div class="text-xs text-gray-500">{{ order.recipient_pincode }}</div></td>
-                            <td class="px-5 py-4 text-sm text-gray-700">{{ order.get_status_display }}</td>
-                            <td class="px-5 py-4 text-sm text-gray-700">{% if order.carrier %}{{ order.carrier }}{% else %}<span class="text-gray-400">Not booked</span>{% endif %}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-gray-500">No courier orders yet.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </section>
@@ -882,7 +1470,17 @@ window.courierCalculatorConfig = {
 <script>
 window.courierWorkspaceConfig = {
     activeSection: "{{ active_section }}",
+    initialOrderType: "{{ initial_order_type }}",
+    initialOrderStatus: "{{ initial_order_status }}",
+    initialShipmentType: "{{ initial_shipment_type }}",
     canManageCourier: {% if can_manage_courier %}true{% else %}false{% endif %},
+    ordersDashboardUrl: "{% url 'operations:courier:orders-dashboard' %}",
+    shipmentsDashboardUrl: "{% url 'operations:courier:shipments-dashboard' %}",
+    orderCreateB2cUrl: "{% url 'operations:courier:order-create' 'b2c' %}",
+    orderCreateB2bUrl: "{% url 'operations:courier:order-create' 'b2b' %}",
+    ftlCreateUrl: "{% url 'operations:courier:ftl-order-create' %}",
+    orderEditUrlTemplate: "{% url 'operations:courier:order-edit' 999999 %}",
+    ftlOrderEditUrlTemplate: "{% url 'operations:courier:ftl-order-edit' 999999 %}",
     lookupPincodeUrlTemplate: "{% url 'operations:courier:lookup-pincode' 111111 %}",
     orderListUrl: "{% url 'operations:courier:order-list' %}",
     ftlOrderListUrl: "{% url 'operations:courier:ftl-order-list' %}",

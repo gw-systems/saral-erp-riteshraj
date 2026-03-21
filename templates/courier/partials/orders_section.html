@@ -1,74 +1,135 @@
-<section class="space-y-6">
-    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div class="space-y-4">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div class="inline-flex rounded-2xl bg-gray-100 p-1">
-                    <button type="button" class="courier-segment-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-type="b2c">B2C Orders</button>
-                    <button type="button" class="courier-segment-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-type="b2b">B2B Orders</button>
-                    <button type="button" class="courier-segment-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-type="ftl">FTL Orders</button>
-                </div>
-                <button type="button" id="courier-open-create-order" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Create B2C Order</button>
+<section class="courier-page-stack">
+    <div class="courier-surface courier-page-head">
+        <div>
+            <p class="courier-section-kicker">Order Operations</p>
+            <h2 class="courier-section-title">Courier Orders</h2>
+            <p class="courier-section-copy">Draft creation, review, booking handoff, and bulk actions now stay above the fold on laptop screens.</p>
+        </div>
+        <div class="courier-head-actions">
+            <a id="courier-open-create-order" href="{% url 'operations:courier:order-create' 'b2c' %}" class="courier-primary-link">Create B2C Order</a>
+        </div>
+    </div>
+
+    <div class="courier-surface courier-toolbar courier-toolbar--sticky">
+        <div class="courier-toolbar-main">
+            <div class="courier-segmented" role="tablist" aria-label="Order type">
+                <button type="button" class="courier-segment-btn" data-orders-type="b2c">B2C Orders</button>
+                <button type="button" class="courier-segment-btn" data-orders-type="b2b">B2B Orders</button>
+                <button type="button" class="courier-segment-btn" data-orders-type="ftl">FTL Orders</button>
             </div>
+            <div id="courier-orders-status-toolbar" class="courier-segmented" role="tablist" aria-label="Order status">
+                <button type="button" class="courier-filter-btn" data-orders-status="all">All</button>
+                <button type="button" class="courier-filter-btn" data-orders-status="draft">Draft</button>
+                <button type="button" class="courier-filter-btn" data-orders-status="booked">Booked</button>
+                <button type="button" class="courier-filter-btn" data-orders-status="manifested">Manifested</button>
+                <button type="button" class="courier-filter-btn" data-orders-status="cancelled">Cancelled</button>
+            </div>
+        </div>
+        <div class="courier-toolbar-side">
+            <div class="courier-search-wrap">
+                <input id="courier-orders-search" type="text" placeholder="Search order, recipient, pincode, carrier, or AWB" class="courier-search-input">
+            </div>
+            <button type="button" id="courier-orders-refresh" class="courier-secondary-button">Refresh</button>
+        </div>
+    </div>
+
+    <div id="courier-orders-actions" class="courier-selection-bar hidden">
+        <div>
+            <span id="courier-orders-selected-count" class="courier-selection-count">0 selected</span>
+            <p class="courier-selection-copy">Use bulk actions without dropping out of the list view.</p>
+        </div>
+        <div class="courier-selection-actions">
+            <button type="button" id="courier-order-edit-action" class="courier-selection-button">Edit</button>
+            <button type="button" id="courier-order-book-awb-action" class="courier-selection-button courier-selection-button--primary">Book AWB</button>
+            <button type="button" id="courier-order-manifest-action" class="courier-selection-button">Generate Manifest</button>
+            <button type="button" id="courier-order-cancel-action" class="courier-selection-button">Cancel Booking</button>
+            <button type="button" id="courier-order-invoice-action" class="courier-selection-button">Invoice</button>
+            <button type="button" id="courier-order-label-action" class="courier-selection-button">Labels</button>
+            <button type="button" id="courier-order-details-action" class="courier-selection-button">Details</button>
+            <button type="button" id="courier-order-track-action" class="courier-selection-button">Track</button>
+            <button type="button" id="courier-order-sync-action" class="courier-selection-button">Sync Status</button>
+            <button type="button" id="courier-order-delete-action" class="courier-selection-button courier-selection-button--danger">Delete</button>
+        </div>
+    </div>
+
+    <div id="courier-orders-regular-pane" class="courier-page-stack">
+        <div class="courier-surface courier-table-shell">
+            <div class="courier-table-head">
+                <div>
+                    <h3 class="courier-table-title">Drafts And Live Orders</h3>
+                    <p class="courier-table-copy">Dense table view for faster scanning and less vertical travel.</p>
+                </div>
+            </div>
+            <div class="courier-table-scroll">
+                <table class="courier-table">
+                    <thead>
+                        <tr>
+                            <th class="courier-table-check">
+                                <input id="courier-orders-select-all" type="checkbox" aria-label="Select all visible orders">
+                            </th>
+                            <th>Order</th>
+                            <th>Recipient</th>
+                            <th>Weight</th>
+                            <th>Payment</th>
+                            <th>Warehouse</th>
+                            <th>Carrier</th>
+                            <th>AWB</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courier-orders-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="courier-orders-ftl-pane" class="hidden courier-page-stack">
+        <div id="courier-ftl-orders-actions" class="courier-selection-bar hidden">
             <div>
-                <h2 class="text-xl font-semibold text-gray-900">Courier Orders</h2>
-                <p class="text-sm text-gray-500">Create, edit, review, and action courier orders inside the ERP workspace.</p>
+                <span id="courier-ftl-orders-selected-count" class="courier-selection-count">0 selected</span>
+                <p class="courier-selection-copy">Edit or cancel draft FTL requests directly from the list.</p>
+            </div>
+            <div class="courier-selection-actions">
+                <button type="button" id="courier-ftl-edit-action" class="courier-selection-button">Edit</button>
+                <button type="button" id="courier-ftl-cancel-action" class="courier-selection-button">Cancel</button>
+                <button type="button" id="courier-ftl-delete-action" class="courier-selection-button courier-selection-button--danger">Delete</button>
             </div>
         </div>
-    </div>
 
-    <div id="courier-orders-regular-pane" class="space-y-6">
-        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div class="flex flex-1 flex-col gap-4 lg:flex-row lg:items-center">
-                    <div class="relative flex-1">
-                        <input id="courier-orders-search" type="text" placeholder="Search order, recipient, pincode, carrier, or AWB" class="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+        <div class="courier-surface courier-table-shell">
+            <div class="courier-table-head">
+                <div>
+                    <h3 class="courier-table-title">FTL Draft Queue</h3>
+                    <p class="courier-table-copy">Truckload drafts stay in a compact queue with route and commercial visibility.</p>
+                </div>
+                <div class="courier-table-head-actions">
+                    <div class="courier-segmented" role="tablist" aria-label="FTL order status">
+                        <button type="button" class="courier-ftl-filter-btn" data-ftl-status="all">All</button>
+                        <button type="button" class="courier-ftl-filter-btn" data-ftl-status="draft">Draft</button>
+                        <button type="button" class="courier-ftl-filter-btn" data-ftl-status="booked">Booked</button>
+                        <button type="button" class="courier-ftl-filter-btn" data-ftl-status="cancelled">Cancelled</button>
                     </div>
-                    <div class="inline-flex rounded-2xl bg-gray-100 p-1">
-                        <button type="button" class="courier-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-status="all">All</button>
-                        <button type="button" class="courier-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-status="draft">Draft</button>
-                        <button type="button" class="courier-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-status="booked">Booked</button>
-                        <button type="button" class="courier-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-status="manifested">Manifested</button>
-                        <button type="button" class="courier-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-orders-status="cancelled">Cancelled</button>
-                    </div>
                 </div>
-                <button type="button" id="courier-orders-refresh" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Refresh</button>
             </div>
-            <div id="courier-orders-actions" class="mt-4 hidden flex flex-wrap items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                <span id="courier-orders-selected-count" class="mr-2 text-sm font-medium text-blue-900">0 selected</span>
-                <button type="button" id="courier-order-edit-action" class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-100">Edit</button>
-                <button type="button" id="courier-order-book-awb-action" class="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">Book AWB</button>
-                <button type="button" id="courier-order-manifest-action" class="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700">Generate Manifest</button>
-                <button type="button" id="courier-order-cancel-action" class="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700">Cancel Booking</button>
-                <button type="button" id="courier-order-invoice-action" class="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">Invoice</button>
-                <button type="button" id="courier-order-label-action" class="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700">Labels</button>
-                <button type="button" id="courier-order-details-action" class="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Details</button>
-                <button type="button" id="courier-order-track-action" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Track</button>
-                <button type="button" id="courier-order-sync-action" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">Sync Status</button>
-                <button type="button" id="courier-order-delete-action" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Delete</button>
+            <div class="courier-table-scroll">
+                <table class="courier-table">
+                    <thead>
+                        <tr>
+                            <th class="courier-table-check">
+                                <input id="courier-ftl-orders-select-all" type="checkbox" aria-label="Select all visible FTL orders">
+                            </th>
+                            <th>Order</th>
+                            <th>Contact</th>
+                            <th>Route</th>
+                            <th>Container</th>
+                            <th>Base Price</th>
+                            <th>Total Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courier-ftl-orders-list"></tbody>
+                </table>
             </div>
         </div>
-
-        <div id="courier-orders-list" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
-    </div>
-
-    <div id="courier-orders-ftl-pane" class="hidden space-y-6">
-        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="inline-flex rounded-2xl bg-gray-100 p-1">
-                    <button type="button" class="courier-ftl-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-ftl-status="all">All</button>
-                    <button type="button" class="courier-ftl-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-ftl-status="draft">Draft</button>
-                    <button type="button" class="courier-ftl-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-ftl-status="booked">Booked</button>
-                    <button type="button" class="courier-ftl-filter-btn rounded-xl px-4 py-2 text-sm font-semibold" data-ftl-status="cancelled">Cancelled</button>
-                </div>
-                <div id="courier-ftl-orders-actions" class="hidden flex flex-wrap items-center gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 p-3">
-                    <span id="courier-ftl-orders-selected-count" class="mr-2 text-sm font-medium text-indigo-900">0 selected</span>
-                    <button type="button" id="courier-ftl-edit-action" class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-100">Edit</button>
-                    <button type="button" id="courier-ftl-cancel-action" class="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700">Cancel</button>
-                    <button type="button" id="courier-ftl-delete-action" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Delete</button>
-                </div>
-            </div>
-        </div>
-        <div id="courier-ftl-orders-list" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
     </div>
 </section>
-

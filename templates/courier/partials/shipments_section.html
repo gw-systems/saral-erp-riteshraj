@@ -1,75 +1,118 @@
-<section class="space-y-6">
-    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div class="space-y-2">
-                <div class="inline-flex rounded-2xl bg-gray-100 p-1">
-                    <button type="button" class="courier-shipment-tab-btn rounded-xl px-4 py-2 text-sm font-semibold" data-shipment-type="b2c">B2C Orders</button>
-                    <button type="button" class="courier-shipment-tab-btn rounded-xl px-4 py-2 text-sm font-semibold" data-shipment-type="b2b">B2B Orders</button>
-                    <button type="button" class="courier-shipment-tab-btn rounded-xl px-4 py-2 text-sm font-semibold" data-shipment-type="ftl">FTL Orders</button>
-                </div>
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-900">Shipment Control</h2>
-                    <p class="text-sm text-gray-500">Select draft orders, compare carrier offers, book AWBs, and manage shipment documents.</p>
-                </div>
+<section class="courier-page-stack">
+    <div class="courier-surface courier-page-head">
+        <div>
+            <p class="courier-section-kicker">Shipment Control</p>
+            <h2 class="courier-section-title">Shipment Booking</h2>
+            <p class="courier-section-copy">Select draft orders, compare eligible carriers, and book AWBs without losing your place in the queue.</p>
+        </div>
+        <div class="courier-head-actions">
+            <a href="{% url 'operations:courier:orders-dashboard' %}" class="courier-secondary-link">Open Orders</a>
+            <button type="button" id="courier-shipments-refresh" class="courier-secondary-button">Refresh</button>
+        </div>
+    </div>
+
+    <div class="courier-surface courier-toolbar courier-toolbar--sticky">
+        <div class="courier-toolbar-main">
+            <div class="courier-segmented" role="tablist" aria-label="Shipment type">
+                <button type="button" class="courier-shipment-tab-btn" data-shipment-type="b2c">B2C Orders</button>
+                <button type="button" class="courier-shipment-tab-btn" data-shipment-type="b2b">B2B Orders</button>
+                <button type="button" class="courier-shipment-tab-btn" data-shipment-type="ftl">FTL Orders</button>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{% url 'operations:courier:orders-dashboard' %}" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Open Orders</a>
-                <button type="button" id="courier-shipments-refresh" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Refresh</button>
+        </div>
+        <div class="courier-toolbar-side">
+            <div class="courier-search-wrap">
+                <input id="courier-shipments-search" type="text" placeholder="Search draft queue by order, recipient, pincode, or AWB" class="courier-search-input">
             </div>
         </div>
     </div>
 
-    <div id="courier-shipments-regular-pane" class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div class="flex items-center justify-between gap-3">
+    <div id="courier-shipments-regular-pane" class="courier-ship-layout">
+        <div class="courier-surface courier-table-shell">
+            <div class="courier-table-head courier-table-head--stack">
                 <div>
-                    <h3 id="courier-shipments-heading" class="text-lg font-semibold text-gray-900">Select B2C Orders to Ship</h3>
-                    <p class="text-sm text-gray-500">Pick one or more draft orders, then compare carriers.</p>
+                    <h3 id="courier-shipments-heading" class="courier-table-title">Select B2C Orders To Ship</h3>
+                    <p class="courier-table-copy">Pick one or more draft orders first. Carrier comparison updates against the selected shipment set.</p>
                 </div>
-                <span id="courier-shipment-selection-count" class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">0 selected</span>
-            </div>
-            <div class="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <label for="courier-shipment-warehouse" class="block text-sm font-medium text-gray-700">Source Warehouse</label>
-                <select id="courier-shipment-warehouse" class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select>
-                <p class="mt-2 text-xs text-gray-500">Choose the Shipdaak source warehouse override before comparing or booking.</p>
-            </div>
-            <div id="courier-shipment-orders-list" class="mt-5 space-y-3"></div>
-        </div>
-
-        <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div class="rounded-t-2xl bg-gradient-to-r from-blue-700 to-indigo-800 px-5 py-4">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-sm font-semibold text-white">Carrier Comparison</h3>
-                        <p class="mt-1 text-xs text-blue-100">Cheapest eligible carriers surface first. Full identity stays visible on the card.</p>
+                <div class="courier-ship-tools">
+                    <span id="courier-shipment-selection-count" class="courier-chip">0 selected</span>
+                    <div class="courier-warehouse-inline">
+                        <label for="courier-shipment-warehouse">Source Warehouse</label>
+                        <select id="courier-shipment-warehouse" class="courier-search-input">
+                            <option value="">Use sender pincode from order</option>
+                        </select>
                     </div>
-                    <label class="inline-flex items-center gap-2 text-xs font-medium text-blue-100">
-                        <input id="courier-use-global-account" type="checkbox" class="rounded border-blue-300 text-blue-600 focus:ring-blue-500">
-                        Use Godamwale Global Account
-                    </label>
                 </div>
             </div>
-            <div id="courier-shipment-comparison" class="p-5">
-                <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-14 text-center text-sm text-gray-500">
-                    Select draft orders to compare carrier rates.
-                </div>
+            <div class="courier-table-scroll courier-table-scroll--tall">
+                <table class="courier-table">
+                    <thead>
+                        <tr>
+                            <th class="courier-table-check">
+                                <input id="courier-shipments-select-all" type="checkbox" aria-label="Select all visible shipment rows">
+                            </th>
+                            <th>Order</th>
+                            <th>Recipient</th>
+                            <th>Weight</th>
+                            <th>Payment</th>
+                            <th>Warehouse</th>
+                            <th>AWB</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courier-shipment-orders-list"></tbody>
+                </table>
             </div>
         </div>
+
+        <aside class="courier-surface courier-compare-panel">
+            <div class="courier-compare-head">
+                <div>
+                    <h3 class="courier-table-title">Carrier Comparison</h3>
+                    <p class="courier-table-copy">Cheapest eligible carriers appear first while preserving the full aggregator identity used for booking.</p>
+                </div>
+                <label class="courier-compare-toggle">
+                    <input id="courier-use-global-account" type="checkbox">
+                    Use Godamwale Global Account
+                </label>
+            </div>
+            <div id="courier-shipment-comparison" class="courier-compare-body"></div>
+        </aside>
     </div>
 
-    <div id="courier-shipments-ftl-pane" class="hidden space-y-6">
-        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">FTL Booking Queue</h3>
-                    <p class="text-sm text-gray-500">Book selected draft FTL orders directly from the courier workspace.</p>
-                </div>
-                <div id="courier-shipments-ftl-actions" class="hidden flex items-center gap-2 rounded-2xl border border-green-100 bg-green-50 p-3">
-                    <span id="courier-shipments-ftl-selected-count" class="text-sm font-medium text-green-900">0 selected</span>
-                    <button type="button" id="courier-ftl-book-action" class="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">Book FTL Orders</button>
-                </div>
+    <div id="courier-shipments-ftl-pane" class="hidden courier-page-stack">
+        <div id="courier-shipments-ftl-actions" class="courier-selection-bar hidden">
+            <div>
+                <span id="courier-shipments-ftl-selected-count" class="courier-selection-count">0 selected</span>
+                <p class="courier-selection-copy">Book multiple draft FTL orders from the same queue.</p>
+            </div>
+            <div class="courier-selection-actions">
+                <button type="button" id="courier-ftl-book-action" class="courier-selection-button courier-selection-button--primary">Book FTL Orders</button>
             </div>
         </div>
-        <div id="courier-shipments-ftl-list" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+
+        <div class="courier-surface courier-table-shell">
+            <div class="courier-table-head">
+                <div>
+                    <h3 class="courier-table-title">FTL Booking Queue</h3>
+                    <p class="courier-table-copy">Truckload drafts waiting for booking, shown in a tighter operational queue.</p>
+                </div>
+            </div>
+            <div class="courier-table-scroll">
+                <table class="courier-table">
+                    <thead>
+                        <tr>
+                            <th class="courier-table-check">
+                                <input id="courier-shipments-ftl-select-all" type="checkbox" aria-label="Select all draft FTL shipment rows">
+                            </th>
+                            <th>Order</th>
+                            <th>Route</th>
+                            <th>Container</th>
+                            <th>Total Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courier-shipments-ftl-list"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </section>

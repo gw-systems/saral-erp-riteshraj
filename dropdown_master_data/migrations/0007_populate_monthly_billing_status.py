@@ -7,7 +7,7 @@ def populate_monthly_billing_status(apps, schema_editor):
     These values are referenced by MonthlyBilling.status field (default='draft').
     """
     MonthlyBillingStatus = apps.get_model('dropdown_master_data', 'MonthlyBillingStatus')
-    
+
     statuses = [
         ('draft', 'Draft', 10),
         ('submitted', 'Submitted', 20),
@@ -17,18 +17,18 @@ def populate_monthly_billing_status(apps, schema_editor):
         ('finance_rejected', 'Finance Rejected', 45),
         ('approved', 'Approved', 50),
     ]
-    
+
     for code, label, display_order in statuses:
         MonthlyBillingStatus.objects.get_or_create(
             code=code,
             defaults={
                 'label': label,
                 'is_active': True,
-                'display_order': display_order
-            }
+                'display_order': display_order,
+            },
         )
-    
-    print(f"✅ Populated {len(statuses)} MonthlyBillingStatus values")
+
+    print(f"Populated {len(statuses)} MonthlyBillingStatus values")
 
 
 class Migration(migrations.Migration):
@@ -40,6 +40,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             populate_monthly_billing_status,
-            reverse_code=migrations.RunPython.noop
+            reverse_code=migrations.RunPython.noop,
         ),
     ]

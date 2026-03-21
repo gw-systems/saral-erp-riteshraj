@@ -17,6 +17,10 @@ from .ui import (
     orders_dashboard_view,
     shipments_dashboard_view,
     warehouses_dashboard_view,
+    order_create_view,
+    order_edit_view,
+    ftl_order_create_view,
+    ftl_order_edit_view,
 )
 
 # Order management
@@ -93,6 +97,10 @@ __all__ = [
     'orders_dashboard_view',
     'shipments_dashboard_view',
     'warehouses_dashboard_view',
+    'order_create_view',
+    'order_edit_view',
+    'ftl_order_create_view',
+    'ftl_order_edit_view',
     'compare_rates',
     'lookup_pincode',
     # Orders

@@ -12,7 +12,6 @@ def populate_missing_storage_units(apps, schema_editor):
     """
     StorageUnit = apps.get_model('dropdown_master_data', 'StorageUnit')
 
-    # Add missing units
     units = [
         ('unit', 'Unit', 60),
         ('order', 'Order', 70),
@@ -24,11 +23,11 @@ def populate_missing_storage_units(apps, schema_editor):
             defaults={
                 'label': label,
                 'is_active': True,
-                'display_order': display_order
-            }
+                'display_order': display_order,
+            },
         )
 
-    print(f"✅ Added missing StorageUnit values: unit, order")
+    print("Added missing StorageUnit values: unit, order")
 
 
 def reverse_missing_storage_units(apps, schema_editor):
@@ -36,7 +35,7 @@ def reverse_missing_storage_units(apps, schema_editor):
     StorageUnit = apps.get_model('dropdown_master_data', 'StorageUnit')
 
     StorageUnit.objects.filter(code__in=['unit', 'order']).delete()
-    print("✅ Removed StorageUnit values: unit, order")
+    print("Removed StorageUnit values: unit, order")
 
 
 class Migration(migrations.Migration):
@@ -48,6 +47,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             populate_missing_storage_units,
-            reverse_missing_storage_units
+            reverse_missing_storage_units,
         ),
     ]

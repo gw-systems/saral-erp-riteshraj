@@ -341,7 +341,7 @@
                 </div>
                 <div class="courier-calc-ftl-card">
                     <div class="courier-calc-ftl-label">Route</div>
-                    <div class="courier-calc-ftl-value">${escapeHtml(result.source_city)} ? ${escapeHtml(result.destination_city)}</div>
+                    <div class="courier-calc-ftl-value">${escapeHtml(result.source_city)} to ${escapeHtml(result.destination_city)}</div>
                 </div>
                 <div class="courier-calc-ftl-card">
                     <div class="courier-calc-ftl-label">Total Cost</div>

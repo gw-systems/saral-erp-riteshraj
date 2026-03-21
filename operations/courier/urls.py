@@ -22,6 +22,10 @@ urlpatterns = [
     path('orders-dashboard/', views.orders_dashboard_view, name='orders-dashboard'),
     path('shipments/', views.shipments_dashboard_view, name='shipments-dashboard'),
     path('warehouses-dashboard/', views.warehouses_dashboard_view, name='warehouses-dashboard'),
+    path('orders/create/<str:order_type>/', views.order_create_view, name='order-create'),
+    path('orders/<int:pk>/edit/', views.order_edit_view, name='order-edit'),
+    path('ftl-orders/create/', views.ftl_order_create_view, name='ftl-order-create'),
+    path('ftl-orders/<int:pk>/edit/', views.ftl_order_edit_view, name='ftl-order-edit'),
 
     # Public endpoints
     path('health', views.health_check, name='health'),

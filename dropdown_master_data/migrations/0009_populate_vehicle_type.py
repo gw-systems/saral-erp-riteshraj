@@ -7,7 +7,7 @@ def populate_vehicle_type(apps, schema_editor):
     Used by MonthlyBilling transport fields for client and vendor billing.
     """
     VehicleType = apps.get_model('dropdown_master_data', 'VehicleType')
-    
+
     vehicles = [
         ('bike', 'Bike', 10),
         ('3_wheeler', '3 Wheeler', 15),
@@ -26,18 +26,18 @@ def populate_vehicle_type(apps, schema_editor):
         ('local_transport', 'Local Transport', 90),
         ('other', 'Other', 100),
     ]
-    
+
     for code, label, display_order in vehicles:
         VehicleType.objects.get_or_create(
             code=code,
             defaults={
                 'label': label,
                 'is_active': True,
-                'display_order': display_order
-            }
+                'display_order': display_order,
+            },
         )
-    
-    print(f"✅ Populated {len(vehicles)} VehicleType values")
+
+    print(f"Populated {len(vehicles)} VehicleType values")
 
 
 class Migration(migrations.Migration):
@@ -49,6 +49,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             populate_vehicle_type,
-            reverse_code=migrations.RunPython.noop
+            reverse_code=migrations.RunPython.noop,
         ),
     ]

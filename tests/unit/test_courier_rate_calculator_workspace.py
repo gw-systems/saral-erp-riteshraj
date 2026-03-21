@@ -1,4 +1,8 @@
 import json
+import importlib
+import sys
+import types
+from decimal import Decimal
 
 import pytest
 from django.db import connection
@@ -6,8 +10,115 @@ from django.test import override_settings
 from django.urls import reverse
 from django.http import JsonResponse
 
-from operations.courier.models import Warehouse
+from operations.courier.models import FTLOrder, Order, Warehouse
 from operations import views_porter_invoice
+
+
+def _install_google_ads_stubs():
+    try:
+        importlib.import_module("google")
+    except ImportError:
+        sys.modules.setdefault("google", types.ModuleType("google"))
+
+    if "google.ads.googleads.client" not in sys.modules:
+        google_module = sys.modules["google"]
+
+        ads_module = sys.modules.setdefault("google.ads", types.ModuleType("google.ads"))
+        google_module.ads = ads_module
+
+        googleads_module = sys.modules.setdefault("google.ads.googleads", types.ModuleType("google.ads.googleads"))
+        ads_module.googleads = googleads_module
+
+        client_module = sys.modules.setdefault("google.ads.googleads.client", types.ModuleType("google.ads.googleads.client"))
+        errors_module = sys.modules.setdefault("google.ads.googleads.errors", types.ModuleType("google.ads.googleads.errors"))
+        googleads_module.client = client_module
+        googleads_module.errors = errors_module
+
+        class DummyGoogleAdsClient:
+            @staticmethod
+            def load_from_dict(config):
+                return types.SimpleNamespace(config=config, get_service=lambda name: types.SimpleNamespace(search=lambda **kwargs: []))
+
+        class DummyGoogleAdsException(Exception):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args)
+                self.failure = types.SimpleNamespace(errors=[])
+
+        client_module.GoogleAdsClient = DummyGoogleAdsClient
+        errors_module.GoogleAdsException = DummyGoogleAdsException
+
+    try:
+        importlib.import_module("google.oauth2.credentials")
+    except ImportError:
+        google_module = sys.modules["google"]
+        oauth2_module = sys.modules.setdefault("google.oauth2", types.ModuleType("google.oauth2"))
+        credentials_module = sys.modules.setdefault("google.oauth2.credentials", types.ModuleType("google.oauth2.credentials"))
+        google_module.oauth2 = oauth2_module
+        oauth2_module.credentials = credentials_module
+
+        class DummyCredentials:
+            def __init__(self, **kwargs):
+                self.token = kwargs.get("token")
+                self.refresh_token = kwargs.get("refresh_token")
+                self.token_uri = kwargs.get("token_uri")
+                self.client_id = kwargs.get("client_id")
+                self.client_secret = kwargs.get("client_secret")
+                self.scopes = kwargs.get("scopes")
+                self.expiry = kwargs.get("expiry")
+
+            def refresh(self, request):
+                _ = request
+
+        credentials_module.Credentials = DummyCredentials
+
+    try:
+        importlib.import_module("google.auth.transport.requests")
+    except ImportError:
+        google_module = sys.modules["google"]
+        auth_module = sys.modules.setdefault("google.auth", types.ModuleType("google.auth"))
+        transport_module = sys.modules.setdefault("google.auth.transport", types.ModuleType("google.auth.transport"))
+        requests_module = sys.modules.setdefault("google.auth.transport.requests", types.ModuleType("google.auth.transport.requests"))
+        google_module.auth = auth_module
+        auth_module.transport = transport_module
+        transport_module.requests = requests_module
+
+        class DummyRequest:
+            pass
+
+        requests_module.Request = DummyRequest
+
+    if "google_auth_oauthlib.flow" not in sys.modules:
+        google_auth_oauthlib_module = sys.modules.setdefault("google_auth_oauthlib", types.ModuleType("google_auth_oauthlib"))
+        flow_module = sys.modules.setdefault("google_auth_oauthlib.flow", types.ModuleType("google_auth_oauthlib.flow"))
+        google_auth_oauthlib_module.flow = flow_module
+
+        class DummyFlow:
+            credentials = types.SimpleNamespace(
+                token="token",
+                refresh_token="refresh",
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id="client-id",
+                client_secret="client-secret",
+                scopes=[],
+                expiry=None,
+            )
+
+            @classmethod
+            def from_client_config(cls, *args, **kwargs):
+                _ = args, kwargs
+                return cls()
+
+            def authorization_url(self, **kwargs):
+                _ = kwargs
+                return ("https://example.com/auth", "state-token")
+
+            def fetch_token(self, **kwargs):
+                _ = kwargs
+
+        flow_module.Flow = DummyFlow
+
+
+_install_google_ads_stubs()
 
 WORKSPACE_TEST_SETTINGS = {
     "ALLOWED_HOSTS": ["testserver", "localhost", "127.0.0.1"],
@@ -34,6 +145,62 @@ def _make_warehouse(**overrides):
     }
     payload.update(overrides)
     return Warehouse.objects.create(**payload)
+
+
+def _make_order(**overrides):
+    next_number = Order.objects.count() + 1
+    payload = {
+        "order_number": f"ORD-{next_number:05d}",
+        "recipient_name": "Demo Recipient",
+        "recipient_contact": "9876543210",
+        "recipient_address": "Courier Street",
+        "recipient_pincode": 400001,
+        "recipient_city": "Mumbai",
+        "recipient_state": "Maharashtra",
+        "recipient_email": "demo@example.com",
+        "sender_pincode": 400002,
+        "sender_name": "Primary Warehouse",
+        "sender_address": "Warehouse Lane",
+        "sender_phone": "9123456789",
+        "weight": 1.5,
+        "length": 10,
+        "width": 12,
+        "height": 8,
+        "payment_mode": "prepaid",
+        "order_value": Decimal("0.00"),
+        "item_type": "Shirt",
+        "sku": "SKU-1",
+        "quantity": 1,
+        "item_amount": Decimal("0.00"),
+        "status": "draft",
+    }
+    payload.update(overrides)
+    return Order.objects.create(**payload)
+
+
+def _make_ftl_order(**overrides):
+    next_number = FTLOrder.objects.count() + 1
+    payload = {
+        "order_number": f"FTL-{next_number:05d}",
+        "name": "FTL Customer",
+        "email": "ftl@example.com",
+        "phone": "9876543210",
+        "source_city": "Mumbai",
+        "source_address": "Source Lane",
+        "source_pincode": 400001,
+        "destination_city": "Delhi",
+        "destination_address": "Destination Lane",
+        "destination_pincode": 110001,
+        "container_type": "20FT",
+        "base_price": Decimal("10000.00"),
+        "escalation_amount": Decimal("1500.00"),
+        "price_with_escalation": Decimal("11500.00"),
+        "gst_amount": Decimal("2070.00"),
+        "total_price": Decimal("13570.00"),
+        "status": "draft",
+    }
+    payload.update(overrides)
+    return FTLOrder.objects.create(**payload)
 
 
 @pytest.fixture(autouse=True)
@@ -178,10 +345,11 @@ def test_courier_orders_workspace_renders_native_controls(client, admin_user):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "B2C Orders" in content
-    assert "Create Order" in content
+    assert "Courier Orders" in content
+    assert "Create B2C Order" in content
+    assert "Drafts And Live Orders" in content
+    assert "FTL Draft Queue" in content
     assert "Book AWB" in content
-    assert "Create FTL Order" in content
 
 
 @override_settings(**WORKSPACE_TEST_SETTINGS)
@@ -192,10 +360,65 @@ def test_courier_shipments_workspace_renders_native_controls(client, admin_user)
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Shipment Control" in content
+    assert "Shipment Booking" in content
     assert "Carrier Comparison" in content
     assert "Book Selected Carrier" not in content
     assert "FTL Booking Queue" in content
+    assert "Use Godamwale Global Account" in content
+
+
+@override_settings(**WORKSPACE_TEST_SETTINGS)
+def test_courier_order_create_page_renders_full_page_form(client, admin_user):
+    client.force_login(admin_user)
+
+    response = client.get(reverse("operations:courier:order-create", args=["b2c"]))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Create B2C Order" in content
+    assert "Recipient Details" in content
+    assert "Commercial Details" in content
+
+
+@override_settings(**WORKSPACE_TEST_SETTINGS)
+def test_courier_order_edit_page_renders_full_page_form(client, admin_user):
+    client.force_login(admin_user)
+    order = _make_order()
+
+    response = client.get(reverse("operations:courier:order-edit", args=[order.id]))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Edit B2C Order" in content
+    assert "Recipient Details" in content
+    assert f'apiUrl: "/operations/courier/orders/{order.id}/"' in content
+
+
+@override_settings(**WORKSPACE_TEST_SETTINGS)
+def test_courier_ftl_order_create_page_renders_full_page_form(client, admin_user):
+    client.force_login(admin_user)
+
+    response = client.get(reverse("operations:courier:ftl-order-create"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Create FTL Order" in content
+    assert "Route & Shipment" in content
+    assert "Pricing Preview" in content
+
+
+@override_settings(**WORKSPACE_TEST_SETTINGS)
+def test_courier_ftl_order_edit_page_renders_full_page_form(client, admin_user):
+    client.force_login(admin_user)
+    order = _make_ftl_order()
+
+    response = client.get(reverse("operations:courier:ftl-order-edit", args=[order.id]))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Edit FTL Order" in content
+    assert "Pricing Preview" in content
+    assert f'apiUrl: "/operations/courier/ftl-orders/{order.id}/"' in content
 
 
 @override_settings(**WORKSPACE_TEST_SETTINGS)
